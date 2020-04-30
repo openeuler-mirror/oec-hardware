@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}EulerCert{% endblock %}
+
+{% block page_content %}
+    <div class="page-header">
+        <h3>openEuler Hardware Certification</h3>
+        <br>
+        <a class='btn btn-primary' href="/results/{{ host }}/{{ id }}/{{ job }}/submit">Submit</a>
+        <a class='btn' href="/results/{{ host }}/{{ id }}/{{ job }}/devices">Devices</a>
+        <a class='btn' href="/results/{{ host }}/{{ id }}/{{ job }}/logs/job">Runtime</a>
+        <a class='btn' href="/results/{{ host }}/{{ id }}/{{ job }}/attachment">Attachment</a>
+    </div>
+
+    <div class="page-header">
+        <table class="table table-striped table-hover">
+            <thead>
+                <th colspan="2">Environment</th>
+            </thead>
+            <tbody>
+                {% for key in info %}
+                <tr>
+                    <td width="50%">{{ key }}</td>
+                    <td>{{ info.get(key) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="page-header">
+        <table class="table table-striped table-hover">
+            <thead>
+                <th>Testcase</th>
+                <th>Device</th>
+                <th>Result</th>
+            </thead>
+            <tbody>
+                {% for d in results %}
+                <tr>
+                    {% set int = d.get("device").get("INTERFACE", "") %}
+
+                    {% if int %}
+                        {% set testcase = d.get("name") + "-" + int %}
+                    {% else %}
+                        {% set testcase = d.get("name") %}
+                    {% endif %}
+
+                    {% if d.get("run") %}
+                        {% set result = d.get("status") %}
+                    {% else %}
+                        {% set result = "" %}
+                    {% endif %}
+
+                    <td>{{ testcase }}</td>
+                    <td><a href="/results/{{ host }}/{{ id }}/{{ job }}/devices/{{ int }}">{{ int }}</a></td>
+                    <td><a href="/results/{{ host }}/{{ id }}/{{ job }}/logs/{{ testcase }}">{{ result }}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

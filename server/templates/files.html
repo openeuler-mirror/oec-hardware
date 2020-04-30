@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}EulerCert{% endblock %}
+
+{% block page_content %}
+    <div class="page-header">
+        <h3>Directory listing for /files</h3>
+    </div>
+    <ul>
+    {% for file in files %}
+        <li><a href="/files/{{ file }}">{{ file }}</a></li>
+    {% endfor %}
+    </ul>
+{% endblock %}

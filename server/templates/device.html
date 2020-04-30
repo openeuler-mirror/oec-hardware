@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}EulerCert{% endblock %}
+
+{% block page_content %}
+    <div class="page-header">
+        <h3>openEuler Hardware Certification</h3>
+    </div>
+    <table class="table table-striped table-hover">
+        <thead>
+            <th colspan="2">{{ interface }}</th>
+        </thead>
+        <tbody>
+            {% for key in device %}
+            <tr>
+                <td>{{ key }}</td>
+                <td>{{ device.get(key) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

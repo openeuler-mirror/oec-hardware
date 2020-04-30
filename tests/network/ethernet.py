@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# oec-hardware is licensed under the Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+#     http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+# PURPOSE.
+# See the Mulan PSL v2 for more details.
+# Create: 2020-04-01
+
+import os
+import argparse
+
+from hwcert.test import Test
+from hwcert.command import Command
+from hwcert.env import CertEnv
+from hwcert.document import CertDocument
+from rdma import RDMATest
+
+
+class EthernetTest(RDMATest):
+    def __init__(self):
+        RDMATest.__init__(self)
+        self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
+                         self.test_udp_tcp, self.test_http]
+        self.target_bandwidth_percent = 0.75
+
+    def is_RoCE(self):
+        path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
+        path_pci = path_netdev.split('net')[0]
+        cmd = "ls %s | grep -q infiniband" % path_pci
+        print(cmd)
+        return 0 == os.system(cmd)
+
+    def setup(self, args=None):
+        self.args = args or argparse.Namespace()
+        self.device = getattr(self.args, 'device', None)
+        self.interface = self.device.get_property("INTERFACE")
+        self.cert = CertDocument(CertEnv.certificationfile)
+        self.server_ip = self.cert.get_server()
+
+        if self.is_RoCE():
+            try:
+                input = raw_input
+            except NameError:
+                from builtins import input
+            choice = input("[!] RoCE interface found. " \
+                           "Run RDMA tests instead? [y/N] ")
+            if choice.lower() != "y":
+                return
+
+            print("[+] Testing RoCE interface %s..." % self.interface)
+            self.link_layer = 'Ethernet'
+            self.subtests = [self.test_ip_info, self.test_ibstatus,
+                             self.test_eth_link, self.test_icmp, self.test_rdma]
+
+    def test(self):
+        for subtest in self.subtests:
+            if not subtest():
+                return False
+        return True
+
+
+if __name__ == '__main__':
+    t = EthernetTest()
+    t.server_ip = '199.1.1.2'
+
+    from hwcert.device import Device
+    properties = {
+        'DEVPATH': '/devices/pci0000:80/0000:80:01.0/0000:81:00.0/net/enp129s0f0',
+        'INTERFACE': 'enp129s0f0'
+    }
+    t.device = Device(properties)
+    t.interface = t.device.get_property("INTERFACE")
+    # t.setup()
+    t.test()
