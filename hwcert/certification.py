@@ -159,14 +159,14 @@ class EulerCertification():
             if not self.upload(path, server):
                 print("Upload failed.")
             else:
-                print("Successfully upload result to server %s." % server)
+                print("Successfully uploaded result to server %s." % server)
             time.sleep(2)
 
         for filename in packages:
             os.remove(os.path.join(CertEnv.datadirectory, filename))
 
     def upload(self, path, server):
-        print("uploading...")
+        print("Uploading...")
         if not self.client:
             cert_id = self.certification.get_certify()
             hardware_info = self.certification.get_hardware()
