@@ -244,7 +244,9 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
    ethernet-enp3s0                  PASS
    system                           FAIL
    Log saved to /usr/share/eulercert/logs/eulercert-20200228210118-TnvUJxFb50.tar succ.
-   Do you want to submit last result? (y|n)
+   Do you want to submit last result? (y|n) y
+   Uploading...
+   Successfully uploaded result to server X.X.X.X.
    ```
 
 
