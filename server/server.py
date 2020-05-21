@@ -128,6 +128,8 @@ def get_attachment(host, id, job):
 def get_log(host, id, job, name):
     dir_job = os.path.join(dir_results, host, id, job)
     logpath = os.path.join(dir_job, name + '.log')
+    if not os.path.exists(logpath):
+        logpath = os.path.join(dir_job, 'job.log')
     try:
         with open(logpath, 'r') as f:
             log = f.read().split('\n')
