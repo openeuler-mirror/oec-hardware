@@ -187,9 +187,8 @@ class Job(object):
         self.create_test_suite(self.subtests_filter)
         if not self.check_test_depends():
             print("Required rpm package not installed, test stopped.")
-            logger.stop()
-            return
-        self.run_tests(self.subtests_filter)
+        else:
+            self.run_tests(self.subtests_filter)
         self.save_result()
         logger.stop()
         self.show_summary()
