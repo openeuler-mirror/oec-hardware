@@ -25,8 +25,8 @@ $(VERSION_PY):
 	@echo "name = '$(NAME)'" >> $(VERSION_PY)
 
 install:
-	mkdir -p $(DESTDIR)/usr/share/eulercert
-	mkdir -p $(DESTDIR)/var/eulercert
+	mkdir -p $(DESTDIR)/usr/share/oech
+	mkdir -p $(DESTDIR)/var/oech
 	for i in $(SUBDIRS); do $(MAKE) -C $$i DESTDIR=$(DESTDIR) install; done
 
 clean:

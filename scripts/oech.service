@@ -5,7 +5,7 @@ DefaultDependencies=no
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/eulercert --rebootup
+ExecStart=/usr/bin/oech --rebootup
 RemainAfterExit=yes
 TimeoutSec=0
 

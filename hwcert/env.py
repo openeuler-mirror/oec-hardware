@@ -14,16 +14,16 @@
 
 
 class CertEnv:
-    environmentfile = "/etc/eulercert.json"
+    environmentfile = "/etc/oech.json"
     releasefile = "/etc/os-release"
-    datadirectory = "/var/eulercert"
+    datadirectory = "/var/oech"
     certificationfile = datadirectory + "/certification.json"
     devicefile = datadirectory + "/device.json"
     factoryfile = datadirectory + "/factory.json"
     rebootfile = datadirectory + "/reboot.json"
-    testdirectoy = "/usr/share/eulercert/lib/tests"
-    logdirectoy = "/usr/share/eulercert/logs"
-    resultdirectoy = "/usr/share/eulercert/lib/server/results"
-    kernelinfo = "/usr/share/eulercert/kernelrelease.json"
+    testdirectoy = "/usr/share/oech/lib/tests"
+    logdirectoy = "/usr/share/oech/logs"
+    resultdirectoy = "/usr/share/oech/lib/server/results"
+    kernelinfo = "/usr/share/oech/kernelrelease.json"
 
 

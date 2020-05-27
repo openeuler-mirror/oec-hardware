@@ -39,7 +39,7 @@ class EulerCertification():
         self.client = None
 
     def run(self):
-        print("The openEuler Hardware Certification Test Suite")
+        print("The openEuler Hardware Compatibility Test Suite")
         self.load()
         certdevice = CertDevice()
 
@@ -81,7 +81,7 @@ class EulerCertification():
             return False
 
     def clean(self):
-        if self.ui.prompt_confirm("Are you sure to clean all certification data?"):
+        if self.ui.prompt_confirm("Are you sure to clean all compatibility test data?"):
             try:
                 Command("rm -rf %s" % CertEnv.certificationfile).run()
                 Command("rm -rf %s" % CertEnv.factoryfile).run()
@@ -107,7 +107,7 @@ class EulerCertification():
         cert_id = self.certification.get_certify()
         hardware_info = self.certification.get_hardware()
         self.client = Client(hardware_info, cert_id)
-        print("    Certification ID: ".ljust(30) + cert_id)
+        print("    Compatibility Test ID: ".ljust(30) + cert_id)
         print("    Hardware Info: ".ljust(30) + hardware_info)
         print("    Product URL: ".ljust(30) + self.certification.get_url())
         print("    OS Info: ".ljust(30) + self.certification.get_os())
@@ -126,7 +126,7 @@ class EulerCertification():
 
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
-        dir_name = "eulercert-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "-" + job.job_id
+        dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "-" + job.job_id
         pack_name = dir_name +".tar"
         cmd = Command("tar -cf %s %s" % (pack_name, dir_name))
         try:
@@ -145,7 +145,7 @@ class EulerCertification():
 
     def submit(self):
         packages = list()
-        pattern = re.compile("^eulercert-[0-9]{14}-[0-9a-zA-Z]{10}.tar$")
+        pattern = re.compile("^oech-[0-9]{14}-[0-9a-zA-Z]{10}.tar$")
         for (root, dirs, files) in os.walk(CertEnv.datadirectory):
             break
         packages.extend(filter(pattern.search, files))
@@ -358,7 +358,7 @@ class EulerCertification():
             else:
                 test["run"] = True
         os.system("clear")
-        print("These tests are recommended to complete the certification:")
+        print("These tests are recommended to complete the compatibility test:")
         self.show_tests()
         action = self.ui.prompt("Ready to begin testing?", ["run", "edit", "quit"])
         action = action.lower()

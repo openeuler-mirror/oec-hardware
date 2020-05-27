@@ -23,7 +23,7 @@
 
 .PHONY: install clean
 
-HWCERT_CLASS_LIB := /usr/share/eulercert/lib
+HWCERT_CLASS_LIB := /usr/share/oech/lib
 
 all: ;
 

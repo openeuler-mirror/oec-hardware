@@ -21,7 +21,7 @@ from .env import CertEnv
 
 class Log(object):
 
-    def __init__(self, logname='eulercert.log', logdir='__temp__'):
+    def __init__(self, logname='oech.log', logdir='__temp__'):
         if not logdir:
             curtime = datetime.datetime.now().isoformat()
             logdir = os.path.join(CertEnv.logdirectoy, curtime)

@@ -51,24 +51,24 @@ DESTDIR=$RPM_BUILD_ROOT make install
 
 %files
 %defattr(-,root,root)
-/usr/bin/eulercert
-/usr/share/eulercert/kernelrelease.json
-/usr/share/eulercert/lib/hwcert
-/usr/share/eulercert/lib/tests
-/usr/lib/systemd/system/eulercert.service
-%dir /var/eulercert
-%dir /usr/share/eulercert/lib
-%dir /usr/share/eulercert
+/usr/bin/oech
+/usr/share/oech/kernelrelease.json
+/usr/share/oech/lib/hwcert
+/usr/share/oech/lib/tests
+/usr/lib/systemd/system/oech.service
+%dir /var/oech
+%dir /usr/share/oech/lib
+%dir /usr/share/oech
 
 %files server
 %defattr(-,root,root)
-/usr/share/eulercert/lib/server
-/usr/share/eulercert/lib/server/uwsgi.ini
-/usr/share/eulercert/lib/server/uwsgi.conf
-/usr/lib/systemd/system/eulercert-server.service
+/usr/share/oech/lib/server
+/usr/share/oech/lib/server/uwsgi.ini
+/usr/share/oech/lib/server/uwsgi.conf
+/usr/lib/systemd/system/oech-server.service
 
 %postun
-rm -rf /var/lock/eulercert.lock
+rm -rf /var/lock/oech.lock
 
 %changelog
 * Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h1

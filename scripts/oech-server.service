@@ -1,0 +1,11 @@
+[Unit]
+Description=openEuler Hardware Certification Server
+After=network.target
+
+[Service]
+Type=notify
+ExecStartPre=/usr/share/oech/lib/server/oech-server-pre.sh
+ExecStart=/usr/local/bin/uwsgi --ini /usr/share/oech/lib/server/uwsgi.ini
+
+[Install]
+WantedBy=multi-user.target

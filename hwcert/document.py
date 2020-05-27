@@ -79,17 +79,17 @@ class CertDocument(Document):
             print(e)
 
         sysinfo = SysInfo(CertEnv.releasefile)
-        self.document["eulerversion"] = sysinfo.product + " " + sysinfo.get_version()
-        self.document["kernelversion"] = sysinfo.kernel
-        self.document["certify"] = CommandUI().prompt("Please provide your Certification ID:")
+        self.document["OS"] = sysinfo.product + " " + sysinfo.get_version()
+        self.document["kernel"] = sysinfo.kernel
+        self.document["tester"] = CommandUI().prompt("Please provide your Compatibility Test ID:")
         self.document["Product URL"] = CommandUI().prompt("Please provide your Product URL:")
-        self.document["server"] = CommandUI().prompt("Please provide the Certification Server (Hostname or Ipaddr):")
+        self.document["server"] = CommandUI().prompt("Please provide the Compatibility Test Server (Hostname or Ipaddr):")
 
     def get_hardware(self):
         return self.document["Manufacturer"] + " " + self.document["Product Name"] + " " + self.document["Version"]
 
     def get_os(self):
-        return self.document["eulerversion"]
+        return self.document["OS"]
 
     def get_server(self):
         return self.document["server"]
@@ -98,10 +98,10 @@ class CertDocument(Document):
         return self.document["Product URL"]
 
     def get_certify(self):
-        return self.document["certify"]
+        return self.document["tester"]
 
     def get_kernel(self):
-        return self.document["kernelversion"]
+        return self.document["kernel"]
 
 class DeviceDocument(Document):
     def __init__(self, filename, devices=list()):
