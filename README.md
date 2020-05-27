@@ -61,7 +61,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 │   ├── sysinfo.py        收集系统信息
 │   └── test.py           测试套模板
 ├── scripts   工具脚本
-│   ├── eulercert                  框架命令行工具
+│   ├── oech                       框架命令行工具
 │   ├── eulercert-server.service   框架服务端 service 文件，用于启动 web 服务器
 │   ├── eulercert.service          框架客户端 service 文件，用于接管 reboot 用例
 │   └── kernelrelease.json         规范可用于认证的系统和内核版本
