@@ -1,5 +1,5 @@
 [Unit]
-Description=openEuler Hardware Certification Test Suite
+Description=openEuler Hardware Compatibility Test Suite
 After=basic.target network.target
 DefaultDependencies=no
 

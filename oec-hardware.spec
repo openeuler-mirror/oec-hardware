@@ -5,7 +5,7 @@
 %undefine __brp_mangle_shebangs
 
 Name:           oec-hardware
-Summary:        openEuler Hardware Certification Test Suite
+Summary:        openEuler Hardware Compatibility Test Suite
 Version:        %{version}
 Release:        %{release}
 Group:          Development/Tools
@@ -22,15 +22,15 @@ Requires:       python3
 
 # server subpackage
 %package server
-Summary:        openEuler Hardware Certification Test Server
+Summary:        openEuler Hardware Compatibility Test Server
 Group:          Development/Tools
 Requires:       python3, python3-devel, nginx, qperf, psmisc
 
 %description
-openEuler Hardware Certification Test Suite
+openEuler Hardware Compatibility Test Suite
 
 %description server
-openEuler Hardware Certification Test Server
+openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c

@@ -27,7 +27,7 @@
                     {% endif %}
 
                     {% do use_divider.append(1) %}
-                    <li class="dropdown-header">Cert ID: {{ id }}</li>
+                    <li class="dropdown-header">Test ID: {{ id }}</li>
                     {% for job in job_list %}
                         <li><a href="/results/{{ host }}/{{ id }}/{{ job }}">{{ job }}</a></li>
                     {% endfor %}

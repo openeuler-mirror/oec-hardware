@@ -1,5 +1,5 @@
 [Unit]
-Description=openEuler Hardware Certification Server
+Description=openEuler Hardware Compatibility Test Server
 After=network.target
 
 [Service]
