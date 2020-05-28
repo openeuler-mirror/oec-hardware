@@ -48,7 +48,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 ```
 .
 ├── hwcert   框架主功能
-│   ├── certification.py  框架核心功能
+│   ├── compatibility.py  框架核心功能
 │   ├── client.py         上传测试结果到服务端
 │   ├── command.py        bash命令执行封装
 │   ├── commandUI.py      命令行交互工具

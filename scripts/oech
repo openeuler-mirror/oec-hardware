@@ -20,7 +20,7 @@ import argparse
 sys.path.append("/usr/share/oech/lib/")
 os.putenv("PYTHONPATH", "/usr/share/oech/lib/")
 
-from hwcert.certification import EulerCertification
+from hwcert.compatibility import EulerCertification
 import hwcert.version
 
 

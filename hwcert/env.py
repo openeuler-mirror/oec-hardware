@@ -17,7 +17,7 @@ class CertEnv:
     environmentfile = "/etc/oech.json"
     releasefile = "/etc/os-release"
     datadirectory = "/var/oech"
-    certificationfile = datadirectory + "/certification.json"
+    certificationfile = datadirectory + "/compatibility.json"
     devicefile = datadirectory + "/device.json"
     factoryfile = datadirectory + "/factory.json"
     rebootfile = datadirectory + "/reboot.json"

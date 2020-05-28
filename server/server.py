@@ -74,7 +74,7 @@ def get_results():
 @app.route('/results/<host>/<id>/<job>')
 def get_job(host, id, job):
     dir_job = os.path.join(dir_results, host, id, job)
-    json_info = os.path.join(dir_job, 'certification.json')
+    json_info = os.path.join(dir_job, 'compatibility.json')
     json_results = os.path.join(dir_job, 'factory.json')
     try:
         with open(json_info, 'r') as f:
@@ -140,7 +140,7 @@ def get_log(host, id, job, name):
 def submit(host, id, job):
     dir_job = os.path.join(dir_results, host, id, job)
     tar_job = dir_job + '.tar.gz'
-    json_cert = os.path.join(dir_job, 'certification.json')
+    json_cert = os.path.join(dir_job, 'compatibility.json')
     try:
         with open(json_cert, 'r') as f:
             cert = json.load(f)
