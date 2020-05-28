@@ -170,7 +170,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ## 验证安装正确性
 
-客户端'oech` 命令，可正常运行，则表示安装成功。如果安装有任何问题，可反馈至该邮箱：oecompatibility@openeuler.org 。
+客户端输入 `oech` 命令，可正常运行，则表示安装成功。如果安装有任何问题，可反馈至该邮箱：oecompatibility@openeuler.org 。
 
 # 使用指导
 
@@ -182,20 +182,20 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ## 使用步骤
 
-1. 在客户端启动测试框架。在客户端启动 `eulercert`，其中 `ID` 和 `URL` 可以按需填写，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
+1. 在客户端启动测试框架。在客户端启动 `oech`，其中 `ID` 和 `URL` 可以按需填写，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
 
    ```
-   # eulercert
-   The openEuler Hardware Certification Test Suite
-   Please provide your Certification ID:
+   # oech
+   The openEuler Hardware Compatibility Test Suite
+   Please provide your Compatibility Test ID:
    Please provide your Product URL:
-   Please provide the Certification Server (Hostname or Ipaddr):
+   Please provide the Compatibility Test Server (Hostname or Ipaddr):
    ```
 
 2. 进入测试套选择界面。在用例选择界面，框架将自动扫描硬件并选取当前环境可供测试的测试套，输入 `edit` 可以进入测试套选择界面。
 
    ```
-   These tests are recommended to complete the certification:
+   These tests are recommended to complete the compatibility test:
    No. Run-Now?  Status  Class         Device
    1     yes     NotRun  acpi
    2     yes     NotRun  clock
