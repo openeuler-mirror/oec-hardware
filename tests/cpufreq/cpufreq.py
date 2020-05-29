@@ -35,7 +35,7 @@ class CPU:
     def get_info(self):
         cmd = Command("lscpu")
         try:
-            nums = cmd.get_str('^CPU\S*:\s+(?P<cpus>\d+)$', 'cpus', False)
+            nums = cmd.get_str(r'^CPU\S*:\s+(?P<cpus>\d+)$', 'cpus', False)
         except:
             return False
         self.nums = int(nums)
@@ -68,7 +68,7 @@ class CPU:
     def get_freq(self, cpu):
         cmd = Command("cpupower -c %s frequency-info -w" % cpu)
         try:
-            return int(cmd.get_str('.* frequency: (?P<freq>\d+) .*', 'freq', False))
+            return int(cmd.get_str(r'.* frequency: (?P<freq>\d+) .*', 'freq', False))
         except:
             return False
 
@@ -83,7 +83,7 @@ class CPU:
     def get_governor(self, cpu):
         cmd = Command("cpupower -c %s frequency-info -p" % cpu)
         try:
-            return cmd.get_str('.* governor "(?P<governor>\w+)".*', 'governor', False)
+            return cmd.get_str(r'.* governor "(?P<governor>\w+)".*', 'governor', False)
         except:
             return False
 
