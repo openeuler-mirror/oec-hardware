@@ -17,12 +17,11 @@ from time import sleep
 
 from hwcert.env import CertEnv
 from hwcert.test import Test
-from hwcert.command import Command
+from hwcert.command import Command, CertCommandError
 
 
 class CPU:
     def __init__(self):
-        self.requirements = ['util-linux', 'kernel-tools']
         self.cpu = None
         self.nums = None
         self.list = None
@@ -36,7 +35,8 @@ class CPU:
         cmd = Command("lscpu")
         try:
             nums = cmd.get_str(r'^CPU\S*:\s+(?P<cpus>\d+)$', 'cpus', False)
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
         self.nums = int(nums)
         self.list = range(self.nums)
@@ -44,14 +44,16 @@ class CPU:
         cmd = Command("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq")
         try:
             max_freq = cmd.get_str()
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
         self.max_freq = int(max_freq)
 
         cmd = Command("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq")
         try:
             min_freq = cmd.get_str()
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
         self.min_freq = int(min_freq)
 
@@ -62,14 +64,16 @@ class CPU:
         try:
             cmd.run()
             return cmd.returncode
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
 
     def get_freq(self, cpu):
         cmd = Command("cpupower -c %s frequency-info -w" % cpu)
         try:
             return int(cmd.get_str(r'.* frequency: (?P<freq>\d+) .*', 'freq', False))
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
 
     def set_governor(self, governor, cpu='all'):
@@ -77,14 +81,16 @@ class CPU:
         try:
             cmd.run()
             return cmd.returncode
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
 
     def get_governor(self, cpu):
         cmd = Command("cpupower -c %s frequency-info -p" % cpu)
         try:
             return cmd.get_str(r'.* governor "(?P<governor>\w+)".*', 'governor', False)
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
 
     def find_path(self, parent_dir, target_name):
@@ -92,7 +98,8 @@ class CPU:
         try:
             cmd.run()
             return cmd.returncode
-        except:
+        except CertCommandError as e:
+            print(e)
             return False
 
 
@@ -119,6 +126,12 @@ class Load:
 
 
 class CPUFreqTest(Test):
+    def __init__(self):
+        Test.__init__(self)
+        self.requirements = ['util-linux', 'kernel-tools']
+        self.cpu = CPU()
+        self.original_governor = self.cpu.get_governor(0)
+
     def test_userspace(self):
         target_cpu = randint(0, self.cpu.nums-1)
         target_freq = randint(self.cpu.min_freq, self.cpu.max_freq)
@@ -335,9 +348,6 @@ class CPUFreqTest(Test):
         return True
 
     def test(self):
-        self.cpu = CPU()
-        self.original_governor = self.cpu.get_governor(0)
-
         if not self.cpu.get_info():
             print("[X] Fail to get CPU info." \
                 " Please check if the CPU supports cpufreq.")
