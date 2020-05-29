@@ -35,7 +35,7 @@ class CPU:
     def get_info(self):
         cmd = Command("lscpu")
         try:
-            nums = cmd.get_str('CPU\(s\):\s+(?P<cpus>\d+)', 'cpus', False)
+            nums = cmd.get_str('^CPU\S*:\s+(?P<cpus>\d+)$', 'cpus', False)
         except:
             return False
         self.nums = int(nums)
