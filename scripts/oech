@@ -20,8 +20,8 @@ import argparse
 sys.path.append("/usr/share/oech/lib/")
 os.putenv("PYTHONPATH", "/usr/share/oech/lib/")
 
-from hwcert.compatibility import EulerCertification
-import hwcert.version
+from hwcompatible.compatibility import EulerCertification
+import hwcompatible.version
 
 
 class CertLock:
@@ -72,7 +72,7 @@ if __name__ == '__main__':
             lock.release()
             sys.exit(1)
     elif args.version:
-        print("version: %s" % hwcert.version.version)
+        print("version: %s" % hwcompatible.version.version)
     else:
         if not cert.run():
             lock.release()

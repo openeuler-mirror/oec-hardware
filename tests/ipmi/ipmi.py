@@ -12,8 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-from hwcert.test import Test
-from hwcert.command import Command
+from hwcompatible.test import Test
+from hwcompatible.command import Command
 
 
 class IpmiTest(Test):

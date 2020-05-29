@@ -53,7 +53,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 %defattr(-,root,root)
 /usr/bin/oech
 /usr/share/oech/kernelrelease.json
-/usr/share/oech/lib/hwcert
+/usr/share/oech/lib/hwcompatible
 /usr/share/oech/lib/tests
 /usr/lib/systemd/system/oech.service
 %dir /var/oech

@@ -18,11 +18,11 @@ import re
 import shutil
 import argparse
 
-from hwcert.test import Test
-from hwcert.command import Command, CertCommandError
-from hwcert.sysinfo import SysInfo
-from hwcert.env import CertEnv
-from hwcert.document import Document
+from hwcompatible.test import Test
+from hwcompatible.command import Command, CertCommandError
+from hwcompatible.sysinfo import SysInfo
+from hwcompatible.env import CertEnv
+from hwcompatible.document import Document
 
 
 class SystemTest(Test):

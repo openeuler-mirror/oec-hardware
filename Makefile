@@ -10,11 +10,11 @@
 # Create: 2020-04-01
 
 NAME := oec-hardware
-VERSION_PY := hwcert/version.py
+VERSION_PY := hwcompatible/version.py
 
 .PHONY: all clean install
 
-SUBDIRS := hwcert tests server scripts
+SUBDIRS := hwcompatible tests server scripts
 
 all: $(VERSION_PY)
 	for i in $(SUBDIRS); do $(MAKE) -C $$i DESTDIR=$(DESTDIR); done

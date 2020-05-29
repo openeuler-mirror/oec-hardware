@@ -14,8 +14,8 @@
 
 import os
 
-from hwcert.test import Test
-from hwcert.command import Command
+from hwcompatible.test import Test
+from hwcompatible.command import Command
 
 clock_dir = os.path.dirname(os.path.realpath(__file__))
 

@@ -16,10 +16,10 @@ import os
 import re
 import argparse
 
-from hwcert.test import Test
-from hwcert.command import Command
-from hwcert.document import CertDocument
-from hwcert.env import CertEnv
+from hwcompatible.test import Test
+from hwcompatible.command import Command
+from hwcompatible.document import CertDocument
+from hwcompatible.env import CertEnv
 from network import NetworkTest
 
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     t.server_ip = '199.1.37.20'
     t.speed = 10000   # Mb/s
 
-    from hwcert.device import Device
+    from hwcompatible.device import Device
     properties = {
         'DEVPATH': '/devices/pci0000:d7/0000:d7:02.0/0000:d8:00.0/net/ib0',
         'INTERFACE': 'ib0'

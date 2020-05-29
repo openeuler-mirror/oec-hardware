@@ -17,8 +17,8 @@ import sys
 import time
 import re
 import string
-from hwcert.test import Test
-from hwcert.command import Command, CertCommandError
+from hwcompatible.test import Test
+from hwcompatible.command import Command, CertCommandError
 
 
 class MemoryTest(Test):

@@ -28,10 +28,10 @@ HWCERT_CLASS_LIB := /usr/share/oech/lib
 all: ;
 
 install:
-	rm -rf $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcert
-	mkdir -p $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcert
-	cp -r ./*.py $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcert/
+	rm -rf $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcompatible
+	mkdir -p $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcompatible
+	cp -r ./*.py $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcompatible/
 
 clean:
-	rm -rf $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcert
+	rm -rf $(DESTDIR)$(HWCERT_CLASS_LIB)/hwcompatible
 

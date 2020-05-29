@@ -25,10 +25,10 @@ except ImportError:
     from urllib import urlencode
     from urllib2 import urlopen, Request, HTTPError
 
-from hwcert.test import Test
-from hwcert.command import Command
-from hwcert.document import CertDocument
-from hwcert.env import CertEnv
+from hwcompatible.test import Test
+from hwcompatible.command import Command
+from hwcompatible.document import CertDocument
+from hwcompatible.env import CertEnv
 
 
 class NetworkTest(Test):
@@ -377,7 +377,7 @@ if __name__ == '__main__':
     t = NetworkTest()
     t.server_ip = '9.82.37.2'
 
-    from hwcert.device import Device
+    from hwcompatible.device import Device
     properties = {
         'DEVPATH': '/devices/pci0000:17/0000:17:00.0/0000:18:00.0/0000:19:03.0/0000:1a:00.2/net/eth_main',
         'INTERFACE': 'eth_main'
