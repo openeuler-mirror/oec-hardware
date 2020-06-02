@@ -81,7 +81,7 @@ class CertDocument(Document):
         sysinfo = SysInfo(CertEnv.releasefile)
         self.document["OS"] = sysinfo.product + " " + sysinfo.get_version()
         self.document["kernel"] = sysinfo.kernel
-        self.document["tester"] = CommandUI().prompt("Please provide your Compatibility Test ID:")
+        self.document["ID"] = CommandUI().prompt("Please provide your Compatibility Test ID:")
         self.document["Product URL"] = CommandUI().prompt("Please provide your Product URL:")
         self.document["server"] = CommandUI().prompt("Please provide the Compatibility Test Server (Hostname or Ipaddr):")
 
@@ -98,7 +98,7 @@ class CertDocument(Document):
         return self.document["Product URL"]
 
     def get_certify(self):
-        return self.document["tester"]
+        return self.document["ID"]
 
     def get_kernel(self):
         return self.document["kernel"]
