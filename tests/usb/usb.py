@@ -16,10 +16,10 @@ import os
 import sys
 import time
 
-from hwcert.test import Test
-from hwcert.commandUI import CommandUI
-from hwcert.command import Command, CertCommandError
-from hwcert.device import CertDevice, Device
+from hwcompatible.test import Test
+from hwcompatible.commandUI import CommandUI
+from hwcompatible.command import Command, CertCommandError
+from hwcompatible.device import CertDevice, Device
 
 
 class UsbTest(Test):

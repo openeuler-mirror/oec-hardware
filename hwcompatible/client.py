@@ -67,7 +67,7 @@ class Client:
 
 
 if __name__ == '__main__':
-    c = Client(' Taishan 2280', ' Certid-123523')
+    c = Client(' Taishan 2280', ' Testid-123523')
     import sys
     file = sys.argv[1]
     c.upload(file)

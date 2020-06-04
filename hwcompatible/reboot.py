@@ -36,7 +36,7 @@ class Reboot:
                 test["reboot"] = False
 
         Command("rm -rf %s" % CertEnv.rebootfile).run(ignore_errors=True)
-        Command("systemctl disable eulercert").run(ignore_errors=True)
+        Command("systemctl disable oech").run(ignore_errors=True)
 
     def setup(self):
         if not (self.job and self.testname):
@@ -62,9 +62,9 @@ class Reboot:
 
         try:
             Command("systemctl daemon-reload").run_quiet()
-            Command("systemctl enable eulercert").run_quiet()
+            Command("systemctl enable oech").run_quiet()
         except:
-            print("Error: enable eulercert.service fail.")
+            print("Error: enable oech.service fail.")
             return False
 
         return True

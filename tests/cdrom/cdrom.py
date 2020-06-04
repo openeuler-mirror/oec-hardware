@@ -18,9 +18,9 @@ import time
 import shutil
 import argparse
 
-from hwcert.test import Test
-from hwcert.commandUI import CommandUI
-from hwcert.command import Command, CertCommandError
+from hwcompatible.test import Test
+from hwcompatible.commandUI import CommandUI
+from hwcompatible.command import Command, CertCommandError
 
 
 class CDRomTest(Test):

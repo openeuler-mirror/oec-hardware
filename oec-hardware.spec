@@ -5,7 +5,7 @@
 %undefine __brp_mangle_shebangs
 
 Name:           oec-hardware
-Summary:        openEuler Hardware Certification Test Suite
+Summary:        openEuler Hardware Compatibility Test Suite
 Version:        %{version}
 Release:        %{release}
 Group:          Development/Tools
@@ -22,15 +22,15 @@ Requires:       python3
 
 # server subpackage
 %package server
-Summary:        openEuler Hardware Certification Test Server
+Summary:        openEuler Hardware Compatibility Test Server
 Group:          Development/Tools
 Requires:       python3, python3-devel, nginx, qperf, psmisc
 
 %description
-openEuler Hardware Certification Test Suite
+openEuler Hardware Compatibility Test Suite
 
 %description server
-openEuler Hardware Certification Test Server
+openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
@@ -51,24 +51,24 @@ DESTDIR=$RPM_BUILD_ROOT make install
 
 %files
 %defattr(-,root,root)
-/usr/bin/eulercert
-/usr/share/eulercert/kernelrelease.json
-/usr/share/eulercert/lib/hwcert
-/usr/share/eulercert/lib/tests
-/usr/lib/systemd/system/eulercert.service
-%dir /var/eulercert
-%dir /usr/share/eulercert/lib
-%dir /usr/share/eulercert
+/usr/bin/oech
+/usr/share/oech/kernelrelease.json
+/usr/share/oech/lib/hwcompatible
+/usr/share/oech/lib/tests
+/usr/lib/systemd/system/oech.service
+%dir /var/oech
+%dir /usr/share/oech/lib
+%dir /usr/share/oech
 
 %files server
 %defattr(-,root,root)
-/usr/share/eulercert/lib/server
-/usr/share/eulercert/lib/server/uwsgi.ini
-/usr/share/eulercert/lib/server/uwsgi.conf
-/usr/lib/systemd/system/eulercert-server.service
+/usr/share/oech/lib/server
+/usr/share/oech/lib/server/uwsgi.ini
+/usr/share/oech/lib/server/uwsgi.conf
+/usr/lib/systemd/system/oech-server.service
 
 %postun
-rm -rf /var/lock/eulercert.lock
+rm -rf /var/lock/oech.lock
 
 %changelog
 * Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h1

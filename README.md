@@ -47,8 +47,8 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ```
 .
-├── hwcert   框架主功能
-│   ├── certification.py  框架核心功能
+├── hwcompatible 框架主功能
+│   ├── compatibility.py  框架核心功能
 │   ├── client.py         上传测试结果到服务端
 │   ├── command.py        bash命令执行封装
 │   ├── commandUI.py      命令行交互工具
@@ -61,18 +61,18 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 │   ├── sysinfo.py        收集系统信息
 │   └── test.py           测试套模板
 ├── scripts   工具脚本
-│   ├── eulercert                  框架命令行工具
-│   ├── eulercert-server.service   框架服务端 service 文件，用于启动 web 服务器
-│   ├── eulercert.service          框架客户端 service 文件，用于接管 reboot 用例
-│   └── kernelrelease.json         规范可用于认证的系统和内核版本
+│   ├── oech                  框架命令行工具
+│   ├── oech-server.service   框架服务端 service 文件，用于启动 web 服务器
+│   ├── oech.service          框架客户端 service 文件，用于接管 reboot 用例
+│   └── kernelrelease.json    规范可用于认证的系统和内核版本
 ├── server   服务端
-│   ├── eulercert-server-pre.sh    服务预执行脚本
-│   ├── results/                   测试结果存放目录
-│   ├── server.py                  服务端主程序
-│   ├── static/                    图片存放目录
-│   ├── templates/                 网页模板存放目录
-│   ├── uwsgi.conf                 nginx 服务配置
-│   └── uwsgi.ini                  uwsgi 服务配置
+│   ├── oech-server-pre.sh    服务预执行脚本
+│   ├── results/              测试结果存放目录
+│   ├── server.py             服务端主程序
+│   ├── static/               图片存放目录
+│   ├── templates/            网页模板存放目录
+│   ├── uwsgi.conf            nginx 服务配置
+│   └── uwsgi.ini             uwsgi 服务配置
 └── tests   测试套
 ```
 
@@ -156,7 +156,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 3. 启动服务。本服务默认使用 8080 端口，同时搭配 nginx（默认端口 80）提供 web 服务，请保证这些端口未被占用。
 
    ```
-   systemctl start eulercert-server.service
+   systemctl start oech-server.service
    systemctl start nginx.service
    ```
 
@@ -170,32 +170,32 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ## 验证安装正确性
 
-客户端输入 `eulercert` 命令，可正常运行，则表示安装成功。如果安装有任何问题，可反馈至该邮箱：oecompatibility@openeuler.org 。
+客户端输入 `oech` 命令，可正常运行，则表示安装成功。如果安装有任何问题，可反馈至该邮箱：oecompatibility@openeuler.org 。
 
 # 使用指导
 
 ## 前提条件
 
-* `/usr/share/eulercert/kernelrelease.json`文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
+* `/usr/share/oech/kernelrelease.json`文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
 
 * 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能`ping`通服务端的 ip  ；如果是测试客户端 `InfiniBand`网卡，服务端也必须有一个 `InfiniBand`网卡并提前配好 ip 。
 
 ## 使用步骤
 
-1. 在客户端启动测试框架。在客户端启动 `eulercert`，其中 `ID` 和 `URL` 可以按需填写，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
+1. 在客户端启动测试框架。在客户端启动 `oech`，其中 `ID` 和 `URL` 可以按需填写，`ID` 建议填写gitee上的issue ID，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
 
    ```
-   # eulercert
-   The openEuler Hardware Certification Test Suite
-   Please provide your Certification ID:
+   # oech
+   The openEuler Hardware Compatibility Test Suite
+   Please provide your Compatibility Test ID:
    Please provide your Product URL:
-   Please provide the Certification Server (Hostname or Ipaddr):
+   Please provide the Compatibility Test Server (Hostname or Ipaddr):
    ```
 
 2. 进入测试套选择界面。在用例选择界面，框架将自动扫描硬件并选取当前环境可供测试的测试套，输入 `edit` 可以进入测试套选择界面。
 
    ```
-   These tests are recommended to complete the certification:
+   These tests are recommended to complete the compatibility test:
    No. Run-Now?  Status  Class         Device
    1     yes     NotRun  acpi
    2     yes     NotRun  clock
@@ -243,7 +243,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
    -------------  Summary  -------------
    ethernet-enp3s0                  PASS
    system                           FAIL
-   Log saved to /usr/share/eulercert/logs/eulercert-20200228210118-TnvUJxFb50.tar succ.
+   Log saved to /usr/share/oech/logs/oech-20200228210118-TnvUJxFb50.tar succ.
    Do you want to submit last result? (y|n) y
    Uploading...
    Successfully uploaded result to server X.X.X.X.

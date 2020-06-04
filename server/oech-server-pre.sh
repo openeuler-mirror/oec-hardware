@@ -12,6 +12,6 @@
 # Create: 2020-04-01
 
 dir_nginx=/etc/nginx/default.d
-dir_cert=/usr/share/eulercert/lib/server
+dir_cert=/usr/share/oech/lib/server
 
 test -f ${dir_nginx}/uwsgi.conf || cp -af ${dir_cert}/uwsgi.conf ${dir_nginx}
