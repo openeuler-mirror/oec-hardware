@@ -15,9 +15,9 @@
 from random import randint
 from time import sleep
 
-from hwcert.env import CertEnv
-from hwcert.test import Test
-from hwcert.command import Command
+from hwcompatible.env import CertEnv
+from hwcompatible.test import Test
+from hwcompatible.command import Command
 
 
 class CPU:

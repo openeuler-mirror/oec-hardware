@@ -26,15 +26,15 @@
 all: ;
 
 install:
-	rm -rf $(DESTDIR)/usr/bin/eulercert
+	rm -rf $(DESTDIR)/usr/bin/oech
 	mkdir -p $(DESTDIR)/usr/bin
-	cp eulercert $(DESTDIR)/usr/bin
-	chmod u+x $(DESTDIR)/usr/bin/eulercert
-	mkdir -p $(DESTDIR)/usr/share/eulercert/lib
-	cp kernelrelease.json $(DESTDIR)/usr/share/eulercert/
+	cp oech $(DESTDIR)/usr/bin
+	chmod u+x $(DESTDIR)/usr/bin/oech
+	mkdir -p $(DESTDIR)/usr/share/oech/lib
+	cp kernelrelease.json $(DESTDIR)/usr/share/oech/
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system/
 	cp *.service $(DESTDIR)/usr/lib/systemd/system/
 
 clean:
-	rm -rf $(DESTDIR)/usr/bin/eulercert
+	rm -rf $(DESTDIR)/usr/bin/oech
 

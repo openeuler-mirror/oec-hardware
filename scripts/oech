@@ -17,11 +17,11 @@ import sys
 import fcntl
 import argparse
 
-sys.path.append("/usr/share/eulercert/lib/")
-os.putenv("PYTHONPATH", "/usr/share/eulercert/lib/")
+sys.path.append("/usr/share/oech/lib/")
+os.putenv("PYTHONPATH", "/usr/share/oech/lib/")
 
-from hwcert.certification import EulerCertification
-import hwcert.version
+from hwcompatible.compatibility import EulerCertification
+import hwcompatible.version
 
 
 class CertLock:
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         sys.stderr.write("You need to be root to run this program.\n")
         sys.exit(1)
 
-    parser = argparse.ArgumentParser(description="Run openEuler Hardware Certification Test Suite")
+    parser = argparse.ArgumentParser(description="Run openEuler Hardware Compatibility Test Suite")
     parser.add_argument('--clean', action='store_true',
                         help='Clean saved testsuite.')
     parser.add_argument('--rebootup', action='store_true',
@@ -57,9 +57,9 @@ if __name__ == '__main__':
                         help='Show testsuite version.')
     args = parser.parse_args()
 
-    lock = CertLock("/var/lock/eulercert.lock")
+    lock = CertLock("/var/lock/oech.lock")
     if not lock.acquire():
-        sys.stderr.write("The eulercert may be running already, you should not run it repeated.\n")
+        sys.stderr.write("The oech may be running already, you should not run it repeated.\n")
         sys.exit(1)
 
     cert = EulerCertification()
@@ -72,7 +72,7 @@ if __name__ == '__main__':
             lock.release()
             sys.exit(1)
     elif args.version:
-        print("version: %s" % hwcert.version.version)
+        print("version: %s" % hwcompatible.version.version)
     else:
         if not cert.run():
             lock.release()

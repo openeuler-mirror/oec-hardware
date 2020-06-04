@@ -15,10 +15,10 @@
 import os
 import argparse
 
-from hwcert.test import Test
-from hwcert.command import Command
-from hwcert.env import CertEnv
-from hwcert.document import CertDocument
+from hwcompatible.test import Test
+from hwcompatible.command import Command
+from hwcompatible.env import CertEnv
+from hwcompatible.document import CertDocument
 from rdma import RDMATest
 
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     t = EthernetTest()
     t.server_ip = '199.1.1.2'
 
-    from hwcert.device import Device
+    from hwcompatible.device import Device
     properties = {
         'DEVPATH': '/devices/pci0000:80/0000:80:01.0/0000:81:00.0/net/enp129s0f0',
         'INTERFACE': 'enp129s0f0'

@@ -18,10 +18,10 @@ import time
 import shutil
 import string
 
-from hwcert.test import Test
-from hwcert.command import Command, CertCommandError
-from hwcert.commandUI import CommandUI
-from hwcert.device import CertDevice, Device
+from hwcompatible.test import Test
+from hwcompatible.command import Command, CertCommandError
+from hwcompatible.commandUI import CommandUI
+from hwcompatible.device import CertDevice, Device
 
 
 class DiskTest(Test):

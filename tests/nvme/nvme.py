@@ -15,9 +15,9 @@
 import os
 import sys
 import argparse
-from hwcert.test import Test
-from hwcert.command import Command
-from hwcert.device import CertDevice, Device
+from hwcompatible.test import Test
+from hwcompatible.command import Command
+from hwcompatible.device import CertDevice, Device
 
 
 class NvmeTest(Test):

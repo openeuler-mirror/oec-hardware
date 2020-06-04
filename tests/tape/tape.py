@@ -14,9 +14,9 @@
 
 import argparse
 
-from hwcert.test import Test
-from hwcert.command import Command, CertCommandError
-from hwcert.device import CertDevice, Device
+from hwcompatible.test import Test
+from hwcompatible.command import Command, CertCommandError
+from hwcompatible.device import CertDevice, Device
 
 
 class TapeTest(Test):

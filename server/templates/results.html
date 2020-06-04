@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}EulerCert{% endblock %}
+{% block title %}OECH{% endblock %}
 
 {% block page_content %}
     <div class="page-header">
-        <h3>openEuler Hardware Certification</h3>
+        <h3>openEuler Hardware Compatibility Test</h3>
     </div>
 
     <table class="table table-striped table-hover">
@@ -27,7 +27,7 @@
                     {% endif %}
 
                     {% do use_divider.append(1) %}
-                    <li class="dropdown-header">Cert ID: {{ id }}</li>
+                    <li class="dropdown-header">Test ID: {{ id }}</li>
                     {% for job in job_list %}
                         <li><a href="/results/{{ host }}/{{ id }}/{{ job }}">{{ job }}</a></li>
                     {% endfor %}

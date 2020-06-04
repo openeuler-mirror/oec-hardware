@@ -16,10 +16,10 @@ import os
 import sys
 import time
 import re
-from hwcert.test import Test
-from hwcert.commandUI import CommandUI
-from hwcert.document import ConfigFile
-from hwcert.command import Command, CertCommandError
+from hwcompatible.test import Test
+from hwcompatible.commandUI import CommandUI
+from hwcompatible.document import ConfigFile
+from hwcompatible.command import Command, CertCommandError
 
 
 class KdumpTest(Test):

@@ -13,8 +13,8 @@
 # Create: 2020-04-01
 
 import re
-from hwcert.test import Test
-from hwcert.command import Command, CertCommandError
+from hwcompatible.test import Test
+from hwcompatible.command import Command, CertCommandError
 
 
 class PerfTest(Test):
@@ -22,9 +22,9 @@ class PerfTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["perf"]
-        self.perfRecord = "perf record -a -e cycles -o hwcert-perf.data sleep 5"
-        self.perfEvlist = "perf evlist -i hwcert-perf.data"
-        self.perfReport = "perf report -i hwcert-perf.data --stdio"
+        self.perfRecord = "perf record -a -e cycles -o hwcompatible-perf.data sleep 5"
+        self.perfEvlist = "perf evlist -i hwcompatible-perf.data"
+        self.perfReport = "perf report -i hwcompatible-perf.data --stdio"
 
     def exec_perf(self):
         # record
