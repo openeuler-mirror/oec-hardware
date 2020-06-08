@@ -63,18 +63,3 @@ class EthernetTest(RDMATest):
             if not subtest():
                 return False
         return True
-
-
-if __name__ == '__main__':
-    t = EthernetTest()
-    t.server_ip = '199.1.1.2'
-
-    from hwcompatible.device import Device
-    properties = {
-        'DEVPATH': '/devices/pci0000:80/0000:80:01.0/0000:81:00.0/net/enp129s0f0',
-        'INTERFACE': 'enp129s0f0'
-    }
-    t.device = Device(properties)
-    t.interface = t.device.get_property("INTERFACE")
-    # t.setup()
-    t.test()

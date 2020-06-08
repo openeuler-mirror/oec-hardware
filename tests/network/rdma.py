@@ -210,19 +210,3 @@ class RDMATest(NetworkTest):
             if not subtest():
                 return False
         return True
-
-
-if __name__ == '__main__':
-    t = RDMATest()
-    t.server_ip = '199.1.37.20'
-    t.speed = 10000   # Mb/s
-
-    from hwcompatible.device import Device
-    properties = {
-        'DEVPATH': '/devices/pci0000:d7/0000:d7:02.0/0000:d8:00.0/net/ib0',
-        'INTERFACE': 'ib0'
-    }
-    t.device = Device(properties)
-    t.interface = t.device.get_property("INTERFACE")
-    # t.setup()
-    t.test()

@@ -371,18 +371,3 @@ class NetworkTest(Test):
         self.set_other_interfaces_up()
 
         print("[.] Test finished.")
-
-
-if __name__ == '__main__':
-    t = NetworkTest()
-    t.server_ip = '9.82.37.2'
-
-    from hwcompatible.device import Device
-    properties = {
-        'DEVPATH': '/devices/pci0000:17/0000:17:00.0/0000:18:00.0/0000:19:03.0/0000:1a:00.2/net/eth_main',
-        'INTERFACE': 'eth_main'
-    }
-    t.device = Device(properties)
-    t.interface = t.device.get_property("INTERFACE")
-    # t.setup()
-    t.test()
