@@ -26,7 +26,7 @@ except ImportError:
     from urllib2 import urlopen, Request, HTTPError
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
+from hwcompatible.command import Command, CertCommandError
 from hwcompatible.document import CertDocument
 from hwcompatible.env import CertEnv
 
@@ -34,6 +34,9 @@ from hwcompatible.env import CertEnv
 class NetworkTest(Test):
     def __init__(self):
         Test.__init__(self)
+        self.args = None
+        self.cert = None
+        self.device = None
         self.requirements = ['ethtool', 'iproute', 'psmisc', 'qperf']
         self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
                          self.test_udp_tcp, self.test_http]
@@ -79,7 +82,7 @@ class NetworkTest(Test):
         try:
             c.run()
             return c.output
-        except Exception as e:
+        except CertCommandError as e:
             print(e)
             return []
 
@@ -98,28 +101,28 @@ class NetworkTest(Test):
 
     def get_speed(self):
         c = Command("ethtool %s" % self.interface)
-        pattern = ".*Speed:\s+(?P<speed>\d+)Mb/s"
+        pattern = r".*Speed:\s+(?P<speed>\d+)Mb/s"
         try:
             speed = c.get_str(pattern, 'speed', False)
             return int(speed)
-        except Exception as e:
+        except CertCommandError as e:
             print("[X] No speed found on the interface.")
             return None
 
     def get_interface_ip(self):
         c = Command("ip addr show %s" % self.interface)
-        pattern = ".*inet.? (?P<ip>.+)/.*"
+        pattern = r".*inet.? (?P<ip>.+)/.*"
         try:
             ip = c.get_str(pattern, 'ip', False)
             return ip
-        except Exception as e:
+        except CertCommandError as e:
             print("[X] No available ip on the interface.")
             return None
 
     def test_icmp(self):
         count = 500
         c = Command("ping -q -c %d -i 0 %s" % (count, self.server_ip))
-        pattern =".*, (?P<loss>\d+\.{0,1}\d*)% packet loss.*"
+        pattern = r".*, (?P<loss>\d+\.{0,1}\d*)% packet loss.*"
 
         for _ in range(self.retries):
             try:
@@ -128,7 +131,7 @@ class NetworkTest(Test):
                 c.print_output()
                 if float(loss) == 0:
                     return True
-            except Exception as e:
+            except CertCommandError as e:
                 print(e)
         return False
 
@@ -145,7 +148,7 @@ class NetworkTest(Test):
         try:
             request = Request(url, data=data, headers=headers)
             response = urlopen(request)
-        except Exception as e:
+        except HTTPError as e:
             print(e)
             return False
         print("Status: %u %s" % (response.code, response.msg))
@@ -171,7 +174,7 @@ class NetworkTest(Test):
         cmd = "qperf %s tcp_bw" % self.server_ip
         print(cmd)
         c = Command(cmd)
-        pattern = "\s+bw\s+=\s+(?P<bandwidth>[\.0-9]+ [MG]B/sec)"
+        pattern = r"\s+bw\s+=\s+(?P<bandwidth>[\.0-9]+ [MG]B/sec)"
         for _ in range(self.retries):
             try:
                 bandwidth = c.get_str(pattern, 'bandwidth', False)
@@ -186,7 +189,7 @@ class NetworkTest(Test):
                       (bandwidth, target_bandwidth))
                 if bandwidth > target_bandwidth:
                     return True
-            except Exception as e:
+            except CertCommandError as e:
                 print(e)
         return False
 
@@ -204,7 +207,7 @@ class NetworkTest(Test):
         try:
             with open(self.testfile, 'rb') as f:
                 filetext = base64.b64encode(f.read())
-        except Exception as e:
+        except FileNotFoundError as e:
             print(e)
             return False
 
@@ -221,7 +224,7 @@ class NetworkTest(Test):
         try:
             request = Request(url, data=data, headers=headers)
             response = urlopen(request)
-        except Exception as e:
+        except HTTPError as e:
             print(e)
             return False
         time_stop = time.time()
@@ -240,7 +243,7 @@ class NetworkTest(Test):
         time_start = time.time()
         try:
             response = urlopen(url)
-        except Exception as e:
+        except HTTPError as e:
             print(e)
             return False
         time_stop = time.time()
@@ -252,7 +255,7 @@ class NetworkTest(Test):
         try:
             with open(self.testfile, 'wb') as f:
                 f.write(filetext)
-        except Exception as e:
+        except FileNotFoundError as e:
             print(e)
             return False
 

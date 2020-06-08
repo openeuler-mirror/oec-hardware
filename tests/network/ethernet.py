@@ -16,7 +16,6 @@ import os
 import argparse
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
 from hwcompatible.env import CertEnv
 from hwcompatible.document import CertDocument
 from rdma import RDMATest
@@ -25,6 +24,9 @@ from rdma import RDMATest
 class EthernetTest(RDMATest):
     def __init__(self):
         RDMATest.__init__(self)
+        self.args = None
+        self.cert = None
+        self.device = None
         self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
                          self.test_udp_tcp, self.test_http]
         self.target_bandwidth_percent = 0.75
