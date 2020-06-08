@@ -96,11 +96,11 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ## 前提条件
 
-安装了 EulerOS 2.0 (SP8) 及更高版本，或 openEuler 20.03 (LTS) 及更高版本。
+安装了 openEuler 20.03 (LTS) 或更高版本。
 
 ## 获取安装包
 
-* 安装包从 openEuler 官方网站下载。
+* 安装包从 openEuler 官方网站下载（暂未开放）。
 
 * 校验安装包的完整性。
 
@@ -110,7 +110,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
      cat oec-hardware-*.rpm.sha256sum
      ```
 
-  2. 计算文件的sha256校验值:
+  2. 计算文件的 sha256 校验值:
 
      ```
      sha256sum oec-hardware-*.rpm
@@ -126,28 +126,22 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ### 客户端
 
-1. 部分基础用例依赖 fio 和 memtester 工具，需要提前安装依赖（可以用 tools/ 里的源码包编译）。
+1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，使用 `dnf` 安装客户端 oec-hardware。
 
    ```
-   rpm -ivh fio-3.7-2.aarch64.rpm memtester-4.3.0-13.aarch64.rpm
-   ```
-
-2. 安装 oec-hardware-1.0.0-h1.aarch64.rpm。
-
-   ```
-   dnf install oec-hardware-1.0.0-h1.aarch64.rpm
+   dnf install oec-hardware-XXX.rpm
    ```
 
 
 ### 服务端
 
-1. 安装服务端子包。
+1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，使用 `dnf` 安装服务端 oec-hardware-server。
 
    ```
-   dnf install oec-hardware-server-1.0.0-h1.aarch64.rpm
+   dnf install oec-hardware-server-XXX.rpm
    ```
 
-2. 服务端 web 展示页面部分组件系统本身不提供，需要使用 pip 安装（请自行配置可用 pip 源）。
+2. 服务端 web 展示页面部分组件系统本身不提供，需要使用 `pip3` 安装（请自行配置可用 pip 源）。
 
    ```
    pip3 install Flask Flask-bootstrap uwsgi
@@ -176,13 +170,13 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ## 前提条件
 
-* `/usr/share/oech/kernelrelease.json`文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
+* `/usr/share/oech/kernelrelease.json` 文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
 
-* 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能`ping`通服务端的 ip  ；如果是测试客户端 `InfiniBand`网卡，服务端也必须有一个 `InfiniBand`网卡并提前配好 ip 。
+* 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能 `ping` 通服务端的 ip；如果客户端是对 InfiniBand 网卡进行测试，服务端也必须有一个 InfiniBand 网卡并提前配好 ip 。
 
 ## 使用步骤
 
-1. 在客户端启动测试框架。在客户端启动 `oech`，其中 `ID` 和 `URL` 可以按需填写，`ID` 建议填写gitee上的issue ID，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
+1. 在客户端启动测试框架。在客户端启动 `oech`，其中 `ID` 和 `URL` 可以按需填写，`ID` 建议填写 gitee 上的 issue ID，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
 
    ```
    # oech
@@ -283,10 +277,10 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 1. **system**
 
+   - 检查本工具是否被修改。
    - 检查 OS 版本和 kernel 版本是否匹配。
-   - 检查安装的认证工具是否有被修改。
-   - 检查内核是否被感染。
-   - 检查 selinux 是否正常。
+   - 检查内核是否被修改/感染。
+   - 检查 selinux 是否正常启用。
    - 使用 dmidecode 工具读取硬件信息。
 
 2. **cpufreq**
