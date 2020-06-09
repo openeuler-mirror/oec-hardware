@@ -207,7 +207,7 @@ class NetworkTest(Test):
         try:
             with open(self.testfile, 'rb') as f:
                 filetext = base64.b64encode(f.read())
-        except FileNotFoundError as e:
+        except IOError as e:
             print(e)
             return False
 
@@ -255,7 +255,7 @@ class NetworkTest(Test):
         try:
             with open(self.testfile, 'wb') as f:
                 f.write(filetext)
-        except FileNotFoundError as e:
+        except IOError as e:
             print(e)
             return False
 
