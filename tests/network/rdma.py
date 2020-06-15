@@ -17,7 +17,7 @@ import re
 import argparse
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
+from hwcompatible.command import Command, CertCommandError
 from hwcompatible.document import CertDocument
 from hwcompatible.env import CertEnv
 from network import NetworkTest
@@ -26,11 +26,13 @@ from network import NetworkTest
 class RDMATest(NetworkTest):
     def __init__(self):
         NetworkTest.__init__(self)
+        self.args = None
+        self.cert = None
+        self.device = None
         self.requirements = ['ethtool', 'iproute', 'psmisc', 'qperf',
                              'perftest', 'opensm', 'infiniband-diags',
                              'librdmacm-utils', 'libibverbs-utils']
         self.subtests = [self.test_ibstatus, self.test_icmp, self.test_rdma]
-        self.device = None
         self.interface = None
         self.ib_device = None
         self.ib_port = None
@@ -53,7 +55,7 @@ class RDMATest(NetworkTest):
         c = Command(cmd)
         try:
             self.ib_device = c.read()
-        except Exception as e:
+        except CertCommandError as e:
             print(e)
             return False
 
@@ -62,7 +64,7 @@ class RDMATest(NetworkTest):
         c = Command(cmd)
         try:
             self.ib_port = int(c.read(), 16) + 1
-        except Exception as e:
+        except CertCommandError as e:
             print(e)
             return False
 
@@ -78,14 +80,14 @@ class RDMATest(NetworkTest):
                 if ib_str not in info:
                     continue
                 print(info)
-                self.gid = re.search("default gid:\s+(.*)", info).group(1)
-                self.base_lid = re.search("base lid:\s+(.*)", info).group(1)
-                self.sm_lid = re.search("sm lid:\s+(.*)", info).group(1)
-                self.state = re.search("state:\s+(.*)", info).group(1)
-                self.phys_state = re.search("phys state:\s+(.*)", info).group(1)
-                self.link_layer = re.search("link_layer:\s+(.*)", info).group(1)
-                self.speed = int(re.search("rate:\s+(\d*)", info).group(1)) * 1024
-        except Exception as e:
+                self.gid = re.search(r"default gid:\s+(.*)", info).group(1)
+                self.base_lid = re.search(r"base lid:\s+(.*)", info).group(1)
+                self.sm_lid = re.search(r"sm lid:\s+(.*)", info).group(1)
+                self.state = re.search(r"state:\s+(.*)", info).group(1)
+                self.phys_state = re.search(r"phys state:\s+(.*)", info).group(1)
+                self.link_layer = re.search(r"link_layer:\s+(.*)", info).group(1)
+                self.speed = int(re.search(r"rate:\s+(\d*)", info).group(1)) * 1024
+        except CertCommandError as e:
             print(e)
             return False
 
@@ -126,7 +128,7 @@ class RDMATest(NetworkTest):
         cmd = "%s %s -d %s -i %s" % (cmd, self.server_ip, self.ib_device, self.ib_port)
         print(cmd)
         c = Command(cmd)
-        pattern = "\s+(\d+)\s+(\d+)\s+([\.\d]+)\s+(?P<avg_bw>[\.\d]+)\s+([\.\d]+)"
+        pattern = r"\s+(\d+)\s+(\d+)\s+([\.\d]+)\s+(?P<avg_bw>[\.\d]+)\s+([\.\d]+)"
         try:
             avg_bw = c.get_str(pattern, 'avg_bw', False)   ## MB/sec
             avg_bw = float(avg_bw) * 8
@@ -135,7 +137,7 @@ class RDMATest(NetworkTest):
             print("Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
                   (avg_bw, tgt_bw))
             return avg_bw > tgt_bw
-        except Exception as e:
+        except CertCommandError as e:
             print(e)
             self.call_remote_server(cmd, 'stop')
             return False
@@ -210,19 +212,3 @@ class RDMATest(NetworkTest):
             if not subtest():
                 return False
         return True
-
-
-if __name__ == '__main__':
-    t = RDMATest()
-    t.server_ip = '199.1.37.20'
-    t.speed = 10000   # Mb/s
-
-    from hwcompatible.device import Device
-    properties = {
-        'DEVPATH': '/devices/pci0000:d7/0000:d7:02.0/0000:d8:00.0/net/ib0',
-        'INTERFACE': 'ib0'
-    }
-    t.device = Device(properties)
-    t.interface = t.device.get_property("INTERFACE")
-    # t.setup()
-    t.test()

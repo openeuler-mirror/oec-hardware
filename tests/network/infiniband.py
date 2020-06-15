@@ -47,18 +47,3 @@ class InfiniBandTest(RDMATest):
         print("[.] The subnet manager lid is %s" % self.sm_lid)
 
         return True
-
-if __name__ == '__main__':
-    t = InfiniBandTest()
-    t.server_ip = '199.1.37.20'
-    t.speed = 10000   # Mb/s
-
-    from hwcompatible.device import Device
-    properties = {
-        'DEVPATH': '/devices/pci0000:d7/0000:d7:02.0/0000:d8:00.0/net/ib0',
-        'INTERFACE': 'ib0'
-    }
-    t.device = Device(properties)
-    t.interface = t.device.get_property("INTERFACE")
-    # t.setup()
-    t.test()

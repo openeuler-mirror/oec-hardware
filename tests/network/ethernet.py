@@ -16,7 +16,6 @@ import os
 import argparse
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
 from hwcompatible.env import CertEnv
 from hwcompatible.document import CertDocument
 from rdma import RDMATest
@@ -25,6 +24,9 @@ from rdma import RDMATest
 class EthernetTest(RDMATest):
     def __init__(self):
         RDMATest.__init__(self)
+        self.args = None
+        self.cert = None
+        self.device = None
         self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
                          self.test_udp_tcp, self.test_http]
         self.target_bandwidth_percent = 0.75
@@ -63,18 +65,3 @@ class EthernetTest(RDMATest):
             if not subtest():
                 return False
         return True
-
-
-if __name__ == '__main__':
-    t = EthernetTest()
-    t.server_ip = '199.1.1.2'
-
-    from hwcompatible.device import Device
-    properties = {
-        'DEVPATH': '/devices/pci0000:80/0000:80:01.0/0000:81:00.0/net/enp129s0f0',
-        'INTERFACE': 'enp129s0f0'
-    }
-    t.device = Device(properties)
-    t.interface = t.device.get_property("INTERFACE")
-    # t.setup()
-    t.test()
