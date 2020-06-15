@@ -196,7 +196,7 @@ def upload_job():
     try:
         with open(tar_job, 'wb') as f:
             f.write(base64.b64decode(filetext))
-        os.system("tar xf %s -C %s" % (tar_job, os.path.dirname(dir_job)))
+        os.system("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
     except Exception as e:
         print(e)
         abort(400)
