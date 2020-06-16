@@ -26,7 +26,7 @@ class AcpiTest(Test):
         try:
             Command("acpidump").echo()
             return True
-        except Exception as e:
+        except OSError as e:
             print(e)
             return False
 

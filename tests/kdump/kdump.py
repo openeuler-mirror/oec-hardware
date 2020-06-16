@@ -79,12 +79,12 @@ class KdumpTest(Test):
         if config.get_parameter("path"):
             self.vmcore_path = config.get_parameter("path")
 
-        dir_pattern = re.compile("(?P<ipaddr>[0-9]+\.[0-9]+\.[0-9]+)-(?P<date>[0-9]+(-|\.)[0-9]+(-|\.)[0-9]+)-(?P<time>[0-9]+:[0-9]+:[0-9]+)")
+        dir_pattern = re.compile(r"(?P<ipaddr>[0-9]+\.[0-9]+\.[0-9]+)-(?P<date>[0-9]+(-|\.)[0-9]+(-|\.)[0-9]+)-(?P<time>[0-9]+:[0-9]+:[0-9]+)")
         vmcore_dirs = list()
         for (root, dirs, files) in os.walk(self.vmcore_path):
-            for dir in dirs:
-                if dir_pattern.search(dir):
-                    vmcore_dirs.append(dir)
+            for eve_dir in dirs:
+                if dir_pattern.search(eve_dir):
+                    vmcore_dirs.append(eve_dir)
         vmcore_dirs.sort()
         vmcore_file = os.path.join(self.vmcore_path, vmcore_dirs[-1], "vmcore")
 

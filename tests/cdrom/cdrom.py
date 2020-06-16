@@ -72,26 +72,26 @@ class CDRomTest(Test):
         bd_types = ["BD_RE",  "BD_R", "BD"]
         dvd_types = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD"]
         cd_types = ["CD_RW", "CD_R", "CD"]
-        for type in bd_types:
-            if device.get_property("ID_CDROM_" + type) == "1":
-                return type
-        for type in dvd_types:
-            if device.get_property("ID_CDROM_" + type) == "1":
-                return type
-        for type in cd_types:
-            if device.get_property("ID_CDROM_" + type) == "1":
-                return type
+        for bd_type in bd_types:
+            if device.get_property("ID_CDROM_" + bd_type) == "1":
+                return bd_type
+        for bd_type in dvd_types:
+            if device.get_ertpropy("ID_CDROM_" + bd_type) == "1":
+                return bd_type
+        for bd_type in cd_types:
+            if device.get_property("ID_CDROM_" + bd_type) == "1":
+                return bd_type
 
         print("Can not find pr)oper test-type for %s." % device.get_name())
         return None
 
-    def get_mode(self, type):
-        if not type:
+    def get_mode(self, device_type):
+        if not device_type:
             return
 
-        if "RW" in type or "RE" in type:
+        if "RW" in device_type or "RE" in device_type:
             self.method = "rw_test"
-        elif "_R" in type:
+        elif "_R" in device_type:
             self.method = "write_test"
         else:
             self.method = "read_test"
@@ -216,14 +216,14 @@ class CDRomTest(Test):
             Command("eject %s" % device).run()
             print("tray ejected.")
             sys.stdout.flush()
-        except:
+        except CertCommandError as e:
             pass
 
         try:
             Command("eject -t %s" % device).run()
             print("tray auto-closed.\n")
             sys.stdout.flush()
-        except:
+        except CertCommandError as e:
             print("Could not auto-close the tray, please close the tray manually.")
             self.ui.prompt_confirm("Done well?")
 

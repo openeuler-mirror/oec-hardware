@@ -13,7 +13,7 @@
 # Create: 2020-04-01
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
+from hwcompatible.command import Command, CertCommandError
 
 
 class IpmiTest(Test):
@@ -26,7 +26,7 @@ class IpmiTest(Test):
         try:
             Command("systemctl start ipmi").run()
             Command("systemctl status ipmi.service").get_str(regex="Active: active", single_line=False)
-        except:
+        except CertCommandError as e:
             print("ipmi service cant't be started")
             return False
         return True
@@ -36,7 +36,7 @@ class IpmiTest(Test):
         for cmd in cmd_list:
             try:
                 Command(cmd).echo()
-            except:
+            except CertCommandError as e:
                 print("%s return error." % cmd)
                 return False
         return True

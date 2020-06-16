@@ -94,14 +94,14 @@ class Command:
     def print_output(self):
         if self.output:
             for line in self.output:
-                sys.stdout.write( line )
+                sys.stdout.write(line)
                 sys.stdout.write("\n")
             sys.stdout.flush()
 
     def print_errors(self):
         if self.errors:
             for line in self.errors:
-                sys.stderr.write( line )
+                sys.stderr.write(line)
                 sys.stderr.write("\n")
             sys.stderr.flush()
 

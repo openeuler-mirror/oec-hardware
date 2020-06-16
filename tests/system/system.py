@@ -148,7 +148,7 @@ class SystemTest(Test):
         return return_code
 
     def get_modules(self, sign):
-        pattern = re.compile("^(?P<mod_name>\w+)[\s\S]+\((?P<signs>[A-Z]+)\)")
+        pattern = re.compile(r"^(?P<mod_name>\w+)[\s\S]+\((?P<signs>[A-Z]+)\)")
         proc_modules = open("/proc/modules")
         modules = list()
         for line in proc_modules.readlines():

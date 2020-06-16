@@ -32,7 +32,7 @@ class DiskTest(Test):
         self.filesystems = ["ext4"]
         self.ui = CommandUI()
 
-    def setup(self, args=None):
+    def setup(self):
         try:
             print("Disk Info:")
             Command("fdisk -l").echo(ignore_errors=True)
