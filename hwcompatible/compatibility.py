@@ -146,6 +146,7 @@ class EulerCertification():
     def submit(self):
         packages = list()
         pattern = re.compile("^oech-[0-9]{14}-[0-9a-zA-Z]{10}.tar$")
+        files = []
         for (root, dirs, files) in os.walk(CertEnv.datadirectory):
             break
         packages.extend(filter(pattern.search, files))
@@ -268,8 +269,8 @@ class EulerCertification():
             if device.get_property("ID_CDROM") == "1":
                 types = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD", \
                          "BD_RE",  "BD_R", "BD", "CD_RW", "CD_R", "CD"]
-                for type in types:
-                    if device.get_property("ID_CDROM_" + type) == "1":
+                for dev_type in types:
+                    if device.get_property("ID_CDROM_" + dev_type) == "1":
                         try:
                             sort_devices["cdrom"].extend([device])
                         except KeyError:

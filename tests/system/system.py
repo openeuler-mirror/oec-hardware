@@ -161,10 +161,10 @@ class SystemTest(Test):
 
     def abi_check(self, module):
         whitelist_path = [("/lib/modules/kabi-current/kabi_whitelist_" + self.sysinfo.arch),
-                              ("/lib/modules/kabi/kabi_whitelist_" + self.sysinfo.arch),
-                              ("/usr/src/kernels/%s/kabi_whitelist" % self.sysinfo.kernel)
-                            ]
-
+                          ("/lib/modules/kabi/kabi_whitelist_" + self.sysinfo.arch),
+                          ("/usr/src/kernels/%s/kabi_whitelist" % self.sysinfo.kernel)
+                          ]
+        whitelist = ""
         for whitelist in whitelist_path:
             if os.path.exists(whitelist):
                 break

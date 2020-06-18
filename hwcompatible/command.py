@@ -124,7 +124,7 @@ class Command:
         if self.pipe:
             return self.pipe.poll()
 
-    def _get_str(self, regex=None, regex_group=None, single_line=True, return_list=False, ignore_errors=False):
+    def _get_str(self, regex=None, regex_group=None, single_line=True, return_list=False):
         self.regex = regex
         self.single_line = single_line
         self.regex_group = regex_group

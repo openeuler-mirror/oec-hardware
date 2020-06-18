@@ -58,6 +58,7 @@ class MemoryTest(Test):
         self.free_memory = 0
         self.system_memory = 0
         self.swap_memory = 0
+        self.hugepage_size = 0
         self.hugepage_total = 0
         self.hugepage_free = 0
         while True:

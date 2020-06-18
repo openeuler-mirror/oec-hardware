@@ -71,7 +71,7 @@ def get_results():
     return render_template('results.html', results=results)
 
 
-@app.route('/results/<host>/<id>/<job>')
+@app.route('/results/<host>/<oec_id>/<job>')
 def get_job(host, oec_id, job):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_info = os.path.join(dir_job, 'compatibility.json')
@@ -86,7 +86,7 @@ def get_job(host, oec_id, job):
     return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
 
-@app.route('/results/<host>/<id>/<job>/devices/<interface>')
+@app.route('/results/<host>/<oec_id>/<job>/devices/<interface>')
 def get_device(host, oec_id, job, interface):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_results = os.path.join(dir_job, 'factory.json')
@@ -103,7 +103,7 @@ def get_device(host, oec_id, job, interface):
         abort(404)
 
 
-@app.route('/results/<host>/<id>/<job>/devices')
+@app.route('/results/<host>/<oec_id>/<job>/devices')
 def get_devices(host, oec_id, job):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_devices = os.path.join(dir_job, 'device.json')
@@ -115,7 +115,7 @@ def get_devices(host, oec_id, job):
     return render_template('devices.html', devices=devices)
 
 
-@app.route('/results/<host>/<id>/<job>/attachment')
+@app.route('/results/<host>/<oec_id>/<job>/attachment')
 def get_attachment(host, oec_id, job):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     attachment = dir_job + '.tar.gz'
@@ -124,7 +124,7 @@ def get_attachment(host, oec_id, job):
     return send_from_directory(filedir, filename, as_attachment=True)
 
 
-@app.route('/results/<host>/<id>/<job>/logs/<name>')
+@app.route('/results/<host>/<oec_id>/<job>/logs/<name>')
 def get_log(host, oec_id, job, name):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     logpath = os.path.join(dir_job, name + '.log')
@@ -138,7 +138,7 @@ def get_log(host, oec_id, job, name):
     return render_template('log.html', name=name, log=log)
 
 
-@app.route('/results/<host>/<id>/<job>/submit')
+@app.route('/results/<host>/<oec_id>/<job>/submit')
 def submit(host, oec_id, job):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
