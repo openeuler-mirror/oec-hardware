@@ -40,17 +40,17 @@ dir_files = os.path.join(dir_server, 'files')
 
 
 @app.errorhandler(400)
-def bad_request():
+def bad_request(e):
     return render_template('error.html', error='400 - Bad Request'), 400
 
 
 @app.errorhandler(404)
-def page_not_found():
+def page_not_found(e):
     return render_template('error.html', error='404 - Page Not Found'), 404
 
 
 @app.errorhandler(500)
-def internal_server_error():
+def internal_server_error(e):
     return render_template('error.html', error='500 - Internal Server Error'), 500
 
 
@@ -65,15 +65,15 @@ def get_results():
     for host in next(os.walk(dir_results))[1]:
         dir_host = os.path.join(dir_results, host)
         results[host] = {}
-        for cert_id in next(os.walk(dir_host))[1]:
-            dir_id = os.path.join(dir_host, cert_id)
+        for oec_id in next(os.walk(dir_host))[1]:
+            dir_id = os.path.join(dir_host, oec_id)
             results[host][id] = next(os.walk(dir_id))[1]
     return render_template('results.html', results=results)
 
 
 @app.route('/results/<host>/<id>/<job>')
-def get_job(host, cert_id, job):
-    dir_job = os.path.join(dir_results, host, cert_id, job)
+def get_job(host, oec_id, job):
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     json_info = os.path.join(dir_job, 'compatibility.json')
     json_results = os.path.join(dir_job, 'factory.json')
     try:
@@ -83,12 +83,12 @@ def get_job(host, cert_id, job):
             results = json.load(f)
     except (IOError, json.decoder.JSONDecodeError) as e:
         abort(404)
-    return render_template('job.html', host=host, id=cert_id, job=job, info=info, results=results)
+    return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
 
 @app.route('/results/<host>/<id>/<job>/devices/<interface>')
-def get_device(host, cert_id, job, interface):
-    dir_job = os.path.join(dir_results, host, cert_id, job)
+def get_device(host, oec_id, job, interface):
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     json_results = os.path.join(dir_job, 'factory.json')
     try:
         with open(json_results, 'r') as f:
@@ -104,8 +104,8 @@ def get_device(host, cert_id, job, interface):
 
 
 @app.route('/results/<host>/<id>/<job>/devices')
-def get_devices(host, cert_id, job):
-    dir_job = os.path.join(dir_results, host, cert_id, job)
+def get_devices(host, oec_id, job):
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     json_devices = os.path.join(dir_job, 'device.json')
     try:
         with open(json_devices, 'r') as f:
@@ -116,8 +116,8 @@ def get_devices(host, cert_id, job):
 
 
 @app.route('/results/<host>/<id>/<job>/attachment')
-def get_attachment(host, cert_id, job):
-    dir_job = os.path.join(dir_results, host, cert_id, job)
+def get_attachment(host, oec_id, job):
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     attachment = dir_job + '.tar.gz'
     filedir = os.path.dirname(attachment)
     filename = os.path.basename(attachment)
@@ -125,8 +125,8 @@ def get_attachment(host, cert_id, job):
 
 
 @app.route('/results/<host>/<id>/<job>/logs/<name>')
-def get_log(host, cert_id, job, name):
-    dir_job = os.path.join(dir_results, host, cert_id, job)
+def get_log(host, oec_id, job, name):
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     logpath = os.path.join(dir_job, name + '.log')
     if not os.path.exists(logpath):
         logpath = os.path.join(dir_job, 'job.log')
@@ -139,8 +139,8 @@ def get_log(host, cert_id, job, name):
 
 
 @app.route('/results/<host>/<id>/<job>/submit')
-def submit(host, cert_id, job):
-    dir_job = os.path.join(dir_results, host, cert_id, job)
+def submit(host, oec_id, job):
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
     json_cert = os.path.join(dir_job, 'compatibility.json')
     try:
@@ -181,14 +181,14 @@ def submit(host, cert_id, job):
 @app.route('/api/job/upload', methods=['GET', 'POST'])
 def upload_job():
     host = request.values.get('host', '').strip().replace(' ', '-')
-    cert_id = request.values.get('id', '').strip().replace(' ', '-')
+    oec_id = request.values.get('id', '').strip().replace(' ', '-')
     job = request.values.get('job', '').strip().replace(' ', '-')
     filetext = request.values.get('filetext', '')
-    if not(all([host, cert_id, job, filetext])):
-        return render_template('upload.html', host=host, id=cert_id, job=job,
+    if not(all([host, oec_id, job, filetext])):
+        return render_template('upload.html', host=host, id=id, job=job,
                                 filetext=filetext, ret='Failed'), 400
 
-    dir_job = os.path.join(dir_results, host, cert_id, job)
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
     if not os.path.exists(dir_job):
         os.makedirs(dir_job)
@@ -199,7 +199,7 @@ def upload_job():
     except (IOError, OSError) as e:
         print(e)
         abort(400)
-    return render_template('upload.html', host=host, id=cert_id, job=job,
+    return render_template('upload.html', host=host, id=oec_id, job=job,
                            filetext=filetext, ret='Successful')
 
 

@@ -104,10 +104,10 @@ class EulerCertification():
             factory_doc = FactoryDocument(CertEnv.factoryfile)
             self.test_factory = factory_doc.get_factory()
 
-        cert_id = self.certification.get_certify()
+        oec_id = self.certification.get_certify()
         hardware_info = self.certification.get_hardware()
-        self.client = Client(hardware_info, cert_id)
-        print("    Compatibility Test ID: ".ljust(30) + cert_id)
+        self.client = Client(hardware_info, oec_id)
+        print("    Compatibility Test ID: ".ljust(30) + oec_id)
         print("    Hardware Info: ".ljust(30) + hardware_info)
         print("    Product URL: ".ljust(30) + self.certification.get_url())
         print("    OS Info: ".ljust(30) + self.certification.get_os())
@@ -168,9 +168,9 @@ class EulerCertification():
     def upload(self, path, server):
         print("Uploading...")
         if not self.client:
-            cert_id = self.certification.get_certify()
+            oec_id = self.certification.get_certify()
             hardware_info = self.certification.get_hardware()
-            self.client = Client(hardware_info, cert_id)
+            self.client = Client(hardware_info, oec_id)
         return self.client.upload(path, server)
 
     def get_tests(self, devices):
