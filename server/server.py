@@ -73,13 +73,13 @@ def get_results():
 
 @app.route('/results/<host>/<oec_id>/<job>')
 def get_job(host, oec_id, job):
-    '''
+    """
     获取job信息
     :param host:
     :param oec_id:
     :param job:
     :return:
-    '''
+    """
 
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_info = os.path.join(dir_job, 'compatibility.json')
@@ -96,14 +96,14 @@ def get_job(host, oec_id, job):
 
 @app.route('/results/<host>/<oec_id>/<job>/devices/<interface>')
 def get_device(host, oec_id, job, interface):
-    '''
+    """
     获取硬件设备信息
     :param host:
     :param oec_id:
     :param job:
     :param interface:
     :return:
-    '''
+    """
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_results = os.path.join(dir_job, 'factory.json')
     try:
@@ -121,13 +121,13 @@ def get_device(host, oec_id, job, interface):
 
 @app.route('/results/<host>/<oec_id>/<job>/devices')
 def get_devices(host, oec_id, job):
-    '''
+    """
     获取设备信息
     :param host:
     :param oec_id:
     :param job:
     :return:
-    '''
+    """
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_devices = os.path.join(dir_job, 'device.json')
     try:
@@ -140,13 +140,13 @@ def get_devices(host, oec_id, job):
 
 @app.route('/results/<host>/<oec_id>/<job>/attachment')
 def get_attachment(host, oec_id, job):
-    '''
+    """
     发送结果附件
     :param host:
     :param oec_id:
     :param job:
     :return:
-    '''
+    """
     dir_job = os.path.join(dir_results, host, oec_id, job)
     attachment = dir_job + '.tar.gz'
     filedir = os.path.dirname(attachment)
@@ -156,14 +156,14 @@ def get_attachment(host, oec_id, job):
 
 @app.route('/results/<host>/<oec_id>/<job>/logs/<name>')
 def get_log(host, oec_id, job, name):
-    '''
+    """
     获取日志
     :param host:
     :param oec_id:
     :param job:
     :param name:
     :return:
-    '''
+    """
     dir_job = os.path.join(dir_results, host, oec_id, job)
     logpath = os.path.join(dir_job, name + '.log')
     if not os.path.exists(logpath):
@@ -178,13 +178,13 @@ def get_log(host, oec_id, job, name):
 
 @app.route('/results/<host>/<oec_id>/<job>/submit')
 def submit(host, oec_id, job):
-    '''
+    """
     提交测试结果
     :param host:
     :param oec_id:
     :param job:
     :return:
-    '''
+    """
     dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
     json_cert = os.path.join(dir_job, 'compatibility.json')
@@ -225,10 +225,10 @@ def submit(host, oec_id, job):
 
 @app.route('/api/job/upload', methods=['GET', 'POST'])
 def upload_job():
-    '''
+    """
     上传job
     :return:
-    '''
+    """
     host = request.values.get('host', '').strip().replace(' ', '-')
     oec_id = request.values.get('id', '').strip().replace(' ', '-')
     job = request.values.get('job', '').strip().replace(' ', '-')

@@ -175,11 +175,11 @@ class EulerCertification():
         return self.client.upload(path, server)
 
     def get_tests(self, devices):
-        '''
+        """
         获取测试项
         :param devices:
         :return:
-        '''
+        """
         nodevice = ["cpufreq", "memory", "clock", "profiler", "system", "stress", "kdump", "perf", "acpi", "watchdog"]
         ethernet = ["ethernet"]
         infiniband = ["infiniband"]
@@ -327,6 +327,10 @@ class EulerCertification():
                 continue
 
     def show_tests(self):
+        """
+        显示测试用例
+        :return:
+        """
         print("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10) \
               + "Status".ljust(8) + "Class".ljust(14) + "Device\033[0m")
         num = 0
@@ -358,6 +362,10 @@ class EulerCertification():
                       + name.ljust(14) + "%s" % device)
 
     def choose_tests(self):
+        """
+        选择测试用例
+        :return:
+        """
         for test in self.test_factory:
             if test["status"] == "PASS":
                 test["run"] = False
