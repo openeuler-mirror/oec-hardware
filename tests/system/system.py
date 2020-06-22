@@ -31,6 +31,8 @@ class SystemTest(Test):
         Test.__init__(self)
         self.pri = 1
         self.sysinfo = SysInfo(CertEnv.releasefile)
+        self.args = None
+        self.logdir = None
 
     def setup(self, args=None):
         self.args = args or argparse.Namespace()

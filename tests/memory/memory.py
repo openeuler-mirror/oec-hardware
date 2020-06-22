@@ -30,6 +30,7 @@ class MemoryTest(Test):
         self.system_memory = 0
         self.swap_memory = 0
         self.huge_pages = 1000
+        self.hugepage_size = 0
         self.hugepage_total = 0
         self.hugepage_free = 0
         self.retry_list = list()

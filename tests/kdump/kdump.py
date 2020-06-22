@@ -35,7 +35,7 @@ class KdumpTest(Test):
 
     def test(self):
         try:
-            Command("cat /proc/cmdline").get_str("crashkernel=[^\ ]*")
+            Command("cat /proc/cmdline").get_str(r"crashkernel=[^\ ]*")
         except:
             print("Error: no crashkernel found.")
             return False

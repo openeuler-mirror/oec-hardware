@@ -205,6 +205,7 @@ class CertCommandError(Exception):
     def __init__(self, command, message):
         self.message = message
         self.command = command
+        self.__message = None
 
     def __str__(self):
         return "\"%s\" %s" % (self.command.command, self.message)

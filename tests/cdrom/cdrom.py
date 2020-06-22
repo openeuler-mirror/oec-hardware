@@ -31,6 +31,7 @@ class CDRomTest(Test):
         self.method = None
         self.device = None
         self.type = None
+        self.args = None
         self.ui = CommandUI()
         self.test_dir = "/usr/share/doc"
 

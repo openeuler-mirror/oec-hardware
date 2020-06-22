@@ -186,7 +186,7 @@ def upload_job():
     filetext = request.values.get('filetext', '')
     if not(all([host, oec_id, job, filetext])):
         return render_template('upload.html', host=host, id=id, job=job,
-                                filetext=filetext, ret='Failed'), 400
+                               filetext=filetext, ret='Failed'), 400
 
     dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
