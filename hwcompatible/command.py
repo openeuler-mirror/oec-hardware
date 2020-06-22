@@ -42,7 +42,7 @@ class Command:
                                          stdin=subprocess.PIPE,
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE,
-                                         encoding='utf8')
+                                         encoding='utf-8')
         (output, errors) = self.pipe.communicate()
         if output:
             #Strip new line character/s if any from the end of output string
@@ -64,7 +64,7 @@ class Command:
                                          stdin=subprocess.PIPE,
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE,
-                                         encoding='utf8')
+                                         encoding='utf-8')
 
     def run(self, ignore_errors=False):
         """ run the command
@@ -92,6 +92,10 @@ class Command:
         return
 
     def print_output(self):
+        '''
+        结果显示
+        :return:
+        '''
         if self.output:
             for line in self.output:
                 sys.stdout.write(line)
@@ -99,6 +103,10 @@ class Command:
             sys.stdout.flush()
 
     def print_errors(self):
+        '''
+        页面显示错误信息
+        :return:
+        '''
         if self.errors:
             for line in self.errors:
                 sys.stderr.write(line)
@@ -106,14 +114,26 @@ class Command:
             sys.stderr.flush()
 
     def pid(self):
+        '''
+        获取管道pid值
+        :return:
+        '''
         if self.pipe:
             return self.pipe.pid
 
     def readline(self):
+        '''
+        按行读取输出信息
+        :return
+        '''
         if self.pipe:
             return self.pipe.stdout.readline()
 
     def read(self):
+        '''
+        执行命令，并读取结果
+        :return:
+        '''
         self.pipe = subprocess.Popen(self.command, shell=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT)

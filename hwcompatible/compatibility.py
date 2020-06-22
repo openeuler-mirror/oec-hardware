@@ -127,7 +127,7 @@ class EulerCertification():
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
         dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "-" + job.job_id
-        pack_name = dir_name +".tar"
+        pack_name = dir_name + ".tar"
         cmd = Command("tar -cf %s %s" % (pack_name, dir_name))
         try:
             os.rename(job.job_id, dir_name)
@@ -175,6 +175,11 @@ class EulerCertification():
         return self.client.upload(path, server)
 
     def get_tests(self, devices):
+        '''
+        获取测试项
+        :param devices:
+        :return:
+        '''
         nodevice = ["cpufreq", "memory", "clock", "profiler", "system", "stress", "kdump", "perf", "acpi", "watchdog"]
         ethernet = ["ethernet"]
         infiniband = ["infiniband"]
@@ -215,9 +220,9 @@ class EulerCertification():
         empty_device = Device()
         for device in devices:
             if device.get_property("SUBSYSTEM") == "usb" and \
-               device.get_property("ID_VENDOR_FROM_DATABASE") == "Linux Foundation" and \
-               ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or \
-               "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
+                    device.get_property("ID_VENDOR_FROM_DATABASE") == "Linux Foundation" and \
+                    ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or \
+                     "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
                 sort_devices["usb"] = [empty_device]
                 continue
             if device.get_property("PCI_CLASS") == "30000" or device.get_property("PCI_CLASS") == "38000":
@@ -230,7 +235,7 @@ class EulerCertification():
                     sort_devices["tape"] = [device]
                 continue
             if (device.get_property("DEVTYPE") == "disk" and not device.get_property("ID_TYPE")) or \
-               device.get_property("ID_TYPE") == "disk":
+                    device.get_property("ID_TYPE") == "disk":
                 if "nvme" in device.get_property("DEVPATH"):
                     sort_devices["disk"] = [empty_device]
                     try:
@@ -268,7 +273,7 @@ class EulerCertification():
                 continue
             if device.get_property("ID_CDROM") == "1":
                 types = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD", \
-                         "BD_RE",  "BD_R", "BD", "CD_RW", "CD_R", "CD"]
+                         "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD"]
                 for dev_type in types:
                     if device.get_property("ID_CDROM_" + dev_type) == "1":
                         try:
@@ -318,11 +323,11 @@ class EulerCertification():
                 continue
 
             if num > 0 and num <= len(self.test_factory):
-                self.test_factory[num-1]["run"] = not self.test_factory[num-1]["run"]
+                self.test_factory[num - 1]["run"] = not self.test_factory[num - 1]["run"]
                 continue
 
     def show_tests(self):
-        print("\033[1;35m" + "No.".ljust(4)  + "Run-Now?".ljust(10) \
+        print("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10) \
               + "Status".ljust(8) + "Class".ljust(14) + "Device\033[0m")
         num = 0
         for test in self.test_factory:
@@ -340,17 +345,17 @@ class EulerCertification():
 
             num = num + 1
             if status == "PASS":
-                print("%-6d"%num + run.ljust(8) + "\033[0;32mPASS    \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;32mPASS    \033[0m" \
+                      + name.ljust(14) + "%s" % device)
             elif status == "FAIL":
-                print("%-6d"%num + run.ljust(8) + "\033[0;31mFAIL    \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;31mFAIL    \033[0m" \
+                      + name.ljust(14) + "%s" % device)
             elif status == "Force":
-                print("%-6d"%num + run.ljust(8) + "\033[0;33mForce   \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;33mForce   \033[0m" \
+                      + name.ljust(14) + "%s" % device)
             else:
-                print("%-6d"%num + run.ljust(8) + "\033[0;34mNotRun  \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;34mNotRun  \033[0m" \
+                      + name.ljust(14) + "%s" % device)
 
     def choose_tests(self):
         for test in self.test_factory:
