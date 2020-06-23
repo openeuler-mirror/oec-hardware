@@ -286,7 +286,7 @@ class EulerCertification():
         try:
             Command("dmidecode").get_str("IPMI Device Information", single_line=False)
             sort_devices["ipmi"] = [empty_device]
-        except:
+        except OSError as e:
             pass
 
         return sort_devices
@@ -319,7 +319,7 @@ class EulerCertification():
 
             try:
                 num = int(reply)
-            except:
+            except ValueError:
                 continue
 
             if num > 0 and num <= len(self.test_factory):

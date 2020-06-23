@@ -50,7 +50,7 @@ class DiskTest(Test):
             Command("cat /proc/mdstat").echo(ignore_errors=True)
             sys.stdout.flush()
             print("\n")
-        except Exception as e:
+        except CertCommandError as e:
             print("Warning: could not get disk info")
             print(e)
 
@@ -195,7 +195,7 @@ class DiskTest(Test):
                 if not self.do_fio(path, size, opts):
                     return_code = False
                     break
-            except Exception as e:
+            except CertCommandError as e:
                 print(e)
                 return_code = False
                 break

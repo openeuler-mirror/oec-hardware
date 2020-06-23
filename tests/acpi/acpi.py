@@ -13,7 +13,7 @@
 # Create: 2020-04-01
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
+from hwcompatible.command import Command, CertCommandError
 
 
 class AcpiTest(Test):
@@ -26,7 +26,7 @@ class AcpiTest(Test):
         try:
             Command("acpidump").echo()
             return True
-        except OSError as e:
+        except CertCommandError as e:
             print(e)
             return False
 
