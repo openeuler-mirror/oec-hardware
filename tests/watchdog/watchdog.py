@@ -59,6 +59,7 @@ class WatchDogTest(Test):
             print("")
             return False
 
-    def startup(self):
+    @staticmethod
+    def startup():
         print("Recover from watchdog.")
         return True

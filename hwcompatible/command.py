@@ -92,28 +92,48 @@ class Command:
         return
 
     def print_output(self):
+        """
+        结果显示
+        :return:
+        """
         if self.output:
             for line in self.output:
-                sys.stdout.write( line )
+                sys.stdout.write(line)
                 sys.stdout.write("\n")
             sys.stdout.flush()
 
     def print_errors(self):
+        """
+        页面显示错误信息
+        :return:
+        """
         if self.errors:
             for line in self.errors:
-                sys.stderr.write( line )
+                sys.stderr.write(line)
                 sys.stderr.write("\n")
             sys.stderr.flush()
 
     def pid(self):
+        """
+        获取管道pid值
+        :return:
+        """
         if self.pipe:
             return self.pipe.pid
 
     def readline(self):
+        """
+        按行读取输出信息
+        :return
+        """
         if self.pipe:
             return self.pipe.stdout.readline()
 
     def read(self):
+        """
+        执行命令，并读取结果
+        :return:
+        """
         self.pipe = subprocess.Popen(self.command, shell=True,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT)
@@ -124,7 +144,7 @@ class Command:
         if self.pipe:
             return self.pipe.poll()
 
-    def _get_str(self, regex=None, regex_group=None, single_line=True, return_list=False, ignore_errors=False):
+    def _get_str(self, regex=None, regex_group=None, single_line=True, return_list=False):
         self.regex = regex
         self.single_line = single_line
         self.regex_group = regex_group
@@ -203,8 +223,10 @@ class Command:
 
 class CertCommandError(Exception):
     def __init__(self, command, message):
+        super(CertCommandError, self).__init__()
         self.message = message
         self.command = command
+        self.__message = None
 
     def __str__(self):
         return "\"%s\" %s" % (self.command.command, self.message)

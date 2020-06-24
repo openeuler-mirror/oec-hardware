@@ -31,6 +31,8 @@ class SystemTest(Test):
         Test.__init__(self)
         self.pri = 1
         self.sysinfo = SysInfo(CertEnv.releasefile)
+        self.args = None
+        self.logdir = None
 
     def setup(self, args=None):
         self.args = args or argparse.Namespace()
@@ -56,7 +58,8 @@ class SystemTest(Test):
 
         return return_code
 
-    def check_certrpm(self):
+    @staticmethod
+    def check_certrpm():
         print("\nChecking installed cert package...")
         return_code = True
         for cert_package in ["oec-hardware"]:
@@ -66,7 +69,7 @@ class SystemTest(Test):
                 sys.stdout.flush()
                 if rpm_verify.output and len(rpm_verify.output) > 0:
                     return_code = False
-            except:
+            except OSError as err:
                 print("Error: files in %s have been tampered." % cert_package)
                 return_code = False
         return return_code
@@ -92,7 +95,7 @@ class SystemTest(Test):
             if kernel_dict.document[os_version] != self.sysinfo.kernel_version:
                 print("Error: kernel %s check GA status fail." % self.sysinfo.kernel_version)
                 return_code = False
-        except:
+        except KeyError:
             print("Error: %s is not supported." % os_version)
             return_code = False
 
@@ -127,7 +130,7 @@ class SystemTest(Test):
                     print("")
 
             tainted_file.close()
-        except Exception as e:
+        except (IOError, ValueError) as e:
             print(e)
             print("Error: could not determine if kernel is tainted.")
             return_code = False
@@ -140,15 +143,16 @@ class SystemTest(Test):
         try:
             params = Command("cat /proc/cmdline").get_str()
             print("Boot Parameters: %s" % params)
-        except Exception as e:
+        except OSError as e:
             print(e)
             print("Error: could not determine boot parameters.")
             return_code = False
 
         return return_code
 
-    def get_modules(self, sign):
-        pattern = re.compile("^(?P<mod_name>\w+)[\s\S]+\((?P<signs>[A-Z]+)\)")
+    @staticmethod
+    def get_modules(sign):
+        pattern = re.compile(r"^(?P<mod_name>\w+)[\s\S]+\((?P<signs>[A-Z]+)\)")
         proc_modules = open("/proc/modules")
         modules = list()
         for line in proc_modules.readlines():
@@ -161,10 +165,10 @@ class SystemTest(Test):
 
     def abi_check(self, module):
         whitelist_path = [("/lib/modules/kabi-current/kabi_whitelist_" + self.sysinfo.arch),
-                              ("/lib/modules/kabi/kabi_whitelist_" + self.sysinfo.arch),
-                              ("/usr/src/kernels/%s/kabi_whitelist" % self.sysinfo.kernel)
-                            ]
-
+                          ("/lib/modules/kabi/kabi_whitelist_" + self.sysinfo.arch),
+                          ("/usr/src/kernels/%s/kabi_whitelist" % self.sysinfo.kernel)
+                          ]
+        whitelist = ""
         for whitelist in whitelist_path:
             if os.path.exists(whitelist):
                 break
@@ -206,7 +210,8 @@ class SystemTest(Test):
         print("")
         return True
 
-    def read_abi_whitelist(self, whitelist):
+    @staticmethod
+    def read_abi_whitelist(whitelist):
         symbols = list()
         if not os.path.isfile(whitelist):
             print("Error: Cannot read whitelist file")
@@ -253,17 +258,19 @@ class SystemTest(Test):
         nm.close()
         return self.readSymbols(symbols)
 
-    def get_modulefile(self, module):
+    @staticmethod
+    def get_modulefile(module):
         try:
             modulefile = Command("modinfo -F filename %s" % module).get_str()
             if os.path.islink(modulefile):
                 modulefile = os.readlink(modulefile)
             return modulefile
-        except:
+        except OSError:
             print("Error: could no find module file for %s:" % module)
             return None
 
-    def check_selinux(self):
+    @staticmethod
+    def check_selinux():
         print("\nChecking selinux...")
         status = os.system("/usr/sbin/sestatus | grep 'SELinux status' | grep -qw 'enabled'")
         mode = os.system("/usr/sbin/sestatus | grep 'Current mode' | grep -qw 'enforcing'")

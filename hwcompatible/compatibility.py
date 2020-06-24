@@ -29,7 +29,7 @@ from .reboot import Reboot
 from .client import Client
 
 
-class EulerCertification():
+class EulerCertification:
 
     def __init__(self):
         self.certification = None
@@ -50,12 +50,12 @@ class EulerCertification():
                 print("All cases are passed, test end.")
                 return True
 
-            devices = certdevice.get_devices()
-            self.devices = DeviceDocument(CertEnv.devicefile, devices)
+            oec_devices = certdevice.get_devices()
+            self.devices = DeviceDocument(CertEnv.devicefile, oec_devices)
             self.devices.save()
 
             # test_factory format example: [{"name":"nvme", "device":device, "run":True, "status":"PASS", "reboot":False}]
-            test_factory = self.get_tests(devices)
+            test_factory = self.get_tests(oec_devices)
             self.update_factory(test_factory)
             if not self.choose_tests():
                 return True
@@ -76,7 +76,7 @@ class EulerCertification():
             reboot.clean()
             self.save(job)
             return True
-        except Exception as e:
+        except (IOError, OSError, TypeError) as e:
             print(e)
             return False
 
@@ -86,7 +86,7 @@ class EulerCertification():
                 Command("rm -rf %s" % CertEnv.certificationfile).run()
                 Command("rm -rf %s" % CertEnv.factoryfile).run()
                 Command("rm -rf %s" % CertEnv.devicefile).run()
-            except Exception as e:
+            except CertCommandError as e:
                 print(e)
                 return False
         return True
@@ -104,10 +104,10 @@ class EulerCertification():
             factory_doc = FactoryDocument(CertEnv.factoryfile)
             self.test_factory = factory_doc.get_factory()
 
-        cert_id = self.certification.get_certify()
+        oec_id = self.certification.get_certify()
         hardware_info = self.certification.get_hardware()
-        self.client = Client(hardware_info, cert_id)
-        print("    Compatibility Test ID: ".ljust(30) + cert_id)
+        self.client = Client(hardware_info, oec_id)
+        print("    Compatibility Test ID: ".ljust(30) + oec_id)
         print("    Hardware Info: ".ljust(30) + hardware_info)
         print("    Product URL: ".ljust(30) + self.certification.get_url())
         print("    OS Info: ".ljust(30) + self.certification.get_os())
@@ -127,7 +127,7 @@ class EulerCertification():
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
         dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "-" + job.job_id
-        pack_name = dir_name +".tar"
+        pack_name = dir_name + ".tar"
         cmd = Command("tar -cf %s %s" % (pack_name, dir_name))
         try:
             os.rename(job.job_id, dir_name)
@@ -146,6 +146,7 @@ class EulerCertification():
     def submit(self):
         packages = list()
         pattern = re.compile("^oech-[0-9]{14}-[0-9a-zA-Z]{10}.tar$")
+        files = []
         for (root, dirs, files) in os.walk(CertEnv.datadirectory):
             break
         packages.extend(filter(pattern.search, files))
@@ -168,12 +169,17 @@ class EulerCertification():
     def upload(self, path, server):
         print("Uploading...")
         if not self.client:
-            cert_id = self.certification.get_certify()
+            oec_id = self.certification.get_certify()
             hardware_info = self.certification.get_hardware()
-            self.client = Client(hardware_info, cert_id)
+            self.client = Client(hardware_info, oec_id)
         return self.client.upload(path, server)
 
     def get_tests(self, devices):
+        """
+        get test items
+        :param devices:
+        :return:
+        """
         nodevice = ["cpufreq", "memory", "clock", "profiler", "system", "stress", "kdump", "perf", "acpi", "watchdog"]
         ethernet = ["ethernet"]
         infiniband = ["infiniband"]
@@ -214,9 +220,9 @@ class EulerCertification():
         empty_device = Device()
         for device in devices:
             if device.get_property("SUBSYSTEM") == "usb" and \
-               device.get_property("ID_VENDOR_FROM_DATABASE") == "Linux Foundation" and \
-               ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or \
-               "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
+                    device.get_property("ID_VENDOR_FROM_DATABASE") == "Linux Foundation" and \
+                    ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or
+                     "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
                 sort_devices["usb"] = [empty_device]
                 continue
             if device.get_property("PCI_CLASS") == "30000" or device.get_property("PCI_CLASS") == "38000":
@@ -229,7 +235,7 @@ class EulerCertification():
                     sort_devices["tape"] = [device]
                 continue
             if (device.get_property("DEVTYPE") == "disk" and not device.get_property("ID_TYPE")) or \
-               device.get_property("ID_TYPE") == "disk":
+                    device.get_property("ID_TYPE") == "disk":
                 if "nvme" in device.get_property("DEVPATH"):
                     sort_devices["disk"] = [empty_device]
                     try:
@@ -267,9 +273,9 @@ class EulerCertification():
                 continue
             if device.get_property("ID_CDROM") == "1":
                 types = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD", \
-                         "BD_RE",  "BD_R", "BD", "CD_RW", "CD_R", "CD"]
-                for type in types:
-                    if device.get_property("ID_CDROM_" + type) == "1":
+                         "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD"]
+                for dev_type in types:
+                    if device.get_property("ID_CDROM_" + dev_type) == "1":
                         try:
                             sort_devices["cdrom"].extend([device])
                         except KeyError:
@@ -280,7 +286,7 @@ class EulerCertification():
         try:
             Command("dmidecode").get_str("IPMI Device Information", single_line=False)
             sort_devices["ipmi"] = [empty_device]
-        except:
+        except OSError as e:
             pass
 
         return sort_devices
@@ -313,15 +319,19 @@ class EulerCertification():
 
             try:
                 num = int(reply)
-            except:
+            except ValueError:
                 continue
 
             if num > 0 and num <= len(self.test_factory):
-                self.test_factory[num-1]["run"] = not self.test_factory[num-1]["run"]
+                self.test_factory[num - 1]["run"] = not self.test_factory[num - 1]["run"]
                 continue
 
     def show_tests(self):
-        print("\033[1;35m" + "No.".ljust(4)  + "Run-Now?".ljust(10) \
+        """
+        show test items
+        :return:
+        """
+        print("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10) \
               + "Status".ljust(8) + "Class".ljust(14) + "Device\033[0m")
         num = 0
         for test in self.test_factory:
@@ -334,24 +344,28 @@ class EulerCertification():
             status = test["status"]
             device = test["device"].get_name()
             run = "no"
-            if test["run"] == True:
+            if test["run"] is True:
                 run = "yes"
 
             num = num + 1
             if status == "PASS":
-                print("%-6d"%num + run.ljust(8) + "\033[0;32mPASS    \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;32mPASS    \033[0m" \
+                      + name.ljust(14) + "%s" % device)
             elif status == "FAIL":
-                print("%-6d"%num + run.ljust(8) + "\033[0;31mFAIL    \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;31mFAIL    \033[0m" \
+                      + name.ljust(14) + "%s" % device)
             elif status == "Force":
-                print("%-6d"%num + run.ljust(8) + "\033[0;33mForce   \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;33mForce   \033[0m" \
+                      + name.ljust(14) + "%s" % device)
             else:
-                print("%-6d"%num + run.ljust(8) + "\033[0;34mNotRun  \033[0m" \
-                      + name.ljust(14) + "%s"%device)
+                print("%-6d" % num + run.ljust(8) + "\033[0;34mNotRun  \033[0m" \
+                      + name.ljust(14) + "%s" % device)
 
     def choose_tests(self):
+        """
+        选择测试用例
+        :return:
+        """
         for test in self.test_factory:
             if test["status"] == "PASS":
                 test["run"] = False
@@ -396,7 +410,8 @@ class EulerCertification():
         self.test_factory.sort(key=lambda k: k["name"])
         FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
 
-    def search_factory(self, obj_test, test_factory):
+    @staticmethod
+    def search_factory(obj_test, test_factory):
         for test in test_factory:
             if test["name"] == obj_test["name"] and test["device"].path == obj_test["device"].path:
                 return True

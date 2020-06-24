@@ -21,7 +21,8 @@ clock_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class ClockTest(Test):
-    def test(self):
+    @staticmethod
+    def test():
         return 0 == os.system("cd %s; ./clock" % clock_dir)
 
 

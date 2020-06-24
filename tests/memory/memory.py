@@ -30,12 +30,13 @@ class MemoryTest(Test):
         self.system_memory = 0
         self.swap_memory = 0
         self.huge_pages = 1000
+        self.hugepage_size = 0
         self.hugepage_total = 0
         self.hugepage_free = 0
         self.retry_list = list()
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
 
-    def setup(self, args=None):
+    def setup(self):
         self.get_memory()
 
     def test(self):
@@ -58,6 +59,7 @@ class MemoryTest(Test):
         self.free_memory = 0
         self.system_memory = 0
         self.swap_memory = 0
+        self.hugepage_size = 0
         self.hugepage_total = 0
         self.hugepage_free = 0
         while True:
@@ -160,7 +162,8 @@ class MemoryTest(Test):
             return False
         return True
 
-    def hot_plug_verify(self):
+    @staticmethod
+    def hot_plug_verify():
         kernel = Command("uname -r").read()
         config_file = "/boot/config-" + kernel
         if not os.path.exists(config_file):
@@ -196,21 +199,23 @@ class MemoryTest(Test):
         if total_mem_3 != total_mem_1:
             return False
 
-    def online_memory(self, memory_path):
+    @staticmethod
+    def online_memory(memory_path):
         try:
             Command("echo 1 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("online")
             return True
-        except:
+        except CertCommandError as e:
             print("Error: fail to online %s." % memory_path)
             return False
 
-    def offline_memory(self, memory_path):
+    @staticmethod
+    def offline_memory(memory_path):
         try:
             Command("echo 0 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("offline")
             return True
-        except:
+        except CertCommandError as e:
             print("Error: fail to online %s." % memory_path)
             return False
 
@@ -242,7 +247,7 @@ class MemoryTest(Test):
                 Command("cat %s/removable" % memory_path).get_str("1")
                 print("%s is removable, start testing..." % os.path.basename(memory_path))
                 test_flag = 1
-            except:
+            except CertCommandError as e:
                 continue
             if not self.hotplug_memory_test(memory_path):
                 print("%s hotplug test fail." % os.path.basename(memory_path))

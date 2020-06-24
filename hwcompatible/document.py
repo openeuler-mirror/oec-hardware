@@ -21,8 +21,8 @@ from .sysinfo import SysInfo
 from .env import CertEnv
 
 
-class Document():
-    def __init__(self, filename, document=dict()):
+class Document:
+    def __init__(self, filename, document={}):
         self.document = document
         self.filename = filename
 
@@ -34,7 +34,7 @@ class Document():
             with open(self.filename, "w+") as save_f:
                 json.dump(self.document, save_f, indent=4)
                 save_f.close()
-        except Exception as e:
+        except (IOError, ValueError) as e:
             print("Error: doc save fail.")
             print(e)
             return False
@@ -46,11 +46,13 @@ class Document():
                 self.document = json.load(load_f)
                 load_f.close()
                 return True
-        except:
+        except (IOError, json.decoder.JSONDecodeError):
             return False
 
+
 class CertDocument(Document):
-    def __init__(self, filename, document=dict()):
+    def __init__(self, filename, document={}):
+        super(CertDocument, self).__init__()
         self.document = dict()
         self.filename = filename
         if not document:
@@ -74,7 +76,7 @@ class CertDocument(Document):
                             self.document[key] = value
                 else:
                     break
-        except Exception as e:
+        except OSError as e:
             print("Error: get hardware info fail.")
             print(e)
 
@@ -103,8 +105,10 @@ class CertDocument(Document):
     def get_kernel(self):
         return self.document["kernel"]
 
+
 class DeviceDocument(Document):
-    def __init__(self, filename, devices=list()):
+    def __init__(self, filename, devices=[]):
+        super(DeviceDocument, self).__init__()
         self.filename = filename
         self.document = list()
         if not devices:
@@ -113,8 +117,10 @@ class DeviceDocument(Document):
             for device in devices:
                 self.document.append(device.properties)
 
+
 class FactoryDocument(Document):
-    def __init__(self, filename, factory=list()):
+    def __init__(self, filename, factory=[]):
+        super(FactoryDocument, self).__init__()
         self.document = list()
         self.filename = filename
         if not factory:
@@ -143,21 +149,22 @@ class FactoryDocument(Document):
 
 class ConfigFile:
     def __init__(self, filename):
+        super(ConfigFile, self).__init__()
         self.filename = filename
         self.parameters = dict()
         self.config = list()
         self.load()
 
     def load(self):
-        file = open(self.filename)
-        self.config = file.readlines()
+        fp = open(self.filename)
+        self.config = fp.readlines()
         for line in self.config:
             if line.strip() and line.strip()[0] == "#":
                 continue
             words = line.strip().split(" ")
             if words[0]:
                 self.parameters[words[0]] = " ".join(words[1:])
-        file.close()
+        fp.close()
 
     def get_parameter(self, name):
         if self.parameters:
@@ -199,7 +206,7 @@ class ConfigFile:
             self.save()
 
     def save(self):
-        file = open(self.filename, "w")
+        fp = open(self.filename, "w")
         for line in self.config:
-            file.write(line)
-        file.close()
+            fp.write(line)
+        fp.close()

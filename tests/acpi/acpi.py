@@ -13,7 +13,7 @@
 # Create: 2020-04-01
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
+from hwcompatible.command import Command, CertCommandError
 
 
 class AcpiTest(Test):
@@ -22,11 +22,12 @@ class AcpiTest(Test):
         Test.__init__(self)
         self.requirements = ["acpica-tools"]
 
-    def test(self):
+    @staticmethod
+    def test():
         try:
             Command("acpidump").echo()
             return True
-        except Exception as e:
+        except CertCommandError as e:
             print(e)
             return False
 

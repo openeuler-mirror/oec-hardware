@@ -50,6 +50,7 @@ class Log(object):
         self.log.close()
         self.log = None
 
+
 class Logger():
     def __init__(self, logname, logdir, out, err):
         self.log = Log(logname, logdir)

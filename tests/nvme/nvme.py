@@ -16,7 +16,7 @@ import os
 import sys
 import argparse
 from hwcompatible.test import Test
-from hwcompatible.command import Command
+from hwcompatible.command import Command, CertCommandError
 from hwcompatible.device import CertDevice, Device
 
 
@@ -69,12 +69,13 @@ class NvmeTest(Test):
 
             Command("nvme list").echo(ignore_errors=True)
             return True
-        except Exception as e:
+        except CertCommandError as e:
             print("Error: nvme cmd fail.")
             print(e)
             return False
 
-    def in_use(self, disk):
+    @staticmethod
+    def in_use(disk):
         os.system("swapon -a 2>/dev/null")
         swap_file = open("/proc/swaps", "r")
         swap = swap_file.read()

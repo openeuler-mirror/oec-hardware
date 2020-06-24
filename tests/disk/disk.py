@@ -32,7 +32,7 @@ class DiskTest(Test):
         self.filesystems = ["ext4"]
         self.ui = CommandUI()
 
-    def setup(self, args=None):
+    def setup(self):
         try:
             print("Disk Info:")
             Command("fdisk -l").echo(ignore_errors=True)
@@ -50,7 +50,7 @@ class DiskTest(Test):
             Command("cat /proc/mdstat").echo(ignore_errors=True)
             sys.stdout.flush()
             print("\n")
-        except Exception as e:
+        except CertCommandError as e:
             print("Warning: could not get disk info")
             print(e)
 
@@ -195,7 +195,7 @@ class DiskTest(Test):
                 if not self.do_fio(path, size, opts):
                     return_code = False
                     break
-            except Exception as e:
+            except CertCommandError as e:
                 print(e)
                 return_code = False
                 break
@@ -205,7 +205,8 @@ class DiskTest(Test):
         print("#############")
         return return_code
 
-    def do_fio(self, filepath, size, option):
+    @staticmethod
+    def do_fio(filepath, size, option):
         if os.path.isdir(filepath):
             file_opt = "-directory=%s" % filepath
         else:

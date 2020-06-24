@@ -65,15 +65,23 @@ def get_results():
     for host in next(os.walk(dir_results))[1]:
         dir_host = os.path.join(dir_results, host)
         results[host] = {}
-        for id in next(os.walk(dir_host))[1]:
-            dir_id = os.path.join(dir_host, id)
+        for oec_id in next(os.walk(dir_host))[1]:
+            dir_id = os.path.join(dir_host, oec_id)
             results[host][id] = next(os.walk(dir_id))[1]
     return render_template('results.html', results=results)
 
 
-@app.route('/results/<host>/<id>/<job>')
-def get_job(host, id, job):
-    dir_job = os.path.join(dir_results, host, id, job)
+@app.route('/results/<host>/<oec_id>/<job>')
+def get_job(host, oec_id, job):
+    """
+    获取job信息
+    :param host:
+    :param oec_id:
+    :param job:
+    :return:
+    """
+
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     json_info = os.path.join(dir_job, 'compatibility.json')
     json_results = os.path.join(dir_job, 'factory.json')
     try:
@@ -81,19 +89,27 @@ def get_job(host, id, job):
             info = json.load(f)
         with open(json_results, 'r') as f:
             results = json.load(f)
-    except Exception as e:
+    except (IOError, json.decoder.JSONDecodeError) as e:
         abort(404)
-    return render_template('job.html', host=host, id=id, job=job, info=info, results=results)
+    return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
 
-@app.route('/results/<host>/<id>/<job>/devices/<interface>')
-def get_device(host, id, job, interface):
-    dir_job = os.path.join(dir_results, host, id, job)
+@app.route('/results/<host>/<oec_id>/<job>/devices/<interface>')
+def get_device(host, oec_id, job, interface):
+    """
+    获取硬件设备信息
+    :param host:
+    :param oec_id:
+    :param job:
+    :param interface:
+    :return:
+    """
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     json_results = os.path.join(dir_job, 'factory.json')
     try:
         with open(json_results, 'r') as f:
             results = json.load(f)
-    except Exception as e:
+    except (IOError, json.decoder.JSONDecodeError) as e:
         abort(404)
     for testcase in results:
         device = testcase.get('device')
@@ -103,44 +119,73 @@ def get_device(host, id, job, interface):
         abort(404)
 
 
-@app.route('/results/<host>/<id>/<job>/devices')
-def get_devices(host, id, job):
-    dir_job = os.path.join(dir_results, host, id, job)
+@app.route('/results/<host>/<oec_id>/<job>/devices')
+def get_devices(host, oec_id, job):
+    """
+    获取设备信息
+    :param host:
+    :param oec_id:
+    :param job:
+    :return:
+    """
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     json_devices = os.path.join(dir_job, 'device.json')
     try:
         with open(json_devices, 'r') as f:
             devices = json.load(f)
-    except Exception as e:
+    except (IOError, json.decoder.JSONDecodeError) as e:
         abort(404)
     return render_template('devices.html', devices=devices)
 
 
-@app.route('/results/<host>/<id>/<job>/attachment')
-def get_attachment(host, id, job):
-    dir_job = os.path.join(dir_results, host, id, job)
+@app.route('/results/<host>/<oec_id>/<job>/attachment')
+def get_attachment(host, oec_id, job):
+    """
+    发送结果附件
+    :param host:
+    :param oec_id:
+    :param job:
+    :return:
+    """
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     attachment = dir_job + '.tar.gz'
     filedir = os.path.dirname(attachment)
     filename = os.path.basename(attachment)
     return send_from_directory(filedir, filename, as_attachment=True)
 
 
-@app.route('/results/<host>/<id>/<job>/logs/<name>')
-def get_log(host, id, job, name):
-    dir_job = os.path.join(dir_results, host, id, job)
+@app.route('/results/<host>/<oec_id>/<job>/logs/<name>')
+def get_log(host, oec_id, job, name):
+    """
+    获取日志
+    :param host:
+    :param oec_id:
+    :param job:
+    :param name:
+    :return:
+    """
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     logpath = os.path.join(dir_job, name + '.log')
     if not os.path.exists(logpath):
         logpath = os.path.join(dir_job, 'job.log')
     try:
         with open(logpath, 'r') as f:
             log = f.read().split('\n')
-    except Exception as e:
+    except IOError as e:
         abort(404)
     return render_template('log.html', name=name, log=log)
 
 
-@app.route('/results/<host>/<id>/<job>/submit')
-def submit(host, id, job):
-    dir_job = os.path.join(dir_results, host, id, job)
+@app.route('/results/<host>/<oec_id>/<job>/submit')
+def submit(host, oec_id, job):
+    """
+    提交测试结果
+    :param host:
+    :param oec_id:
+    :param job:
+    :return:
+    """
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
     json_cert = os.path.join(dir_job, 'compatibility.json')
     try:
@@ -148,7 +193,7 @@ def submit(host, id, job):
             cert = json.load(f)
         with open(tar_job, 'rb') as f:
             attachment = base64.b64encode(f.read())
-    except Exception as e:
+    except (IOError, json.decoder.JSONDecodeError) as e:
         print(e)
         abort(500)
 
@@ -180,16 +225,19 @@ def submit(host, id, job):
 
 @app.route('/api/job/upload', methods=['GET', 'POST'])
 def upload_job():
+    """
+    上传job
+    :return:
+    """
     host = request.values.get('host', '').strip().replace(' ', '-')
-    id = request.values.get('id', '').strip().replace(' ', '-')
+    oec_id = request.values.get('id', '').strip().replace(' ', '-')
     job = request.values.get('job', '').strip().replace(' ', '-')
     filetext = request.values.get('filetext', '')
-
-    if not(all([host, id, job, filetext])):
+    if not(all([host, oec_id, job, filetext])):
         return render_template('upload.html', host=host, id=id, job=job,
-                                filetext=filetext, ret='Failed'), 400
+                               filetext=filetext, ret='Failed'), 400
 
-    dir_job = os.path.join(dir_results, host, id, job)
+    dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
     if not os.path.exists(dir_job):
         os.makedirs(dir_job)
@@ -197,10 +245,10 @@ def upload_job():
         with open(tar_job, 'wb') as f:
             f.write(base64.b64decode(filetext))
         os.system("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
-    except Exception as e:
+    except (IOError, OSError) as e:
         print(e)
         abort(400)
-    return render_template('upload.html', host=host, id=id, job=job,
+    return render_template('upload.html', host=host, id=oec_id, job=job,
                            filetext=filetext, ret='Successful')
 
 
@@ -229,7 +277,7 @@ def upload_file():
     try:
         with open(filepath, 'wb') as f:
             f.write(base64.b64decode(filetext))
-    except Exception as e:
+    except IOError as e:
         print(e)
         abort(400)
     return render_template('upload.html', filename=filename, filetext=filetext,
@@ -303,7 +351,7 @@ def __get_ib_dev_port(ib_server_ip):
         ibport = str(ibport)
 
         return ibdev, ibport
-    except Exception as e:
+    except (OSError, IndexError, ValueError) as e:
         print(e)
         return None, None
 

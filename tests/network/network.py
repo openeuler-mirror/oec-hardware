@@ -48,7 +48,8 @@ class NetworkTest(Test):
         self.target_bandwidth_percent = 0.8
         self.testfile = 'testfile'
 
-    def ifdown(self, interface):
+    @staticmethod
+    def ifdown(interface):
         os.system("ip link set down %s" % interface)
         for _ in range(5):
             if 0 == os.system("ip link show %s | grep 'state DOWN'" % interface):
@@ -56,7 +57,8 @@ class NetworkTest(Test):
             time.sleep(1)
         return False
 
-    def ifup(self, interface):
+    @staticmethod
+    def ifup(interface):
         os.system("ip link set up %s" % interface)
         for _ in range(5):
             time.sleep(1)
@@ -64,7 +66,8 @@ class NetworkTest(Test):
                 return True
         return False
 
-    def get_other_interfaces(self):
+    @staticmethod
+    def get_other_interfaces():
         ignore_interfaces = ['^lo', '^v', 'docker', 'br', 'bond']
         cmd = "ip route show default | awk '/default/ {print $5}'"
         c = Command(cmd)
