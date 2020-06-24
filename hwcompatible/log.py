@@ -37,32 +37,55 @@ class Log(object):
         self.log = open(logfile, "a+")
 
     def write(self, message):
+        """
+        Write messages to terminals and files
+        :param message:
+        :return:
+        """
         self.terminal.write(message)
         if self.log:
             self.log.write(message)
 
     def flush(self):
+        """
+        Refresh buffer to terminal and file
+        :return:
+        """
         self.terminal.flush()
         if self.log:
             self.log.flush()
 
     def close(self):
+        """
+        close logfile
+        :return:
+        """
         self.log.close()
         self.log = None
 
 
-class Logger():
+class Logger(object):
+    """
+     Output results to file
+    """
     def __init__(self, logname, logdir, out, err):
         self.log = Log(logname, logdir)
         self.stdout = out
         self.stderr = err
 
     def start(self):
+        """
+        Start outputing to file
+        :return:
+        """
         sys.stdout = self.log
         sys.stderr = sys.stdout
 
     def stop(self):
+        """
+        Stop outputing to file
+        :return:
+        """
         sys.stdout.close()
         sys.stdout = self.stdout
         sys.stderr = self.stderr
-

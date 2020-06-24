@@ -23,7 +23,6 @@ from .env import CertEnv
 from .command import Command, CertCommandError
 from .commandUI import CommandUI
 from .log import Logger
-from .document import FactoryDocument
 from .reboot import Reboot
 
 
@@ -51,12 +50,20 @@ class Job(object):
                 self.test_parameters[parameter_name] = parameter_value
 
     @staticmethod
-    def discover(testname, device, subtests_filter=None):
+    def discover(testname, subtests_filter=None):
+        """
+        discover test
+        :param testname:
+        :param device:
+        :param subtests_filter:
+        :return:
+        """
         if not testname:
             print("testname not specified, discover test failed")
             return None
 
         filename = testname + ".py"
+        dirpath = ''
         for (dirpath, dirs, files) in os.walk(CertEnv.testdirectoy):
             if filename in files:
                 break
@@ -67,7 +74,7 @@ class Job(object):
         sys.path.insert(0, dirpath)
         try:
             module = __import__(testname, globals(), locals())
-        except Exception as e:
+        except ImportError as e:
             print("Error: module import failed for %s" % testname)
             print(e)
             return None
@@ -158,7 +165,7 @@ class Job(object):
                         return_code = test.test()
                 else:
                     return_code = test.test()
-        except Exception as e:
+        except (IOError, KeyError, AttributeError) as e:
             print(e)
             return_code = False
 

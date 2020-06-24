@@ -29,8 +29,10 @@ from .reboot import Reboot
 from .client import Client
 
 
-class EulerCertification:
-
+class EulerCertification(object):
+    """
+    Main program of oec-hardware
+    """
     def __init__(self):
         self.certification = None
         self.test_factory = list()
@@ -39,6 +41,10 @@ class EulerCertification:
         self.client = None
 
     def run(self):
+        """
+        Openeuler compatibility verification
+        :return:
+        """
         print("The openEuler Hardware Compatibility Test Suite")
         self.load()
         certdevice = CertDevice()
@@ -66,6 +72,10 @@ class EulerCertification:
             self.save(job)
 
     def run_rebootup(self):
+        """
+         rebootup
+        :return:
+        """
         try:
             self.load()
             args = argparse.Namespace(test_factory=self.test_factory)
@@ -81,6 +91,10 @@ class EulerCertification:
             return False
 
     def clean(self):
+        """
+        clean all compatibility test file
+        :return:
+        """
         if self.ui.prompt_confirm("Are you sure to clean all compatibility test data?"):
             try:
                 Command("rm -rf %s" % CertEnv.certificationfile).run()
@@ -92,6 +106,10 @@ class EulerCertification:
         return True
 
     def load(self):
+        """
+        load certification
+        :return:
+        """
         if not os.path.exists(CertEnv.datadirectory):
             os.mkdir(CertEnv.datadirectory)
 
@@ -116,6 +134,11 @@ class EulerCertification:
         print("")
 
     def save(self, job):
+        """
+        collect Job log
+        :param job:
+        :return:
+        """
         doc_dir = os.path.join(CertEnv.logdirectoy, job.job_id)
         if not os.path.exists(doc_dir):
             return
@@ -144,6 +167,10 @@ class EulerCertification:
         os.chdir(cwd)
 
     def submit(self):
+        """
+        submit last result
+        :return:
+        """
         packages = list()
         pattern = re.compile("^oech-[0-9]{14}-[0-9a-zA-Z]{10}.tar$")
         files = []
@@ -167,6 +194,12 @@ class EulerCertification:
             os.remove(os.path.join(CertEnv.datadirectory, filename))
 
     def upload(self, path, server):
+        """
+        uploaded result to server
+        :param path:
+        :param server:
+        :return:
+        """
         print("Uploading...")
         if not self.client:
             oec_id = self.certification.get_certify()
@@ -216,6 +249,11 @@ class EulerCertification:
         return test_factory
 
     def sort_tests(self, devices):
+        """
+        sort tests
+        :param devices:
+        :return:
+        """
         sort_devices = dict()
         empty_device = Device()
         for device in devices:
@@ -292,6 +330,10 @@ class EulerCertification:
         return sort_devices
 
     def edit_tests(self):
+        """
+        edit test items
+        :return:
+        """
         while True:
             for test in self.test_factory:
                 if test["name"] == "system":
@@ -363,7 +405,7 @@ class EulerCertification:
 
     def choose_tests(self):
         """
-        选择测试用例
+        choose test behavior
         :return:
         """
         for test in self.test_factory:
@@ -387,6 +429,10 @@ class EulerCertification:
             return self.choose_tests()
 
     def check_result(self):
+        """
+        check test result
+        :return:
+        """
         if len(self.test_factory) == 0:
             return False
         for test in self.test_factory:
@@ -395,6 +441,11 @@ class EulerCertification:
         return True
 
     def update_factory(self, test_factory):
+        """
+        update teset factory
+        :param test_factory:
+        :return:
+        """
         if not self.test_factory:
             self.test_factory = test_factory
         else:
@@ -412,6 +463,12 @@ class EulerCertification:
 
     @staticmethod
     def search_factory(obj_test, test_factory):
+        """
+        Determine whether test exists by searching test_factory
+        :param obj_test:
+        :param test_factory:
+        :return:
+        """
         for test in test_factory:
             if test["name"] == obj_test["name"] and test["device"].path == obj_test["device"].path:
                 return True

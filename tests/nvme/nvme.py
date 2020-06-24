@@ -25,6 +25,8 @@ class NvmeTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["nvme-cli"]
+        self.args = None
+        self.device = None
 
     def setup(self, args=None):
         self.args = args or argparse.Namespace()

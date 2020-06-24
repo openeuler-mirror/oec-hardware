@@ -22,7 +22,7 @@ from .env import CertEnv
 
 
 class Document:
-    def __init__(self, filename, document={}):
+    def __init__(self, filename, document=''):
         self.document = document
         self.filename = filename
 
@@ -51,8 +51,8 @@ class Document:
 
 
 class CertDocument(Document):
-    def __init__(self, filename, document={}):
-        super(CertDocument, self).__init__()
+    def __init__(self, filename, document=''):
+        super(CertDocument, self).__init__(filename, document)
         self.document = dict()
         self.filename = filename
         if not document:
@@ -68,10 +68,10 @@ class CertDocument(Document):
             while True:
                 line = pipe.readline()
                 if line:
-                    property = line.split(":", 1)
-                    if len(property) == 2:
-                        key = property[0].strip()
-                        value = property[1].strip()
+                    property_right = line.split(":", 1)
+                    if len(property_right) == 2:
+                        key = property_right[0].strip()
+                        value = property_right[1].strip()
                         if key in ["Manufacturer", "Product Name", "Version"]:
                             self.document[key] = value
                 else:
@@ -107,8 +107,8 @@ class CertDocument(Document):
 
 
 class DeviceDocument(Document):
-    def __init__(self, filename, devices=[]):
-        super(DeviceDocument, self).__init__()
+    def __init__(self, filename, devices=''):
+        super(DeviceDocument, self).__init__(filename, devices)
         self.filename = filename
         self.document = list()
         if not devices:
@@ -119,8 +119,8 @@ class DeviceDocument(Document):
 
 
 class FactoryDocument(Document):
-    def __init__(self, filename, factory=[]):
-        super(FactoryDocument, self).__init__()
+    def __init__(self, filename, factory=''):
+        super(FactoryDocument, self).__init__(filename, factory)
         self.document = list()
         self.filename = filename
         if not factory:
@@ -149,7 +149,7 @@ class FactoryDocument(Document):
 
 class ConfigFile:
     def __init__(self, filename):
-        super(ConfigFile, self).__init__()
+        super(ConfigFile, self).__init__(filename)
         self.filename = filename
         self.parameters = dict()
         self.config = list()

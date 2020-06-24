@@ -17,7 +17,7 @@ import re
 
 
 class SysInfo:
-    def __init__(self, file):
+    def __init__(self, filename):
         self.product = None
         self.version = None
         self.update = None
@@ -28,11 +28,11 @@ class SysInfo:
         self.kerneldevel_rpm = None
         self.kernel_version = None
         self.debug_kernel = False
-        self.load(file)
+        self.load(filename)
 
-    def load(self, file):
+    def load(self, filename):
         try:
-            f = open(file)
+            f = open(filename)
             text = f.read()
             f.close()
         except IOError:
@@ -40,11 +40,11 @@ class SysInfo:
             return
 
         if text:
-            pattern = re.compile('NAME="(\w+)"')
+            pattern = re.compile(r'NAME="(\w+)"')
             results = pattern.findall(text)
             self.product = results[0].strip() if results else ""
 
-            pattern = re.compile('VERSION="(.+)"')
+            pattern = re.compile(r'VERSION="(.+)"')
             results = pattern.findall(text)
             self.version = results[0].strip() if results else ""
 

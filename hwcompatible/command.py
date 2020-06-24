@@ -222,6 +222,9 @@ class Command:
 
 
 class CertCommandError(Exception):
+    """
+    Cert command error  handling
+    """
     def __init__(self, command, message):
         super(CertCommandError, self).__init__()
         self.message = message

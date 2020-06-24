@@ -15,7 +15,6 @@
 import os
 import sys
 import time
-import re
 
 from hwcompatible.test import Test
 from hwcompatible.commandUI import CommandUI
@@ -42,7 +41,7 @@ class WatchDogTest(Test):
             timeout = int(timeout)
             if timeout > self.max_timeout:
                 Command("./watchdog -s %d" % self.max_timeout).echo()
-        except Exception as e:
+        except CertCommandError as e:
             print(e)
             print("Set/get watchdog timeout failed.")
             return False

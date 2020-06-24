@@ -47,7 +47,7 @@ class PerfTest(Test):
 
         # report
         perfReportEcho = Command(self.perfReport).read()
-        perfReportMacth = re.search("\s*\S+\s+(\[\S+.\S+\])\s+\S+", perfReportEcho)
+        perfReportMacth = re.search(r"\s*\S+\s+(\[\S+.\S+\])\s+\S+", perfReportEcho)
         if not perfReportMacth:
             print("Error: no samples found. Failed to fetch report because of:\n %s." % perfReportEcho)
             return False
