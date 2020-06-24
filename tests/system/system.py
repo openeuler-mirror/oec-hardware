@@ -58,7 +58,8 @@ class SystemTest(Test):
 
         return return_code
 
-    def check_certrpm(self):
+    @staticmethod
+    def check_certrpm():
         print("\nChecking installed cert package...")
         return_code = True
         for cert_package in ["oec-hardware"]:
@@ -149,7 +150,8 @@ class SystemTest(Test):
 
         return return_code
 
-    def get_modules(self, sign):
+    @staticmethod
+    def get_modules(sign):
         pattern = re.compile(r"^(?P<mod_name>\w+)[\s\S]+\((?P<signs>[A-Z]+)\)")
         proc_modules = open("/proc/modules")
         modules = list()
@@ -208,7 +210,8 @@ class SystemTest(Test):
         print("")
         return True
 
-    def read_abi_whitelist(self, whitelist):
+    @staticmethod
+    def read_abi_whitelist(whitelist):
         symbols = list()
         if not os.path.isfile(whitelist):
             print("Error: Cannot read whitelist file")
@@ -255,7 +258,8 @@ class SystemTest(Test):
         nm.close()
         return self.readSymbols(symbols)
 
-    def get_modulefile(self, module):
+    @staticmethod
+    def get_modulefile(module):
         try:
             modulefile = Command("modinfo -F filename %s" % module).get_str()
             if os.path.islink(modulefile):
@@ -265,7 +269,8 @@ class SystemTest(Test):
             print("Error: could no find module file for %s:" % module)
             return None
 
-    def check_selinux(self):
+    @staticmethod
+    def check_selinux():
         print("\nChecking selinux...")
         status = os.system("/usr/sbin/sestatus | grep 'SELinux status' | grep -qw 'enabled'")
         mode = os.system("/usr/sbin/sestatus | grep 'Current mode' | grep -qw 'enforcing'")

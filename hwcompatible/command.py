@@ -223,6 +223,7 @@ class Command:
 
 class CertCommandError(Exception):
     def __init__(self, command, message):
+        super(CertCommandError, self).__init__()
         self.message = message
         self.command = command
         self.__message = None

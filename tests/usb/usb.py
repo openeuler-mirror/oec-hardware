@@ -96,10 +96,11 @@ class UsbTest(Test):
         devices = CertDevice().get_devices()
         usb_devices = list()
         for device in devices:
-            if (device.get_property("SUBSYSTEM") != "usb" or \
-                device.get_property("DEVTYPE") != "usb_device" or \
-                device.get_property("ID_BUS") != "usb" or \
-                device.get_property("BUSNUM") == "" or device.get_property("DEVNUM") == ""):
+            if (device.get_property("SUBSYSTEM") != "usb" or
+                device.get_property("DEVTYPE") != "usb_device" or
+                device.get_property("ID_BUS") != "usb" or
+                device.get_property("BUSNUM") == "" or
+                    device.get_property("DEVNUM") == ""):
                 continue
             else:
                 usb_devices.append(device.path)

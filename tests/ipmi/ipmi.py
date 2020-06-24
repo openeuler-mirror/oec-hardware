@@ -22,7 +22,8 @@ class IpmiTest(Test):
         Test.__init__(self)
         self.requirements = ["OpenIPMI", "ipmitool"]
 
-    def start_ipmi(self):
+    @staticmethod
+    def start_ipmi():
         try:
             Command("systemctl start ipmi").run()
             Command("systemctl status ipmi.service").get_str(regex="Active: active", single_line=False)
@@ -31,7 +32,8 @@ class IpmiTest(Test):
             return False
         return True
 
-    def ipmitool(self):
+    @staticmethod
+    def ipmitool():
         cmd_list = ["ipmitool fru","ipmitool sensor"]
         for cmd in cmd_list:
             try:
@@ -47,6 +49,7 @@ class IpmiTest(Test):
         if not self.ipmitool():
             return False
         return True
+
 
 if __name__ == "__main__":
     i = IpmiTest()

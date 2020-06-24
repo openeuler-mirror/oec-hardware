@@ -50,7 +50,8 @@ class Job(object):
             for parameter_name, parameter_value in self.args.test_parameters:
                 self.test_parameters[parameter_name] = parameter_value
 
-    def discover(self, testname, device, subtests_filter=None):
+    @staticmethod
+    def discover(testname, device, subtests_filter=None):
         if not testname:
             print("testname not specified, discover test failed")
             return None

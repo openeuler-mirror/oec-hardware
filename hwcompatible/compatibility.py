@@ -29,7 +29,7 @@ from .reboot import Reboot
 from .client import Client
 
 
-class EulerCertification():
+class EulerCertification:
 
     def __init__(self):
         self.certification = None
@@ -50,12 +50,12 @@ class EulerCertification():
                 print("All cases are passed, test end.")
                 return True
 
-            devices = certdevice.get_devices()
-            self.devices = DeviceDocument(CertEnv.devicefile, devices)
+            oec_devices = certdevice.get_devices()
+            self.devices = DeviceDocument(CertEnv.devicefile, oec_devices)
             self.devices.save()
 
             # test_factory format example: [{"name":"nvme", "device":device, "run":True, "status":"PASS", "reboot":False}]
-            test_factory = self.get_tests(devices)
+            test_factory = self.get_tests(oec_devices)
             self.update_factory(test_factory)
             if not self.choose_tests():
                 return True
@@ -76,7 +76,7 @@ class EulerCertification():
             reboot.clean()
             self.save(job)
             return True
-        except Exception as e:
+        except (IOError, OSError, TypeError) as e:
             print(e)
             return False
 
@@ -86,7 +86,7 @@ class EulerCertification():
                 Command("rm -rf %s" % CertEnv.certificationfile).run()
                 Command("rm -rf %s" % CertEnv.factoryfile).run()
                 Command("rm -rf %s" % CertEnv.devicefile).run()
-            except Exception as e:
+            except CertCommandError as e:
                 print(e)
                 return False
         return True
@@ -176,7 +176,7 @@ class EulerCertification():
 
     def get_tests(self, devices):
         """
-        获取测试项
+        get test items
         :param devices:
         :return:
         """
@@ -221,7 +221,7 @@ class EulerCertification():
         for device in devices:
             if device.get_property("SUBSYSTEM") == "usb" and \
                     device.get_property("ID_VENDOR_FROM_DATABASE") == "Linux Foundation" and \
-                    ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or \
+                    ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or
                      "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
                 sort_devices["usb"] = [empty_device]
                 continue
@@ -328,7 +328,7 @@ class EulerCertification():
 
     def show_tests(self):
         """
-        显示测试用例
+        show test items
         :return:
         """
         print("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10) \
@@ -344,7 +344,7 @@ class EulerCertification():
             status = test["status"]
             device = test["device"].get_name()
             run = "no"
-            if test["run"] == True:
+            if test["run"] is True:
                 run = "yes"
 
             num = num + 1
@@ -410,7 +410,8 @@ class EulerCertification():
         self.test_factory.sort(key=lambda k: k["name"])
         FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
 
-    def search_factory(self, obj_test, test_factory):
+    @staticmethod
+    def search_factory(obj_test, test_factory):
         for test in test_factory:
             if test["name"] == obj_test["name"] and test["device"].path == obj_test["device"].path:
                 return True

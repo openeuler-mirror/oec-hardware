@@ -74,7 +74,8 @@ class NvmeTest(Test):
             print(e)
             return False
 
-    def in_use(self, disk):
+    @staticmethod
+    def in_use(disk):
         os.system("swapon -a 2>/dev/null")
         swap_file = open("/proc/swaps", "r")
         swap = swap_file.read()

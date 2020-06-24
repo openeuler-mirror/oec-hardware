@@ -66,7 +66,8 @@ class CDRomTest(Test):
             return False
         return True
 
-    def get_type(self, device):
+    @staticmethod
+    def get_type(device):
         if not device:
             return None
 
@@ -196,7 +197,8 @@ class CDRomTest(Test):
             print(e)
             return False
 
-    def cmp_tree(self, dir1, dir2):
+    @staticmethod
+    def cmp_tree(dir1, dir2):
         if not (dir1 and dir2):
             print("Error: invalid input dir.")
             return False

@@ -205,7 +205,8 @@ class DiskTest(Test):
         print("#############")
         return return_code
 
-    def do_fio(self, filepath, size, option):
+    @staticmethod
+    def do_fio(filepath, size, option):
         if os.path.isdir(filepath):
             file_opt = "-directory=%s" % filepath
         else:

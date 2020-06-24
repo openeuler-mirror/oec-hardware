@@ -162,7 +162,8 @@ class MemoryTest(Test):
             return False
         return True
 
-    def hot_plug_verify(self):
+    @staticmethod
+    def hot_plug_verify():
         kernel = Command("uname -r").read()
         config_file = "/boot/config-" + kernel
         if not os.path.exists(config_file):
@@ -198,7 +199,8 @@ class MemoryTest(Test):
         if total_mem_3 != total_mem_1:
             return False
 
-    def online_memory(self, memory_path):
+    @staticmethod
+    def online_memory(memory_path):
         try:
             Command("echo 1 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("online")
@@ -207,7 +209,8 @@ class MemoryTest(Test):
             print("Error: fail to online %s." % memory_path)
             return False
 
-    def offline_memory(self, memory_path):
+    @staticmethod
+    def offline_memory(memory_path):
         try:
             Command("echo 0 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("offline")

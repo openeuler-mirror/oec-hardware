@@ -28,6 +28,7 @@ def filter_char(str):
     filtered += str[start:]
     return filtered
 
+
 class CertDevice:
     def __init__(self):
         self.devices = None
@@ -65,6 +66,7 @@ class CertDevice:
             print(e)
         self.devices.sort(key=lambda k: k.path)
         return self.devices
+
 
 class Device:
     def __init__(self, properties=None):

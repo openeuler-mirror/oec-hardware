@@ -59,7 +59,8 @@ class CPU:
 
         return True
 
-    def set_freq(self, freq, cpu='all'):
+    @staticmethod
+    def set_freq(freq, cpu='all'):
         cmd = Command("cpupower -c %s frequency-set --freq %s" % (cpu, freq))
         try:
             cmd.run()
@@ -68,7 +69,8 @@ class CPU:
             print(e)
             return False
 
-    def get_freq(self, cpu):
+    @staticmethod
+    def get_freq(cpu):
         cmd = Command("cpupower -c %s frequency-info -w" % cpu)
         try:
             return int(cmd.get_str(r'.* frequency: (?P<freq>\d+) .*', 'freq', False))
@@ -76,7 +78,8 @@ class CPU:
             print(e)
             return False
 
-    def set_governor(self, governor, cpu='all'):
+    @staticmethod
+    def set_governor(governor, cpu='all'):
         cmd = Command("cpupower -c %s frequency-set --governor %s" % (cpu, governor))
         try:
             cmd.run()
@@ -85,7 +88,8 @@ class CPU:
             print(e)
             return False
 
-    def get_governor(self, cpu):
+    @staticmethod
+    def get_governor(cpu):
         cmd = Command("cpupower -c %s frequency-info -p" % cpu)
         try:
             return cmd.get_str(r'.* governor "(?P<governor>\w+)".*', 'governor', False)
@@ -93,7 +97,8 @@ class CPU:
             print(e)
             return False
 
-    def find_path(self, parent_dir, target_name):
+    @staticmethod
+    def find_path(parent_dir, target_name):
         cmd = Command("find %s -name %s" % (parent_dir, target_name))
         try:
             cmd.run()
@@ -262,7 +267,7 @@ class CPUFreqTest(Test):
                 (target_cpu, target_cpu_governor))
             return False
         print("[.] The governor of CPU%s is %s." %
-            (target_cpu, target_cpu_governor))
+              (target_cpu, target_cpu_governor))
 
         load_test = Load(target_cpu)
         load_test.run()
