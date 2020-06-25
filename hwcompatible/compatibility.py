@@ -442,7 +442,7 @@ class EulerCertification(object):
 
     def update_factory(self, test_factory):
         """
-        update teset factory
+        update tese factory
         :param test_factory:
         :return:
         """

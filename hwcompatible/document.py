@@ -21,7 +21,10 @@ from .sysinfo import SysInfo
 from .env import CertEnv
 
 
-class Document:
+class Document(object):
+    """
+    Read and write documents
+    """
     def __init__(self, filename, document=''):
         self.document = document
         self.filename = filename
@@ -51,6 +54,9 @@ class Document:
 
 
 class CertDocument(Document):
+    """
+    get hardware and release information
+    """
     def __init__(self, filename, document=''):
         super(CertDocument, self).__init__(filename, document)
         self.document = dict()
@@ -107,6 +113,9 @@ class CertDocument(Document):
 
 
 class DeviceDocument(Document):
+    """
+    get device document
+    """
     def __init__(self, filename, devices=''):
         super(DeviceDocument, self).__init__(filename, devices)
         self.filename = filename
@@ -119,6 +128,10 @@ class DeviceDocument(Document):
 
 
 class FactoryDocument(Document):
+    """
+    get factory from file or factory parameter
+    """
+
     def __init__(self, filename, factory=''):
         super(FactoryDocument, self).__init__(filename, factory)
         self.document = list()
@@ -147,9 +160,11 @@ class FactoryDocument(Document):
         return factory
 
 
-class ConfigFile:
+class ConfigFile(object):
+    """
+    Get parameters from configuration file
+    """
     def __init__(self, filename):
-        super(ConfigFile, self).__init__(filename)
         self.filename = filename
         self.parameters = dict()
         self.config = list()

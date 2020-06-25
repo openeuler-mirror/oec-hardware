@@ -16,7 +16,10 @@ import os
 import re
 
 
-class SysInfo:
+class SysInfo(object):
+    """
+    Get system information
+    """
     def __init__(self, filename):
         self.product = None
         self.version = None
