@@ -13,8 +13,10 @@
 # Create: 2020-04-01
 
 
-class Test:
-
+class Test(object):
+    """
+    Test set template
+    """
     def __init__(self, name=None):
         self.pri = 0
         self.requirements = list()

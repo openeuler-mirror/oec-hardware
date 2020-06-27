@@ -13,7 +13,10 @@
 # Create: 2020-04-01
 
 
-class CertEnv:
+class CertEnv(object):
+    """
+    Certification file path
+    """
     environmentfile = "/etc/oech.json"
     releasefile = "/etc/os-release"
     datadirectory = "/var/oech"

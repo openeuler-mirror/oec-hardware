@@ -24,7 +24,9 @@ from hwcompatible.command import Command, CertCommandError
 
 
 class CDRomTest(Test):
-
+    """
+    CDRom Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["dvd+rw-tools", "genisoimage", "wodim", "util-linux"]
@@ -36,12 +38,21 @@ class CDRomTest(Test):
         self.test_dir = "/usr/share/doc"
 
     def setup(self, args=None):
+        """
+        The Setup before testing
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(args, "device", None)
         self.type = self.get_type(self.device)
         self.get_mode(self.type)
 
     def test(self):
+        """
+        Test case
+        :return:
+        """
         if not (self.method and self.device and self.type):
             return False
 
@@ -68,6 +79,11 @@ class CDRomTest(Test):
 
     @staticmethod
     def get_type(device):
+        """
+        Get the type of CDROM
+        :param device:
+        :return:
+        """
         if not device:
             return None
 
@@ -77,17 +93,22 @@ class CDRomTest(Test):
         for bd_type in bd_types:
             if device.get_property("ID_CDROM_" + bd_type) == "1":
                 return bd_type
-        for bd_type in dvd_types:
-            if device.get_ertpropy("ID_CDROM_" + bd_type) == "1":
-                return bd_type
-        for bd_type in cd_types:
-            if device.get_property("ID_CDROM_" + bd_type) == "1":
-                return bd_type
+        for dvd_type in dvd_types:
+            if device.get_ertpropy("ID_CDROM_" + dvd_type) == "1":
+                return dvd_type
+        for cd_type in cd_types:
+            if device.get_property("ID_CDROM_" + cd_type) == "1":
+                return cd_type
 
         print("Can not find pr)oper test-type for %s." % device.get_name())
         return None
 
     def get_mode(self, device_type):
+        """
+        Get the read-write mode of CDROM
+        :param device_type:
+        :return:
+        """
         if not device_type:
             return
 
@@ -99,6 +120,10 @@ class CDRomTest(Test):
             self.method = "read_test"
 
     def rw_test(self):
+        """
+        RW mode test of CDROM
+        :return:
+        """
         try:
             devname = self.device.get_property("DEVNAME")
             Command("umount %s" % devname).run(ignore_errors=True)
@@ -127,6 +152,10 @@ class CDRomTest(Test):
             return False
 
     def write_test(self):
+        """
+        Write mode test of CDROM
+        :return:
+        """
         try:
             devname = self.device.get_property("DEVNAME")
             Command("umount %s" % devname).run(ignore_errors=True)
@@ -161,6 +190,10 @@ class CDRomTest(Test):
             return False
 
     def read_test(self):
+        """
+        Read mode test of CDROM
+        :return:
+        """
         try:
             devname = self.device.get_property("DEVNAME")
             if os.path.exists("mnt_cdrom"):
@@ -199,6 +232,12 @@ class CDRomTest(Test):
 
     @staticmethod
     def cmp_tree(dir1, dir2):
+        """
+        Compare the differences between the two directories
+        :param dir1:
+        :param dir2:
+        :return:
+        """
         if not (dir1 and dir2):
             print("Error: invalid input dir.")
             return False
@@ -210,6 +249,11 @@ class CDRomTest(Test):
             return False
 
     def reload_disc(self, device):
+        """
+        Reloading the media
+        :param device:
+        :return:
+        """
         if not device:
             return False
 

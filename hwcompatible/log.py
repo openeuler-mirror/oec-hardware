@@ -20,7 +20,9 @@ from .env import CertEnv
 
 
 class Log(object):
-
+    """
+    Read and write log
+    """
     def __init__(self, logname='oech.log', logdir='__temp__'):
         if not logdir:
             curtime = datetime.datetime.now().isoformat()

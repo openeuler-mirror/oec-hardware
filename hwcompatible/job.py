@@ -27,7 +27,9 @@ from .reboot import Reboot
 
 
 class Job(object):
-
+    """
+    Test task management
+    """
     def __init__(self, args=None):
         """
         Creates an instance of Job class.
@@ -98,6 +100,11 @@ class Job(object):
         return None
 
     def create_test_suite(self, subtests_filter=None):
+        """
+        Create test suites
+        :param subtests_filter:
+        :return:
+        """
         if self.test_suite:
             return
 
@@ -121,6 +128,10 @@ class Job(object):
             print("No test found")
 
     def check_test_depends(self):
+        """
+        Install  dependency packages
+        :return: depending
+        """
         required_rpms = []
         for tests in self.test_suite:
             for pkg in tests["test"].requirements:
@@ -143,6 +154,12 @@ class Job(object):
         return True
 
     def _run_test(self, testcase, subtests_filter=None):
+        """
+        Start a testing item
+        :param testcase:
+        :param subtests_filter:
+        :return:
+        """
         name = testcase["name"]
         if testcase["device"].get_name():
             name = testcase["name"] + "-" + testcase["device"].get_name()
@@ -178,6 +195,11 @@ class Job(object):
         return return_code
 
     def run_tests(self, subtests_filter=None):
+        """
+        Start testing
+        :param subtests_filter:
+        :return:
+        """
         if not len(self.test_suite):
             print("No test to run.")
             return
@@ -190,6 +212,10 @@ class Job(object):
                 testcase["status"] = "FAIL"
 
     def run(self):
+        """
+        Test entrance
+        :return:
+        """
         logger = Logger("job.log", self.job_id, sys.stdout, sys.stderr)
         logger.start()
         self.create_test_suite(self.subtests_filter)
@@ -202,6 +228,10 @@ class Job(object):
         self.show_summary()
 
     def show_summary(self):
+        """
+        Command line interface display summary
+        :return:
+        """
         print("-------------  Summary  -------------")
         for test in self.test_factory:
             if test["run"]:
@@ -215,6 +245,10 @@ class Job(object):
         print("")
 
     def save_result(self):
+        """
+        Get test status
+        :return:
+        """
         for test in self.test_factory:
             for testcase in self.test_suite:
                 if test["name"] == testcase["name"] and test["device"].path == testcase["device"].path:

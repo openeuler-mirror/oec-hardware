@@ -23,13 +23,22 @@ except ImportError:
     from urllib2 import urlopen, Request, HTTPError
 
 
-class Client:
+class Client(object):
+    """
+    upload client
+    """
     def __init__(self, host, id):
         self.host = host
         self.id = id
         self.form = {}
 
     def upload(self, file, server='localhost'):
+        """
+        upload client request
+        :param file:
+        :param server:
+        :return:
+        """
         filename = os.path.basename(file)
         try:
             job = filename.split('.')[0]

@@ -74,7 +74,7 @@ def get_results():
 @app.route('/results/<host>/<oec_id>/<job>')
 def get_job(host, oec_id, job):
     """
-    获取job信息
+    get job information
     :param host:
     :param oec_id:
     :param job:

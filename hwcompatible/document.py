@@ -67,6 +67,10 @@ class CertDocument(Document):
             self.documemt = document
 
     def new(self):
+        """
+        new document object
+        :return:
+        """
         try:
             pipe = Command("/usr/sbin/dmidecode -t 1")
             pipe.start()
@@ -148,6 +152,10 @@ class FactoryDocument(Document):
                 self.document.append(element)
 
     def get_factory(self):
+        """
+        Get factory parameter information
+        :return:
+        """
         factory = list()
         for element in self.document:
             test = dict()
@@ -205,6 +213,11 @@ class ConfigFile(object):
         return False
 
     def remove_parameter(self, name):
+        """
+        Update configuration information
+        :param name:
+        :return:
+        """
         if self.getParameter(name):
             del self.parameters[name]
             newconfig = list()
@@ -221,6 +234,10 @@ class ConfigFile(object):
             self.save()
 
     def save(self):
+        """
+        Save the config property value to a file
+        :return:
+        """
         fp = open(self.filename, "w")
         for line in self.config:
             fp.write(line)

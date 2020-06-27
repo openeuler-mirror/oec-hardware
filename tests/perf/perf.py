@@ -14,11 +14,13 @@
 
 import re
 from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 
 
 class PerfTest(Test):
-
+    """
+    Perf Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["perf"]
@@ -27,6 +29,10 @@ class PerfTest(Test):
         self.perfReport = "perf report -i hwcompatible-perf.data --stdio"
 
     def exec_perf(self):
+        """
+        Execute perf command
+        :return:
+        """
         # record
         print("Collecting the perf record using the command '%s'." % self.perfRecord)
         perfRecordEcho = Command(self.perfRecord).read()
@@ -56,6 +62,10 @@ class PerfTest(Test):
         return True
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         if not self.exec_perf():
             return False
         return True

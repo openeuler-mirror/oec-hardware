@@ -34,6 +34,11 @@ class SysInfo(object):
         self.load(filename)
 
     def load(self, filename):
+        """
+        Collect system information
+        :param filename:
+        :return:
+        """
         try:
             f = open(filename)
             text = f.read()
@@ -62,5 +67,9 @@ class SysInfo(object):
             self.kernel_version = self.kernel.split('-')[0]
 
     def get_version(self):
+        """
+         Get system version information
+        :return:
+        """
         return self.version
 

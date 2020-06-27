@@ -17,7 +17,9 @@ from hwcompatible.command import Command, CertCommandError
 
 
 class AcpiTest(Test):
-
+    """
+    acpi test
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["acpica-tools"]
@@ -30,4 +32,3 @@ class AcpiTest(Test):
         except CertCommandError as e:
             print(e)
             return False
-

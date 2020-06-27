@@ -29,7 +29,7 @@ def filter_char(string):
         if c in ascii_blacklist or (type(string) != unicode and ord(c) >= 128):
             if start < i:
                 filtered += string[start:i]
-            start = i+1
+            start = i + 1
     filtered += string[start:]
     return filtered
 
@@ -42,6 +42,10 @@ class CertDevice(object):
         self.devices = None
 
     def get_devices(self):
+        """
+        get devices information
+        :return:
+        """
         self.devices = list()
         try:
             pipe = Command("udevadm info --export-db")

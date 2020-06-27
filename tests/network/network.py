@@ -13,7 +13,6 @@
 # Create: 2020-04-01
 
 import os
-import re
 import time
 import argparse
 import base64
@@ -32,6 +31,9 @@ from hwcompatible.env import CertEnv
 
 
 class NetworkTest(Test):
+    """
+    Network Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.args = None
@@ -50,6 +52,11 @@ class NetworkTest(Test):
 
     @staticmethod
     def ifdown(interface):
+        """
+        Judge whether the specified interface is closed successfully
+        :param interface:
+        :return:
+        """
         os.system("ip link set down %s" % interface)
         for _ in range(5):
             if 0 == os.system("ip link show %s | grep 'state DOWN'" % interface):
@@ -59,6 +66,11 @@ class NetworkTest(Test):
 
     @staticmethod
     def ifup(interface):
+        """
+        Judge whether the specified interface is enabled successfully
+        :param interface:
+        :return:
+        """
         os.system("ip link set up %s" % interface)
         for _ in range(5):
             time.sleep(1)
@@ -68,6 +80,10 @@ class NetworkTest(Test):
 
     @staticmethod
     def get_other_interfaces():
+        """
+        Get other interfaces
+        :return:
+        """
         ignore_interfaces = ['^lo', '^v', 'docker', 'br', 'bond']
         cmd = "ip route show default | awk '/default/ {print $5}'"
         c = Command(cmd)
@@ -90,39 +106,59 @@ class NetworkTest(Test):
             return []
 
     def set_other_interfaces_down(self):
+        """
+        Judge whether the interface is closed
+        :return:
+        """
         for interface in self.other_interfaces:
             if not self.ifdown(interface):
                 return False
         return True
 
     def set_other_interfaces_up(self):
+        """
+        Set other interfaces to up
+        :return:
+        """
         for interface in self.other_interfaces:
-            ## Not ifup(), as some interfaces may not be linked
+            # Not ifup(), as some interfaces may not be linked
             os.system("ip link set up %s" % interface)
             # os.system("ip link | grep -w %s" % interface)
         return True
 
     def get_speed(self):
+        """
+        Get speed on the interface
+        :return:
+        """
         c = Command("ethtool %s" % self.interface)
         pattern = r".*Speed:\s+(?P<speed>\d+)Mb/s"
         try:
             speed = c.get_str(pattern, 'speed', False)
             return int(speed)
-        except CertCommandError as e:
+        except CertCommandError:
             print("[X] No speed found on the interface.")
             return None
 
     def get_interface_ip(self):
+        """
+        Get interface ip
+        :return:
+        """
         c = Command("ip addr show %s" % self.interface)
         pattern = r".*inet.? (?P<ip>.+)/.*"
         try:
             ip = c.get_str(pattern, 'ip', False)
             return ip
-        except CertCommandError as e:
+        except CertCommandError:
             print("[X] No available ip on the interface.")
             return None
 
     def test_icmp(self):
+        """
+        Test ICMP
+        :return:
+        """
         count = 500
         c = Command("ping -q -c %d -i 0 %s" % (count, self.server_ip))
         pattern = r".*, (?P<loss>\d+\.{0,1}\d*)% packet loss.*"
@@ -139,7 +175,14 @@ class NetworkTest(Test):
         return False
 
     def call_remote_server(self, cmd, act='start', ib_server_ip=''):
-        form = {}
+        """
+        Call remote server
+        :param cmd:
+        :param act:
+        :param ib_server_ip:
+        :return:
+        """
+        form = dict()
         form['cmd'] = cmd
         form['ib_server_ip'] = ib_server_ip
         url = 'http://%s/api/%s' % (self.server_ip, act)
@@ -158,6 +201,10 @@ class NetworkTest(Test):
         return int(response.code) == 200
 
     def test_udp_latency(self):
+        """
+        Test udp latency
+        :return:
+        """
         cmd = "qperf %s udp_lat" % self.server_ip
         print(cmd)
         for _ in range(self.retries):
@@ -174,6 +221,10 @@ class NetworkTest(Test):
         return False
 
     def test_tcp_bandwidth(self):
+        """
+        Test tcp bandwidth
+        :return:
+        """
         cmd = "qperf %s tcp_bw" % self.server_ip
         print(cmd)
         c = Command(cmd)
@@ -197,12 +248,20 @@ class NetworkTest(Test):
         return False
 
     def create_testfile(self):
+        """
+        Create testfile
+        :return:
+        """
         bs = 128
         count = self.speed/8
         cmd = "dd if=/dev/urandom of=%s bs=%uk count=%u" % (self.testfile, bs, count)
         return 0 == os.system(cmd)
 
     def test_http_upload(self):
+        """
+        Test http upload
+        :return:
+        """
         form = {}
         size = os.path.getsize(self.testfile)
         filename = os.path.basename(self.testfile)
@@ -240,6 +299,10 @@ class NetworkTest(Test):
         return True
 
     def test_http_download(self):
+        """
+        Test http download
+        :return:
+        """
         filename = os.path.basename(self.testfile)
         url = "http://%s/files/%s" % (self.server_ip, filename)
 
@@ -268,6 +331,10 @@ class NetworkTest(Test):
         return True
 
     def test_udp_tcp(self):
+        """
+        Test udp tcp
+        :return:
+        """
         if not self.call_remote_server('qperf', 'start'):
             print("[X] start qperf server failed.")
             return False
@@ -291,6 +358,10 @@ class NetworkTest(Test):
         return True
 
     def test_http(self):
+        """
+        Test http
+        :return:
+        """
         print("[+] Creating testfile to upload...")
         if not self.create_testfile():
             print("[X] Create testfile failed.")
@@ -309,6 +380,10 @@ class NetworkTest(Test):
         return True
 
     def test_eth_link(self):
+        """
+        Test eth link
+        :return:
+        """
         self.other_interfaces = self.get_other_interfaces()
         print("[+] Setting irrelevant interfaces down...")
         if not self.set_other_interfaces_down():
@@ -337,6 +412,10 @@ class NetworkTest(Test):
         return True
 
     def test_ip_info(self):
+        """
+        Test ip info
+        :return:
+        """
         if not self.interface:
             print("[X] No interface assigned.")
             return False
@@ -356,6 +435,11 @@ class NetworkTest(Test):
         return True
 
     def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
@@ -364,12 +448,20 @@ class NetworkTest(Test):
         self.server_ip = self.cert.get_server()
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         for subtest in self.subtests:
             if not subtest():
                 return False
         return True
 
     def teardown(self):
+        """
+        Environment recovery after test
+        :return:
+        """
         print("[.] Stop all test servers...")
         self.call_remote_server('all', 'stop')
 

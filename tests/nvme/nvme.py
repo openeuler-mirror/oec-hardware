@@ -21,7 +21,9 @@ from hwcompatible.device import CertDevice, Device
 
 
 class NvmeTest(Test):
-
+    """
+    Test Non-Volatile Memory express
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["nvme-cli"]
@@ -29,11 +31,20 @@ class NvmeTest(Test):
         self.device = None
 
     def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(args, "device", None)
         Command("nvme list").echo(ignore_errors=True)
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         disk = self.device.get_name()
         if self.in_use(disk):
             print("%s is in use now, skip this test." % disk)
@@ -78,6 +89,11 @@ class NvmeTest(Test):
 
     @staticmethod
     def in_use(disk):
+        """
+        Determine whether the swapon is in use
+        :param disk:
+        :return:
+        """
         os.system("swapon -a 2>/dev/null")
         swap_file = open("/proc/swaps", "r")
         swap = swap_file.read()
