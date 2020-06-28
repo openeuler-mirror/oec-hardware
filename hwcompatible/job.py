@@ -83,7 +83,7 @@ class Job(object):
         for thing in dir(module):
             test_class = getattr(module, thing)
             try:
-                from types import ClassType as classtype
+                from types import ClassType as ct
             except ImportError:
                 ct = type
             if isinstance(test_class, ct) and issubclass(test_class, Test):
