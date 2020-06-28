@@ -17,7 +17,7 @@ class Test(object):
     """
     Test set template
     """
-    def __init__(self, name=None):
+    def __init__(self):
         self.pri = 0
         self.requirements = list()
         self.reboot = False

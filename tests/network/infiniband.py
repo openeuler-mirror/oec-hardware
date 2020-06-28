@@ -12,11 +12,6 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
-import argparse
-
-from hwcompatible.test import Test
-from hwcompatible.command import Command
 from rdma import RDMATest
 
 

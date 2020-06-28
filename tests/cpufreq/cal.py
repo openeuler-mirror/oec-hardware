@@ -20,7 +20,8 @@ def cal():
     decimal.getcontext().prec = 1000
     one = decimal.Decimal(1)
     for i in range(1000):
-        j = (i * one).sqrt()
+        # j = (i * one).sqrt()
+        (i * one).sqrt()
 
 
 if __name__ == '__main__':

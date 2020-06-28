@@ -27,24 +27,24 @@ class Client(object):
     """
     upload client
     """
-    def __init__(self, host, id):
+    def __init__(self, host, oec_id):
         self.host = host
-        self.id = id
+        self.id = oec_id
         self.form = {}
 
-    def upload(self, file, server='localhost'):
+    def upload(self, files, server='localhost'):
         """
         upload client request
-        :param file:
+        :param files:
         :param server:
         :return:
         """
-        filename = os.path.basename(file)
+        filename = os.path.basename(files)
         try:
             job = filename.split('.')[0]
-            with open(file, 'rb') as f:
+            with open(files, 'rb') as f:
                 filetext = base64.b64encode(f.read())
-        except Exception as e:
+        except IOError as e:
             print(e)
             return False
 
@@ -70,7 +70,7 @@ class Client(object):
                 print("Error: upload failed, %s" % res.msg)
                 return False
             return True
-        except Exception as e:
+        except HTTPError as e:
             print(e)
             return False
 
@@ -78,6 +78,5 @@ class Client(object):
 if __name__ == '__main__':
     c = Client(' Taishan 2280', ' Testid-123523')
     import sys
-    file = sys.argv[1]
-    c.upload(file)
-
+    file_name = sys.argv[1]
+    c.upload(file_name)

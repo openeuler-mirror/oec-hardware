@@ -56,7 +56,6 @@ class Job(object):
         """
         discover test
         :param testname:
-        :param device:
         :param subtests_filter:
         :return:
         """
@@ -84,7 +83,7 @@ class Job(object):
         for thing in dir(module):
             test_class = getattr(module, thing)
             try:
-                from types import ClassType as ct
+                from types import ClassType as classtype
             except ImportError:
                 ct = type
             if isinstance(test_class, ct) and issubclass(test_class, Test):
@@ -111,7 +110,7 @@ class Job(object):
         self.test_suite = []
         for test in self.test_factory:
             if test["run"]:
-                testclass = self.discover(test["name"], test["device"], subtests_filter)
+                testclass = self.discover(test["name"], subtests_filter)
                 if testclass:
                     testcase = dict()
                     testcase["test"] = testclass
@@ -165,6 +164,8 @@ class Job(object):
             name = testcase["name"] + "-" + testcase["device"].get_name()
         logname = name + ".log"
         reboot = None
+        test = None
+        logger = None
         try:
             test = testcase["test"]
             logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
@@ -253,4 +254,3 @@ class Job(object):
             for testcase in self.test_suite:
                 if test["name"] == testcase["name"] and test["device"].path == testcase["device"].path:
                     test["status"] = testcase["status"]
-

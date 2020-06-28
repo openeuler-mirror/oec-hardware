@@ -144,11 +144,12 @@ class CDRomTest(Test):
             else:
                 print("Blanking ...")
                 sys.stdout.flush()
-                blankCommand = Command("cdrecord -v dev=%s blank=fast" % devname).echo()
+                # blankCommand = Command("cdrecord -v dev=%s blank=fast" % devname).echo()
+                Command("cdrecord -v dev=%s blank=fast" % devname).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return self.write_test()
-        except CertCommandError as e:
+        except CertCommandError:
             return False
 
     def write_test(self):
@@ -165,15 +166,17 @@ class CDRomTest(Test):
                 sys.stdout.flush()
                 return True
             else:
-                write_opts ="-sao"
+                write_opts = "-sao"
                 try:
                     command = Command("cdrecord dev=%s -checkdrive" % devname)
-                    modes = command.get_str(regex="^Supported modes[^:]*:(?P<modes>.*$)", regex_group="modes", single_line=False, ignore_errors=True)
+                    modes = command.get_str(regex="^Supported modes[^:]*:(?P<modes>.*$)", regex_group="modes",
+                                            single_line=False, ignore_errors=True)
                     if "TAO" in modes:
-                        write_opts="-tao"
+                        write_opts = "-tao"
                     if "SAO" in modes:
-                        write_opts="-sao"
-                    flags = command.get_str(regex="^Driver flags[^:]*:(?P<flags>.*$)", regex_group="flags", single_line=False, ignore_errors=True)
+                        write_opts = "-sao"
+                    flags = command.get_str(regex="^Driver flags[^:]*:(?P<flags>.*$)", regex_group="flags",
+                                            single_line=False, ignore_errors=True)
                     if "BURNFREE" in flags:
                         write_opts += " driveropts=burnfree"
                 except CertCommandError as e:
@@ -182,11 +185,12 @@ class CDRomTest(Test):
                 size = Command("mkisofs -quiet -R -print-size %s " % self.test_dir).get_str()
                 blocks = int(size)
 
-                Command("mkisofs -quiet -R %s | cdrecord -v %s dev=%s fs=32M tsize=%ss -" % (self.test_dir, write_opts, devname, blocks)).echo()
+                Command("mkisofs -quiet -R %s | cdrecord -v %s dev=%s fs=32M tsize=%ss -" %
+                        (self.test_dir, write_opts, devname, blocks)).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return True
-        except CertCommandError as e:
+        except CertCommandError:
             return False
 
     def read_test(self):
@@ -244,7 +248,7 @@ class CDRomTest(Test):
         try:
             Command("diff -r %s %s" % (dir1, dir2)).run()
             return True
-        except CertCommandError as e:
+        except CertCommandError:
             print("Error: file comparison failed.")
             return False
 
@@ -263,17 +267,16 @@ class CDRomTest(Test):
             Command("eject %s" % device).run()
             print("tray ejected.")
             sys.stdout.flush()
-        except CertCommandError as e:
+        except CertCommandError:
             pass
 
         try:
             Command("eject -t %s" % device).run()
             print("tray auto-closed.\n")
             sys.stdout.flush()
-        except CertCommandError as e:
+        except CertCommandError:
             print("Could not auto-close the tray, please close the tray manually.")
             self.ui.prompt_confirm("Done well?")
 
         time.sleep(20)
         return True
-

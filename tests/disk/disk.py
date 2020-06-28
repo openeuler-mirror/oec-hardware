@@ -14,14 +14,12 @@
 
 import os
 import sys
-import time
 import shutil
-import string
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command, CertCommandError
 from hwcompatible.commandUI import CommandUI
-from hwcompatible.device import CertDevice, Device
+from hwcompatible.device import CertDevice
 
 
 class DiskTest(Test):
@@ -32,7 +30,11 @@ class DiskTest(Test):
         self.filesystems = ["ext4"]
         self.ui = CommandUI()
 
-    def setup(self):
+    def setup(self, args=None):
+        """
+        The Setup before testing
+        :return:
+        """
         try:
             print("Disk Info:")
             Command("fdisk -l").echo(ignore_errors=True)
@@ -63,7 +65,7 @@ class DiskTest(Test):
         self.disks.append("all")
         disk = self.ui.prompt_edit("Which disk would you like to test: ", self.disks[0], self.disks)
         return_code = True
-        if disk  == "all":
+        if disk == "all":
             for disk in self.disks[:-1]:
                 if not self.raw_test(disk):
                     return_code = False
@@ -126,9 +128,9 @@ class DiskTest(Test):
         device = "/dev/" + disk
         if not os.path.exists(device):
             print("Error: device %s not exists." % device)
-        proc_path="/sys/block/" + disk
+        proc_path = "/sys/block/" + disk
         if not os.path.exists(proc_path):
-            proc_path="/sys/block/*/" + disk
+            proc_path = "/sys/block/*/" + disk
         size = Command("cat %s/size" % proc_path).get_str()
         size = int(size)/2
         if size <= 0:
@@ -160,9 +162,9 @@ class DiskTest(Test):
         device = "/dev/" + disk
         if not os.path.exists(device):
             print("Error: device %s not exists." % device)
-        proc_path="/sys/block/" + disk
+        proc_path = "/sys/block/" + disk
         if not os.path.exists(proc_path):
-            proc_path="/sys/block/*/" + disk
+            proc_path = "/sys/block/*/" + disk
         size = Command("cat %s/size" % proc_path).get_str()
         size = int(size)/2/2
         if size <= 0:
@@ -219,8 +221,5 @@ class DiskTest(Test):
                 return False
             print("\n")
             sys.stdout.flush()
-            bs = bs *2
+            bs = bs * 2
         return True
-
-
-

@@ -15,7 +15,7 @@
 import json
 
 from .commandUI import CommandUI
-from .command import Command, CertCommandError
+from .command import Command
 from .device import Device
 from .sysinfo import SysInfo
 from .env import CertEnv

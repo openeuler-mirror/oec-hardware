@@ -22,6 +22,12 @@ class TapeTest(Test):
     """
     Tape test
     """
+    def __init__(self):
+        Test.__init__(self)
+        self.args = None
+        self.device = None
+        self.tapeDevice = None
+
     def setup(self, args=None):
         """
         Initialization before test

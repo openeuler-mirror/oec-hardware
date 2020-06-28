@@ -17,7 +17,6 @@ import sys
 import argparse
 from hwcompatible.test import Test
 from hwcompatible.command import Command, CertCommandError
-from hwcompatible.device import CertDevice, Device
 
 
 class NvmeTest(Test):
@@ -117,4 +116,3 @@ class NvmeTest(Test):
             return True
         if os.system("pvs 2>/dev/null | grep -q '/dev/%s'" % disk) == 0:
             return True
-
