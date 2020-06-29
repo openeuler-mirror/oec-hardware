@@ -15,7 +15,7 @@ Source0:        %{name}-%{version}-%{release}.tar.bz2
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
-Requires:       kernel-devel, kernel-headers, dmidecode
+Requires:       kernel-devel, kernel-headers, dmidecode, tar
 Requires:       qperf, fio, memtester
 Requires:       kernel >= 4
 Requires:       python3
@@ -24,7 +24,7 @@ Requires:       python3
 %package server
 Summary:        openEuler Hardware Compatibility Test Server
 Group:          Development/Tools
-Requires:       python3, python3-devel, nginx, qperf, psmisc
+Requires:       python3, python3-devel, nginx, tar, qperf, psmisc
 
 %description
 openEuler Hardware Compatibility Test Suite
