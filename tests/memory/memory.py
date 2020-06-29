@@ -36,7 +36,7 @@ class MemoryTest(Test):
         self.retry_list = list()
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
 
-    def setup(self):
+    def setup(self, args=None):
         """
         Initialization before test
         :return:
