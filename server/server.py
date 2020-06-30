@@ -89,7 +89,7 @@ def get_job(host, oec_id, job):
             info = json.load(f)
         with open(json_results, 'r') as f:
             results = json.load(f)
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except (IOError, ValueError):
         abort(404)
     return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
@@ -109,7 +109,7 @@ def get_device(host, oec_id, job, interface):
     try:
         with open(json_results, 'r') as f:
             results = json.load(f)
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except (IOError, ValueError):
         abort(404)
     for testcase in results:
         device = testcase.get('device')
@@ -133,7 +133,7 @@ def get_devices(host, oec_id, job):
     try:
         with open(json_devices, 'r') as f:
             devices = json.load(f)
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except (IOError, ValueError):
         abort(404)
     return render_template('devices.html', devices=devices)
 
@@ -193,7 +193,7 @@ def submit(host, oec_id, job):
             cert = json.load(f)
         with open(tar_job, 'rb') as f:
             attachment = base64.b64encode(f.read())
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except (IOError, ValueError) as e:
         print(e)
         abort(500)
 

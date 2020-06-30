@@ -49,7 +49,7 @@ class Document(object):
                 self.document = json.load(load_f)
                 load_f.close()
                 return True
-        except (IOError, json.decoder.JSONDecodeError):
+        except (IOError, ValueError):
             return False
 
 
