@@ -3,11 +3,11 @@
 ## 背景介绍
 OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂商的合作，进行兼容性测试。OS 厂商制定一个测试标准，并提供测试用例，硬件厂商进行实际的测试，测试通过后，OS 厂商和硬件厂商将共同对结果负责。这是一个双赢的合作，双方都可以藉此推销自己的产品。
 
-认证目的就是保证 OS 与硬件平台的兼容性，认证仅限于基本功能验证，不包括性能测试等其它测试。
+验证目的就是保证 OS 与硬件平台的兼容性，验证仅限于基本功能验证，不包括性能测试等其它测试。
 
-欧拉硬件兼容性认证测试框架有如下特点：
+openEuler硬件兼容性测试框架有如下特点：
 
-1. 为满足可信要求，必须使用欧拉操作系统，不能随意重编/插入内核模块。
+1. 为满足可信要求，必须使用openEuler操作系统，不能随意重编/插入内核模块。
 2. 通过扫描机制自适应发现硬件列表，来确定要运行的测试用例集合。
 3. 面向对象抽象各种硬件类型以及测试用例类，用于扩展开发。
 
@@ -51,7 +51,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 ### 获取安装包
 
-* 安装包从 openEuler 官方网站下载（暂未开放）。
+* 安装包从 openEuler 官方网站下载。
 
 * 校验安装包的完整性。
 
@@ -66,6 +66,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
      ```
      sha256sum oec-hardware-*.rpm
      ```
+	 
 
      命令执行完成后，输出校验值。
 
@@ -77,7 +78,7 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 #### 客户端
 
-1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，使用 `dnf` 安装客户端 oec-hardware。
+1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，以20.03 LTS的版本的everyting源为例，路径为https://repo.openeuler.org/openEuler-20.03-LTS/everything/。使用 `dnf` 安装客户端 oec-hardware。
 
    ```
    dnf install oec-hardware-XXX.rpm
@@ -86,13 +87,13 @@ OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂�
 
 #### 服务端
 
-1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，使用 `dnf` 安装服务端 oec-hardware-server。
+1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，以20.03 LTS的版本的everyting源为例，路径为https://repo.openeuler.org/openEuler-20.03-LTS/everything/。使用 `dnf` 安装服务端 oec-hardware-server。
 
    ```
    dnf install oec-hardware-server-XXX.rpm
    ```
 
-2. 服务端 web 展示页面部分组件系统本身不提供，需要使用 `pip3` 安装（请自行配置可用 pip 源）。
+2. 服务端 web 展示页面需要的部分组件系统本身不提供，需要使用 `pip3` 安装（请自行配置可用 pip 源）。
 
    ```
    pip3 install Flask Flask-bootstrap uwsgi
