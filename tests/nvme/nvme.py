@@ -16,7 +16,7 @@ import os
 import sys
 import argparse
 from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 
 
 class NvmeTest(Test):
@@ -81,7 +81,7 @@ class NvmeTest(Test):
 
             Command("nvme list").echo(ignore_errors=True)
             return True
-        except CertCommandError as e:
+        except Exception as e:
             print("Error: nvme cmd fail.")
             print(e)
             return False

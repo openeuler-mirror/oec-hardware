@@ -43,7 +43,7 @@ class SysInfo(object):
             f = open(filename)
             text = f.read()
             f.close()
-        except IOError:
+        except:
             print("Release file not found.")
             return
 

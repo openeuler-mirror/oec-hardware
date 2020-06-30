@@ -75,7 +75,7 @@ class Job(object):
         sys.path.insert(0, dirpath)
         try:
             module = __import__(testname, globals(), locals())
-        except ImportError as e:
+        except Exception as e:
             print("Error: module import failed for %s" % testname)
             print(e)
             return None
@@ -183,7 +183,7 @@ class Job(object):
                         return_code = test.test()
                 else:
                     return_code = test.test()
-        except (IOError, KeyError, AttributeError) as e:
+        except Exception as e:
             print(e)
             return_code = False
 

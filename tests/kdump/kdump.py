@@ -42,7 +42,7 @@ class KdumpTest(Test):
         """
         try:
             Command("cat /proc/cmdline").get_str(r"crashkernel=[^\ ]*")
-        except (OSError, ValueError):
+        except:
             print("Error: no crashkernel found.")
             return False
 
@@ -59,7 +59,7 @@ class KdumpTest(Test):
         try:
             Command("systemctl restart kdump").run()
             Command("systemctl status kdump").get_str(regex="Active: active", single_line=False)
-        except (OSError, ValueError):
+        except:
             print("Error: kdump service not working.")
             return False
 

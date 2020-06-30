@@ -243,7 +243,7 @@ class MemoryTest(Test):
             Command("echo 1 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("online")
             return True
-        except CertCommandError:
+        except:
             print("Error: fail to online %s." % memory_path)
             return False
 
@@ -258,7 +258,7 @@ class MemoryTest(Test):
             Command("echo 0 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("offline")
             return True
-        except CertCommandError:
+        except:
             print("Error: fail to online %s." % memory_path)
             return False
 
@@ -294,7 +294,7 @@ class MemoryTest(Test):
                 Command("cat %s/removable" % memory_path).get_str("1")
                 print("%s is removable, start testing..." % os.path.basename(memory_path))
                 test_flag = 1
-            except CertCommandError:
+            except:
                 continue
             if not self.hotplug_memory_test(memory_path):
                 print("%s hotplug test fail." % os.path.basename(memory_path))

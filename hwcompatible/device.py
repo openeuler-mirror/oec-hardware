@@ -73,7 +73,7 @@ class CertDevice(object):
                                 properties["INFO"] = attribute
                 else:
                     break
-        except CertCommandError as e:
+        except Exception as e:
             print("Warning: get devices fail")
             print(e)
         self.devices.sort(key=lambda k: k.path)

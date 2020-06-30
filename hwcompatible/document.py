@@ -37,7 +37,7 @@ class Document(object):
             with open(self.filename, "w+") as save_f:
                 json.dump(self.document, save_f, indent=4)
                 save_f.close()
-        except (IOError, ValueError) as e:
+        except Exception as e:
             print("Error: doc save fail.")
             print(e)
             return False
@@ -49,7 +49,7 @@ class Document(object):
                 self.document = json.load(load_f)
                 load_f.close()
                 return True
-        except (IOError, ValueError):
+        except:
             return False
 
 
@@ -86,7 +86,7 @@ class CertDocument(Document):
                             self.document[key] = value
                 else:
                     break
-        except OSError as e:
+        except Exception as e:
             print("Error: get hardware info fail.")
             print(e)
 

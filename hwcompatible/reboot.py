@@ -73,7 +73,7 @@ class Reboot(object):
         try:
             Command("systemctl daemon-reload").run_quiet()
             Command("systemctl enable oech").run_quiet()
-        except OSError as e:
+        except:
             print("Error: enable oech.service fail.")
             return False
 
@@ -95,7 +95,7 @@ class Reboot(object):
             self.job.job_id = self.reboot["job_id"]
             self.job.subtests_filter = self.reboot["rebootup"]
             time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
-        except KeyError:
+        except:
             print("Error: reboot file format not as expect.")
             return False
 

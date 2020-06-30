@@ -16,7 +16,7 @@ import os
 import re
 import argparse
 
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 from hwcompatible.document import CertDocument
 from hwcompatible.env import CertEnv
 from network import NetworkTest
@@ -61,7 +61,7 @@ class RDMATest(NetworkTest):
         c = Command(cmd)
         try:
             self.ib_device = c.read()
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -70,7 +70,7 @@ class RDMATest(NetworkTest):
         c = Command(cmd)
         try:
             self.ib_port = int(c.read(), 16) + 1
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -93,7 +93,7 @@ class RDMATest(NetworkTest):
                 self.phys_state = re.search(r"phys state:\s+(.*)", info).group(1)
                 self.link_layer = re.search(r"link_layer:\s+(.*)", info).group(1)
                 self.speed = int(re.search(r"rate:\s+(\d*)", info).group(1)) * 1024
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -156,7 +156,7 @@ class RDMATest(NetworkTest):
             print("Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
                   (avg_bw, tgt_bw))
             return avg_bw > tgt_bw
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             self.call_remote_server(cmd, 'stop')
             return False

@@ -149,7 +149,7 @@ class CDRomTest(Test):
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return self.write_test()
-        except CertCommandError:
+        except CertCommandError as e:
             return False
 
     def write_test(self):
@@ -190,7 +190,7 @@ class CDRomTest(Test):
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return True
-        except CertCommandError:
+        except CertCommandError as e:
             return False
 
     def read_test(self):
@@ -248,7 +248,7 @@ class CDRomTest(Test):
         try:
             Command("diff -r %s %s" % (dir1, dir2)).run()
             return True
-        except CertCommandError:
+        except CertCommandError as e:
             print("Error: file comparison failed.")
             return False
 
@@ -267,14 +267,14 @@ class CDRomTest(Test):
             Command("eject %s" % device).run()
             print("tray ejected.")
             sys.stdout.flush()
-        except CertCommandError:
+        except:
             pass
 
         try:
             Command("eject -t %s" % device).run()
             print("tray auto-closed.\n")
             sys.stdout.flush()
-        except CertCommandError:
+        except:
             print("Could not auto-close the tray, please close the tray manually.")
             self.ui.prompt_confirm("Done well?")
 

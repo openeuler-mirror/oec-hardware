@@ -86,7 +86,7 @@ class EulerCertification(object):
             reboot.clean()
             self.save(job)
             return True
-        except (IOError, OSError, TypeError) as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -100,7 +100,7 @@ class EulerCertification(object):
                 Command("rm -rf %s" % CertEnv.certificationfile).run()
                 Command("rm -rf %s" % CertEnv.factoryfile).run()
                 Command("rm -rf %s" % CertEnv.devicefile).run()
-            except CertCommandError as e:
+            except Exception as e:
                 print(e)
                 return False
         return True
@@ -324,7 +324,7 @@ class EulerCertification(object):
         try:
             Command("dmidecode").get_str("IPMI Device Information", single_line=False)
             sort_devices["ipmi"] = [empty_device]
-        except OSError as e:
+        except:
             pass
 
         return sort_devices
@@ -361,7 +361,7 @@ class EulerCertification(object):
 
             try:
                 num = int(reply)
-            except ValueError:
+            except:
                 continue
 
             if num > 0 and num <= len(self.test_factory):

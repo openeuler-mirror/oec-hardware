@@ -25,7 +25,7 @@ except ImportError:
     from urllib2 import urlopen, Request, HTTPError
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 from hwcompatible.document import CertDocument
 from hwcompatible.env import CertEnv
 
@@ -101,7 +101,7 @@ class NetworkTest(Test):
         try:
             c.run()
             return c.output
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return []
 
@@ -136,7 +136,7 @@ class NetworkTest(Test):
         try:
             speed = c.get_str(pattern, 'speed', False)
             return int(speed)
-        except CertCommandError:
+        except Exception as e:
             print("[X] No speed found on the interface.")
             return None
 
@@ -150,7 +150,7 @@ class NetworkTest(Test):
         try:
             ip = c.get_str(pattern, 'ip', False)
             return ip
-        except CertCommandError:
+        except Exception as e:
             print("[X] No available ip on the interface.")
             return None
 
@@ -170,7 +170,7 @@ class NetworkTest(Test):
                 c.print_output()
                 if float(loss) == 0:
                     return True
-            except CertCommandError as e:
+            except Exception as e:
                 print(e)
         return False
 
@@ -194,7 +194,7 @@ class NetworkTest(Test):
         try:
             request = Request(url, data=data, headers=headers)
             response = urlopen(request)
-        except HTTPError as e:
+        except Exception as e:
             print(e)
             return False
         print("Status: %u %s" % (response.code, response.msg))
@@ -243,7 +243,7 @@ class NetworkTest(Test):
                       (bandwidth, target_bandwidth))
                 if bandwidth > target_bandwidth:
                     return True
-            except CertCommandError as e:
+            except Exception as e:
                 print(e)
         return False
 
@@ -269,7 +269,7 @@ class NetworkTest(Test):
         try:
             with open(self.testfile, 'rb') as f:
                 filetext = base64.b64encode(f.read())
-        except IOError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -286,7 +286,7 @@ class NetworkTest(Test):
         try:
             request = Request(url, data=data, headers=headers)
             response = urlopen(request)
-        except HTTPError as e:
+        except Exception as e:
             print(e)
             return False
         time_stop = time.time()
@@ -309,7 +309,7 @@ class NetworkTest(Test):
         time_start = time.time()
         try:
             response = urlopen(url)
-        except HTTPError as e:
+        except Exception as e:
             print(e)
             return False
         time_stop = time.time()
@@ -321,7 +321,7 @@ class NetworkTest(Test):
         try:
             with open(self.testfile, 'wb') as f:
                 f.write(filetext)
-        except IOError as e:
+        except Exception as e:
             print(e)
             return False
 

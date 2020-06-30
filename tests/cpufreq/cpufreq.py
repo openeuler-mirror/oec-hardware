@@ -17,7 +17,7 @@ from time import sleep
 
 from hwcompatible.env import CertEnv
 from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 
 
 class CPU(object):
@@ -39,7 +39,7 @@ class CPU(object):
         cmd = Command("lscpu")
         try:
             nums = cmd.get_str(r'^CPU\S*:\s+(?P<cpus>\d+)$', 'cpus', False)
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
         self.nums = int(nums)
@@ -48,7 +48,7 @@ class CPU(object):
         cmd = Command("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq")
         try:
             max_freq = cmd.get_str()
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
         self.max_freq = int(max_freq)
@@ -56,7 +56,7 @@ class CPU(object):
         cmd = Command("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq")
         try:
             min_freq = cmd.get_str()
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
         self.min_freq = int(min_freq)
@@ -75,7 +75,7 @@ class CPU(object):
         try:
             cmd.run()
             return cmd.returncode
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -89,7 +89,7 @@ class CPU(object):
         cmd = Command("cpupower -c %s frequency-info -w" % cpu)
         try:
             return int(cmd.get_str(r'.* frequency: (?P<freq>\d+) .*', 'freq', False))
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -105,7 +105,7 @@ class CPU(object):
         try:
             cmd.run()
             return cmd.returncode
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -119,7 +119,7 @@ class CPU(object):
         cmd = Command("cpupower -c %s frequency-info -p" % cpu)
         try:
             return cmd.get_str(r'.* governor "(?P<governor>\w+)".*', 'governor', False)
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -135,7 +135,7 @@ class CPU(object):
         try:
             cmd.run()
             return cmd.returncode
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 

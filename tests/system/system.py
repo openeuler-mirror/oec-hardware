@@ -83,7 +83,7 @@ class SystemTest(Test):
                 sys.stdout.flush()
                 if rpm_verify.output and len(rpm_verify.output) > 0:
                     return_code = False
-            except OSError:
+            except:
                 print("Error: files in %s have been tampered." % cert_package)
                 return_code = False
         return return_code
@@ -113,7 +113,7 @@ class SystemTest(Test):
             if kernel_dict.document[os_version] != self.sysinfo.kernel_version:
                 print("Error: kernel %s check GA status fail." % self.sysinfo.kernel_version)
                 return_code = False
-        except KeyError:
+        except:
             print("Error: %s is not supported." % os_version)
             return_code = False
 
@@ -148,7 +148,7 @@ class SystemTest(Test):
                     print("")
 
             tainted_file.close()
-        except (IOError, ValueError) as e:
+        except Exception as e:
             print(e)
             print("Error: could not determine if kernel is tainted.")
             return_code = False
@@ -161,7 +161,7 @@ class SystemTest(Test):
         try:
             params = Command("cat /proc/cmdline").get_str()
             print("Boot Parameters: %s" % params)
-        except OSError as e:
+        except Exception as e:
             print(e)
             print("Error: could not determine boot parameters.")
             return_code = False
@@ -308,7 +308,7 @@ class SystemTest(Test):
             if os.path.islink(modulefile):
                 modulefile = os.readlink(modulefile)
             return modulefile
-        except OSError:
+        except:
             print("Error: could no find module file for %s:" % module)
             return None
 

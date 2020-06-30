@@ -44,7 +44,7 @@ class Client(object):
             job = filename.split('.')[0]
             with open(files, 'rb') as f:
                 filetext = base64.b64encode(f.read())
-        except IOError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -70,7 +70,7 @@ class Client(object):
                 print("Error: upload failed, %s" % res.msg)
                 return False
             return True
-        except HTTPError as e:
+        except Exception as e:
             print(e)
             return False
 
