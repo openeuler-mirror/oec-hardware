@@ -1,5 +1,5 @@
 %define version    1.0.0
-%define release    h2
+%define release    2
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
@@ -71,6 +71,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
-* Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h2
+* Sun Jul 01 2020 Cui XuCui <cuixucui@huawei.com> - 1.0.0-2
+* Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h1
 - Initial spec
 
