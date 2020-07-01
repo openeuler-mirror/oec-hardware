@@ -65,8 +65,7 @@ class WatchDogTest(Test):
             print("")
             return False
 
-    @staticmethod
-    def startup():
+    def startup(self):
         """
         Initialization before test
         :return:

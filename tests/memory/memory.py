@@ -186,8 +186,7 @@ class MemoryTest(Test):
             return False
         return True
 
-    @staticmethod
-    def hot_plug_verify():
+    def hot_plug_verify(self):
         """
         Verify hot plug
         :return:
@@ -232,8 +231,7 @@ class MemoryTest(Test):
         if total_mem_3 != total_mem_1:
             return False
 
-    @staticmethod
-    def online_memory(memory_path):
+    def online_memory(self, memory_path):
         """
         Set memory online
         :param memory_path:
@@ -247,8 +245,7 @@ class MemoryTest(Test):
             print("Error: fail to online %s." % memory_path)
             return False
 
-    @staticmethod
-    def offline_memory(memory_path):
+    def offline_memory(self, memory_path):
         """
         Set memory offline
         :param memory_path:

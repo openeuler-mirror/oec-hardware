@@ -24,8 +24,7 @@ class AcpiTest(Test):
         Test.__init__(self)
         self.requirements = ["acpica-tools"]
 
-    @staticmethod
-    def test():
+    def test(self):
         try:
             Command("acpidump").echo()
             return True

@@ -97,8 +97,7 @@ class UsbTest(Test):
             if self.ui.prompt_confirm("All usb sockets have been tested?"):
                 return True
 
-    @staticmethod
-    def get_usb():
+    def get_usb(self):
         """
         Get usb
         :return:

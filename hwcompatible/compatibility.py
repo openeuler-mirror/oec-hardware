@@ -461,8 +461,7 @@ class EulerCertification(object):
         self.test_factory.sort(key=lambda k: k["name"])
         FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
 
-    @staticmethod
-    def search_factory(obj_test, test_factory):
+    def search_factory(self, obj_test, test_factory):
         """
         Determine whether test exists by searching test_factory
         :param obj_test:

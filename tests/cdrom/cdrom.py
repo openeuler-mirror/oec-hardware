@@ -77,8 +77,7 @@ class CDRomTest(Test):
             return False
         return True
 
-    @staticmethod
-    def get_type(device):
+    def get_type(self, device):
         """
         Get the type of CDROM
         :param device:
@@ -234,8 +233,7 @@ class CDRomTest(Test):
             print(e)
             return False
 
-    @staticmethod
-    def cmp_tree(dir1, dir2):
+    def cmp_tree(self, dir1, dir2):
         """
         Compare the differences between the two directories
         :param dir1:

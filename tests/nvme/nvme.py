@@ -86,8 +86,7 @@ class NvmeTest(Test):
             print(e)
             return False
 
-    @staticmethod
-    def in_use(disk):
+    def in_use(self, disk):
         """
         Determine whether the swapon is in use
         :param disk:

@@ -24,8 +24,7 @@ class IpmiTest(Test):
         Test.__init__(self)
         self.requirements = ["OpenIPMI", "ipmitool"]
 
-    @staticmethod
-    def start_ipmi():
+    def start_ipmi(self):
         """
         Start IPMI test
         :return:
@@ -38,8 +37,7 @@ class IpmiTest(Test):
             return False
         return True
 
-    @staticmethod
-    def ipmitool():
+    def ipmitool(self):
         """
         Testing with iptool tools
         :return:

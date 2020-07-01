@@ -51,8 +51,7 @@ class Job(object):
             for parameter_name, parameter_value in self.args.test_parameters:
                 self.test_parameters[parameter_name] = parameter_value
 
-    @staticmethod
-    def discover(testname, subtests_filter=None):
+    def discover(self, testname, subtests_filter=None):
         """
         discover test
         :param testname:

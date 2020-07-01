@@ -68,8 +68,7 @@ class SystemTest(Test):
 
         return return_code
 
-    @staticmethod
-    def check_certrpm():
+    def check_certrpm(self):
         """
         Check installed cert package
         :return:
@@ -168,8 +167,7 @@ class SystemTest(Test):
 
         return return_code
 
-    @staticmethod
-    def get_modules(sign):
+    def get_modules(self, sign):
         """
         Get the module with signs character
         :param sign:
@@ -238,8 +236,7 @@ class SystemTest(Test):
         print("")
         return True
 
-    @staticmethod
-    def read_abi_whitelist(whitelist):
+    def read_abi_whitelist(self, whitelist):
         """
         Read abi whitelist
         :param whitelist:
@@ -296,8 +293,7 @@ class SystemTest(Test):
         nm.close()
         return self.readSymbols(symbols)
 
-    @staticmethod
-    def get_modulefile(module):
+    def get_modulefile(self, module):
         """
         Get module file
         :param module:
@@ -312,8 +308,7 @@ class SystemTest(Test):
             print("Error: could no find module file for %s:" % module)
             return None
 
-    @staticmethod
-    def check_selinux():
+    def check_selinux(self):
         """
         check selinux
         :return:

@@ -50,8 +50,7 @@ class NetworkTest(Test):
         self.target_bandwidth_percent = 0.8
         self.testfile = 'testfile'
 
-    @staticmethod
-    def ifdown(interface):
+    def ifdown(self, interface):
         """
         Judge whether the specified interface is closed successfully
         :param interface:
@@ -64,8 +63,7 @@ class NetworkTest(Test):
             time.sleep(1)
         return False
 
-    @staticmethod
-    def ifup(interface):
+    def ifup(self, interface):
         """
         Judge whether the specified interface is enabled successfully
         :param interface:
@@ -78,8 +76,7 @@ class NetworkTest(Test):
                 return True
         return False
 
-    @staticmethod
-    def get_other_interfaces():
+    def get_other_interfaces(self):
         """
         Get other interfaces
         :return:

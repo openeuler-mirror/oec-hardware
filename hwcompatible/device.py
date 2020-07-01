@@ -63,8 +63,8 @@ class CertDevice(object):
                     else:
                         prop = line.split(":", 1)
                         if len(prop) == 2:
-                            tp = prop[0].strip(r'\ \'\n')
-                            attribute = prop[1].strip(r'\ \'\n')
+                            tp = prop[0].strip('\ \'\n')
+                            attribute = prop[1].strip('\ \'\n')
                             if tp == "E":
                                 keyvalue = attribute.split("=", 1)
                                 if len(keyvalue) == 2:

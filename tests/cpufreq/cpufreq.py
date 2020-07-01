@@ -63,8 +63,7 @@ class CPU(object):
 
         return True
 
-    @staticmethod
-    def set_freq(freq, cpu='all'):
+    def set_freq(self, freq, cpu='all'):
         """
         Set CPU frequency
         :param freq:
@@ -79,8 +78,7 @@ class CPU(object):
             print(e)
             return False
 
-    @staticmethod
-    def get_freq(cpu):
+    def get_freq(self, cpu):
         """
         Get CPU frequency
         :param cpu:
@@ -93,8 +91,7 @@ class CPU(object):
             print(e)
             return False
 
-    @staticmethod
-    def set_governor(governor, cpu='all'):
+    def set_governor(self, governor, cpu='all'):
         """
         Set the frequency governor mode of CPU
         :param governor:
@@ -109,8 +106,7 @@ class CPU(object):
             print(e)
             return False
 
-    @staticmethod
-    def get_governor(cpu):
+    def get_governor(self, cpu):
         """
         Get cpu governor
         :param cpu:
@@ -123,8 +119,7 @@ class CPU(object):
             print(e)
             return False
 
-    @staticmethod
-    def find_path(parent_dir, target_name):
+    def find_path(self, parent_dir, target_name):
         """
         Find the target path from the specified directory
         :param parent_dir:

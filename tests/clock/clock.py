@@ -23,8 +23,7 @@ class ClockTest(Test):
     """
     Clock Test
     """
-    @staticmethod
-    def test():
+    def test(self):
         """
         Clock test case
         :return:

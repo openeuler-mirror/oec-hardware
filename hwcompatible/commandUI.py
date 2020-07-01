@@ -98,8 +98,7 @@ class CommandUI(object):
                 return False
             sys.stdout.write("Please reply %s or %s.\n" % (YES, NO))
 
-    @staticmethod
-    def prompt_edit(label, value, choices=None):
+    def prompt_edit(self, label, value, choices=None):
         """
         prompt choice edit
         :param label:
