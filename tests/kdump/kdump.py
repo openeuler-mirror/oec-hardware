@@ -23,7 +23,9 @@ from hwcompatible.command import Command, CertCommandError
 
 
 class KdumpTest(Test):
-
+    """
+    Kdump Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.pri = 9
@@ -34,9 +36,13 @@ class KdumpTest(Test):
         self.requirements = ["crash", "kernel-debuginfo", "kexec-tools"]
 
     def test(self):
+        """
+        Test case
+        :return:
+        """
         try:
             Command("cat /proc/cmdline").get_str(r"crashkernel=[^\ ]*")
-        except (OSError, ValueError):
+        except:
             print("Error: no crashkernel found.")
             return False
 
@@ -53,7 +59,7 @@ class KdumpTest(Test):
         try:
             Command("systemctl restart kdump").run()
             Command("systemctl status kdump").get_str(regex="Active: active", single_line=False)
-        except (OSError, ValueError):
+        except:
             print("Error: kdump service not working.")
             return False
 
@@ -75,11 +81,17 @@ class KdumpTest(Test):
             return False
 
     def verify_vmcore(self):
+        """
+        Verify vmcore
+        :return:
+        """
         config = ConfigFile(self.kdump_conf)
         if config.get_parameter("path"):
             self.vmcore_path = config.get_parameter("path")
 
-        dir_pattern = re.compile(r"(?P<ipaddr>[0-9]+\.[0-9]+\.[0-9]+)-(?P<date>[0-9]+(-|\.)[0-9]+(-|\.)[0-9]+)-(?P<time>[0-9]+:[0-9]+:[0-9]+)")
+        dir_pattern = re.compile(r'(?P<ipaddr>[0-9]+\.[0-9]+\.[0-9]+)-(?P<date>[0-9]+[-.][0-9]+[-.][0-9]+)-'
+                                 r'(?P<time>[0-9]+:[0-9]+:[0-9]+)')
+
         vmcore_dirs = list()
         for (root, dirs, files) in os.walk(self.vmcore_path):
             for eve_dir in dirs:
@@ -96,4 +108,3 @@ class KdumpTest(Test):
             print("Error: could not verify kdump image %s" % vmcore_file)
             print(e)
             return False
-

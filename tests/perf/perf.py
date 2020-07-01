@@ -14,11 +14,13 @@
 
 import re
 from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 
 
 class PerfTest(Test):
-
+    """
+    Perf Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["perf"]
@@ -27,6 +29,10 @@ class PerfTest(Test):
         self.perfReport = "perf report -i hwcompatible-perf.data --stdio"
 
     def exec_perf(self):
+        """
+        Execute perf command
+        :return:
+        """
         # record
         print("Collecting the perf record using the command '%s'." % self.perfRecord)
         perfRecordEcho = Command(self.perfRecord).read()
@@ -47,7 +53,7 @@ class PerfTest(Test):
 
         # report
         perfReportEcho = Command(self.perfReport).read()
-        perfReportMacth = re.search("\s*\S+\s+(\[\S+.\S+\])\s+\S+", perfReportEcho)
+        perfReportMacth = re.search(r"\s*\S+\s+(\[\S+.\S+\])\s+\S+", perfReportEcho)
         if not perfReportMacth:
             print("Error: no samples found. Failed to fetch report because of:\n %s." % perfReportEcho)
             return False
@@ -56,6 +62,10 @@ class PerfTest(Test):
         return True
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         if not self.exec_perf():
             return False
         return True

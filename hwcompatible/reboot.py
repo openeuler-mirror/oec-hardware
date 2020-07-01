@@ -20,7 +20,9 @@ from .command import Command, CertCommandError
 
 
 class Reboot:
-
+    """
+    Special for restart tasks, so that the test can be continued after the machine is restarted
+    """
     def __init__(self, testname, job, rebootup):
         self.testname = testname
         self.rebootup = rebootup
@@ -28,6 +30,10 @@ class Reboot:
         self.reboot = dict()
 
     def clean(self):
+        """
+        Remove reboot file
+        :return:
+        """
         if not (self.job and self.testname):
             return
 
@@ -39,6 +45,10 @@ class Reboot:
         Command("systemctl disable oech").run(ignore_errors=True)
 
     def setup(self):
+        """
+        Reboot  setuping
+        :return:
+        """
         if not (self.job and self.testname):
             print("Error: invalid reboot input.")
             return False
@@ -63,13 +73,17 @@ class Reboot:
         try:
             Command("systemctl daemon-reload").run_quiet()
             Command("systemctl enable oech").run_quiet()
-        except OSError as e:
+        except:
             print("Error: enable oech.service fail.")
             return False
 
         return True
 
     def check(self):
+        """
+        Reboot file check
+        :return:
+        """
         doc = Document(CertEnv.rebootfile)
         if not doc.load():
             print("Error: reboot file load fail.")
@@ -81,7 +95,7 @@ class Reboot:
             self.job.job_id = self.reboot["job_id"]
             self.job.subtests_filter = self.reboot["rebootup"]
             time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
-        except KeyError:
+        except:
             print("Error: reboot file format not as expect.")
             return False
 

@@ -16,14 +16,16 @@ import os
 import re
 import argparse
 
-from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 from hwcompatible.document import CertDocument
 from hwcompatible.env import CertEnv
 from network import NetworkTest
 
 
 class RDMATest(NetworkTest):
+    """
+    RDMA Test
+    """
     def __init__(self):
         NetworkTest.__init__(self)
         self.args = None
@@ -47,6 +49,10 @@ class RDMATest(NetworkTest):
         self.target_bandwidth_percent = 0.5
 
     def get_ibstatus(self):
+        """
+        Get ibstatus
+        :return:
+        """
         path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
         path_pci = path_netdev.split('net')[0]
         path_ibdev = 'infiniband_verbs/uverb*/ibdev'
@@ -55,7 +61,7 @@ class RDMATest(NetworkTest):
         c = Command(cmd)
         try:
             self.ib_device = c.read()
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -64,7 +70,7 @@ class RDMATest(NetworkTest):
         c = Command(cmd)
         try:
             self.ib_port = int(c.read(), 16) + 1
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
@@ -87,13 +93,17 @@ class RDMATest(NetworkTest):
                 self.phys_state = re.search(r"phys state:\s+(.*)", info).group(1)
                 self.link_layer = re.search(r"link_layer:\s+(.*)", info).group(1)
                 self.speed = int(re.search(r"rate:\s+(\d*)", info).group(1)) * 1024
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             return False
 
         return True
 
     def test_rping(self):
+        """
+        Test rping
+        :return:
+        """
         if not self.call_remote_server('rping', 'start', self.server_ip):
             print("start rping server failed.")
             return False
@@ -107,6 +117,10 @@ class RDMATest(NetworkTest):
             return False
 
     def test_rcopy(self):
+        """
+        Test rcopy
+        :return:
+        """
         if not self.call_remote_server('rcopy', 'start', self.server_ip):
             print("start rcopy server failed.")
             return False
@@ -118,6 +132,11 @@ class RDMATest(NetworkTest):
         return 0 == ret
 
     def test_bw(self, cmd):
+        """
+        Test bandwidth
+        :param cmd:
+        :return:
+        """
         if self.link_layer == 'Ethernet':
             cmd = cmd + ' -R'
 
@@ -130,19 +149,23 @@ class RDMATest(NetworkTest):
         c = Command(cmd)
         pattern = r"\s+(\d+)\s+(\d+)\s+([\.\d]+)\s+(?P<avg_bw>[\.\d]+)\s+([\.\d]+)"
         try:
-            avg_bw = c.get_str(pattern, 'avg_bw', False)   ## MB/sec
+            avg_bw = c.get_str(pattern, 'avg_bw', False)   # MB/sec
             avg_bw = float(avg_bw) * 8
 
             tgt_bw = self.target_bandwidth_percent * self.speed
             print("Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
                   (avg_bw, tgt_bw))
             return avg_bw > tgt_bw
-        except CertCommandError as e:
+        except Exception as e:
             print(e)
             self.call_remote_server(cmd, 'stop')
             return False
 
     def test_rdma(self):
+        """
+        Test Remote Direct Memory Access
+        :return:
+        """
         print("[+] Testing rping...")
         if not self.test_rping():
             print("[X] Test rping failed.")
@@ -176,6 +199,10 @@ class RDMATest(NetworkTest):
         return True
 
     def test_ibstatus(self):
+        """
+        Test ibstatus
+        :return:
+        """
         if 0 != os.system("systemctl start opensm"):
             print("[X] start opensm failed.")
             return False
@@ -191,6 +218,11 @@ class RDMATest(NetworkTest):
         return True
 
     def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
@@ -199,6 +231,10 @@ class RDMATest(NetworkTest):
         self.server_ip = self.cert.get_server()
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         try:
             input = raw_input
         except NameError:

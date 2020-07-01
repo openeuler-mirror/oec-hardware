@@ -16,22 +16,34 @@ import os
 import sys
 import argparse
 from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
-from hwcompatible.device import CertDevice, Device
+from hwcompatible.command import Command
 
 
 class NvmeTest(Test):
-
+    """
+    Test Non-Volatile Memory express
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["nvme-cli"]
+        self.args = None
+        self.device = None
 
     def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(args, "device", None)
         Command("nvme list").echo(ignore_errors=True)
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         disk = self.device.get_name()
         if self.in_use(disk):
             print("%s is in use now, skip this test." % disk)
@@ -69,13 +81,17 @@ class NvmeTest(Test):
 
             Command("nvme list").echo(ignore_errors=True)
             return True
-        except CertCommandError as e:
+        except Exception as e:
             print("Error: nvme cmd fail.")
             print(e)
             return False
 
-    @staticmethod
-    def in_use(disk):
+    def in_use(self, disk):
+        """
+        Determine whether the swapon is in use
+        :param disk:
+        :return:
+        """
         os.system("swapon -a 2>/dev/null")
         swap_file = open("/proc/swaps", "r")
         swap = swap_file.read()
@@ -99,4 +115,3 @@ class NvmeTest(Test):
             return True
         if os.system("pvs 2>/dev/null | grep -q '/dev/%s'" % disk) == 0:
             return True
-

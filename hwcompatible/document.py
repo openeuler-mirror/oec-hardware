@@ -15,14 +15,17 @@
 import json
 
 from .commandUI import CommandUI
-from .command import Command, CertCommandError
+from .command import Command
 from .device import Device
 from .sysinfo import SysInfo
 from .env import CertEnv
 
 
-class Document:
-    def __init__(self, filename, document={}):
+class Document():
+    """
+    Read and write documents
+    """
+    def __init__(self, filename, document=''):
         self.document = document
         self.filename = filename
 
@@ -34,7 +37,7 @@ class Document:
             with open(self.filename, "w+") as save_f:
                 json.dump(self.document, save_f, indent=4)
                 save_f.close()
-        except (IOError, ValueError) as e:
+        except Exception as e:
             print("Error: doc save fail.")
             print(e)
             return False
@@ -46,13 +49,16 @@ class Document:
                 self.document = json.load(load_f)
                 load_f.close()
                 return True
-        except (IOError, json.decoder.JSONDecodeError):
+        except:
             return False
 
 
 class CertDocument(Document):
-    def __init__(self, filename, document={}):
-        super(CertDocument, self).__init__()
+    """
+    get hardware and release information
+    """
+    def __init__(self, filename, document=''):
+        # super(CertDocument, self).__init__(filename, document)
         self.document = dict()
         self.filename = filename
         if not document:
@@ -61,6 +67,10 @@ class CertDocument(Document):
             self.documemt = document
 
     def new(self):
+        """
+        new document object
+        :return:
+        """
         try:
             pipe = Command("/usr/sbin/dmidecode -t 1")
             pipe.start()
@@ -68,15 +78,15 @@ class CertDocument(Document):
             while True:
                 line = pipe.readline()
                 if line:
-                    property = line.split(":", 1)
-                    if len(property) == 2:
-                        key = property[0].strip()
-                        value = property[1].strip()
+                    property_right = line.split(":", 1)
+                    if len(property_right) == 2:
+                        key = property_right[0].strip()
+                        value = property_right[1].strip()
                         if key in ["Manufacturer", "Product Name", "Version"]:
                             self.document[key] = value
                 else:
                     break
-        except OSError as e:
+        except Exception as e:
             print("Error: get hardware info fail.")
             print(e)
 
@@ -107,8 +117,11 @@ class CertDocument(Document):
 
 
 class DeviceDocument(Document):
-    def __init__(self, filename, devices=[]):
-        super(DeviceDocument, self).__init__()
+    """
+    get device document
+    """
+    def __init__(self, filename, devices=''):
+        # super(DeviceDocument, self).__init__(filename, devices)
         self.filename = filename
         self.document = list()
         if not devices:
@@ -119,8 +132,12 @@ class DeviceDocument(Document):
 
 
 class FactoryDocument(Document):
-    def __init__(self, filename, factory=[]):
-        super(FactoryDocument, self).__init__()
+    """
+    get factory from file or factory parameter
+    """
+
+    def __init__(self, filename, factory=''):
+        # super(FactoryDocument, self).__init__(filename, factory)
         self.document = list()
         self.filename = filename
         if not factory:
@@ -135,6 +152,10 @@ class FactoryDocument(Document):
                 self.document.append(element)
 
     def get_factory(self):
+        """
+        Get factory parameter information
+        :return:
+        """
         factory = list()
         for element in self.document:
             test = dict()
@@ -148,8 +169,10 @@ class FactoryDocument(Document):
 
 
 class ConfigFile:
+    """
+    Get parameters from configuration file
+    """
     def __init__(self, filename):
-        super(ConfigFile, self).__init__()
         self.filename = filename
         self.parameters = dict()
         self.config = list()
@@ -190,6 +213,11 @@ class ConfigFile:
         return False
 
     def remove_parameter(self, name):
+        """
+        Update configuration information
+        :param name:
+        :return:
+        """
         if self.getParameter(name):
             del self.parameters[name]
             newconfig = list()
@@ -206,6 +234,10 @@ class ConfigFile:
             self.save()
 
     def save(self):
+        """
+        Save the config property value to a file
+        :return:
+        """
         fp = open(self.filename, "w")
         for line in self.config:
             fp.write(line)

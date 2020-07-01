@@ -17,11 +17,18 @@ import readline
 
 
 class CommandUI:
-
+    """
+    Command user interface selection
+    """
     def __init__(self, echoResponses=False):
         self.echo = echoResponses
 
     def printPipe(self, pipe):
+        """
+        print pipe data
+        :param pipe:
+        :return:
+        """
         while 1:
             line = pipe.readline()
             if line:
@@ -30,6 +37,12 @@ class CommandUI:
                 return pipe.close()
 
     def prompt(self, question, choices=None):
+        """
+        choice test item
+        :param question:
+        :param choices:
+        :return:
+        """
         while True:
             sys.stdout.write(question)
             if choices:
@@ -45,6 +58,12 @@ class CommandUI:
             sys.stdout.write("Please enter a choice\n")
 
     def prompt_integer(self, question, choices=None):
+        """
+        choice test item
+        :param question:
+        :param choices:
+        :return:
+        """
         while True:
             sys.stdout.write(question)
             if choices:
@@ -62,6 +81,11 @@ class CommandUI:
                 sys.stdout.write("Please enter an integer.\n")
 
     def prompt_confirm(self, question):
+        """
+        Command interface displays confirmation information
+        :param question:
+        :return:
+        """
         YES = "y"
         SAMEASYES = ["y", "yes"]
         NO = "n"
@@ -72,9 +96,16 @@ class CommandUI:
                 return True
             if reply.lower() in SAMEASNO:
                 return False
-            sys.stdout.write("Please reply %s or %s.\n" %(YES, NO))
+            sys.stdout.write("Please reply %s or %s.\n" % (YES, NO))
 
     def prompt_edit(self, label, value, choices=None):
+        """
+        prompt choice edit
+        :param label:
+        :param value:
+        :param choices:
+        :return:
+        """
         if not value:
             value = ""
         if choices:

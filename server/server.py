@@ -67,14 +67,14 @@ def get_results():
         results[host] = {}
         for oec_id in next(os.walk(dir_host))[1]:
             dir_id = os.path.join(dir_host, oec_id)
-            results[host][id] = next(os.walk(dir_id))[1]
+            results[host][oec_id] = next(os.walk(dir_id))[1]
     return render_template('results.html', results=results)
 
 
 @app.route('/results/<host>/<oec_id>/<job>')
 def get_job(host, oec_id, job):
     """
-    获取job信息
+    get job information
     :param host:
     :param oec_id:
     :param job:
@@ -89,7 +89,7 @@ def get_job(host, oec_id, job):
             info = json.load(f)
         with open(json_results, 'r') as f:
             results = json.load(f)
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except Exception as e:
         abort(404)
     return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
@@ -109,7 +109,7 @@ def get_device(host, oec_id, job, interface):
     try:
         with open(json_results, 'r') as f:
             results = json.load(f)
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except Exception as e:
         abort(404)
     for testcase in results:
         device = testcase.get('device')
@@ -133,7 +133,7 @@ def get_devices(host, oec_id, job):
     try:
         with open(json_devices, 'r') as f:
             devices = json.load(f)
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except Exception as e:
         abort(404)
     return render_template('devices.html', devices=devices)
 
@@ -171,7 +171,7 @@ def get_log(host, oec_id, job, name):
     try:
         with open(logpath, 'r') as f:
             log = f.read().split('\n')
-    except IOError as e:
+    except Exception as e:
         abort(404)
     return render_template('log.html', name=name, log=log)
 
@@ -193,7 +193,7 @@ def submit(host, oec_id, job):
             cert = json.load(f)
         with open(tar_job, 'rb') as f:
             attachment = base64.b64encode(f.read())
-    except (IOError, json.decoder.JSONDecodeError) as e:
+    except Exception as e:
         print(e)
         abort(500)
 
@@ -245,7 +245,7 @@ def upload_job():
         with open(tar_job, 'wb') as f:
             f.write(base64.b64decode(filetext))
         os.system("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
-    except (IOError, OSError) as e:
+    except Exception as e:
         print(e)
         abort(400)
     return render_template('upload.html', host=host, id=oec_id, job=job,
@@ -277,7 +277,7 @@ def upload_file():
     try:
         with open(filepath, 'wb') as f:
             f.write(base64.b64decode(filetext))
-    except IOError as e:
+    except Exception as e:
         print(e)
         abort(400)
     return render_template('upload.html', filename=filename, filetext=filetext,
@@ -351,7 +351,7 @@ def __get_ib_dev_port(ib_server_ip):
         ibport = str(ibport)
 
         return ibdev, ibport
-    except (OSError, IndexError, ValueError) as e:
+    except Exception as e:
         print(e)
         return None, None
 

@@ -15,25 +15,37 @@
 from .command import Command, CertCommandError
 
 
-def filter_char(str):
-    ascii_blacklist = map(chr, range(9) + range(11,13) + range(14,32))
+def filter_char(string):
+    """
+    fileter char
+    :param string:
+    :return:
+    """
+    ascii_blacklist = map(chr, range(9) + range(11, 13) + range(14, 32))
     filtered = u''
     start = 0
-    for i in range(len(str)):
-        c = str[i]
-        if c in ascii_blacklist or (type(str) != unicode and ord(c) >= 128):
+    for i in range(len(string)):
+        c = string[i]
+        if c in ascii_blacklist or (type(string) != unicode and ord(c) >= 128):
             if start < i:
-                filtered += str[start:i]
-            start = i+1
-    filtered += str[start:]
+                filtered += string[start:i]
+            start = i + 1
+    filtered += string[start:]
     return filtered
 
 
 class CertDevice:
+    """
+    Certified device
+    """
     def __init__(self):
         self.devices = None
 
     def get_devices(self):
+        """
+        get devices information
+        :return:
+        """
         self.devices = list()
         try:
             pipe = Command("udevadm info --export-db")
@@ -49,19 +61,19 @@ class CertDevice:
                                 self.devices.append(device)
                             properties = dict()
                     else:
-                        property = line.split(":", 1)
-                        if len(property) == 2:
-                            type = property[0].strip('\ \'\n')
-                            attribute = property[1].strip('\ \'\n')
-                            if type == "E":
+                        prop = line.split(":", 1)
+                        if len(prop) == 2:
+                            tp = prop[0].strip('\ \'\n')
+                            attribute = prop[1].strip('\ \'\n')
+                            if tp == "E":
                                 keyvalue = attribute.split("=", 1)
                                 if len(keyvalue) == 2:
-                                    properties[keyvalue[0]]= keyvalue[1]
-                            elif type == "P":
+                                    properties[keyvalue[0]] = keyvalue[1]
+                            elif tp == "P":
                                 properties["INFO"] = attribute
                 else:
                     break
-        except OSError as e:
+        except Exception as e:
             print("Warning: get devices fail")
             print(e)
         self.devices.sort(key=lambda k: k.path)
@@ -69,6 +81,9 @@ class CertDevice:
 
 
 class Device:
+    """
+    get device properties
+    """
     def __init__(self, properties=None):
         self.path = ""
         if properties:
@@ -77,13 +92,22 @@ class Device:
         else:
             self.properties = dict()
 
-    def get_property(self, property):
+    def get_property(self, prop):
+        """
+        get properties
+        :param prop:
+        :return:
+        """
         try:
-            return self.properties[property]
+            return self.properties[prop]
         except KeyError:
             return ""
 
     def get_name(self):
+        """
+        get property value
+        :return:
+        """
         if "INTERFACE" in self.properties.keys():
             return self.properties["INTERFACE"]
         elif "DEVNAME" in self.properties.keys():

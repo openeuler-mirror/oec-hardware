@@ -13,16 +13,16 @@
 # Create: 2020-04-01
 
 import os
-import sys
 import time
 import re
-import string
 from hwcompatible.test import Test
 from hwcompatible.command import Command, CertCommandError
 
 
 class MemoryTest(Test):
-
+    """
+    Memory Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["libhugetlbfs-utils"]
@@ -36,10 +36,18 @@ class MemoryTest(Test):
         self.retry_list = list()
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
 
-    def setup(self):
+    def setup(self, args=None):
+        """
+        Initialization before test
+        :return:
+        """
         self.get_memory()
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         if not self.memory_rw():
             return False
 
@@ -55,6 +63,10 @@ class MemoryTest(Test):
         return True
 
     def get_memory(self):
+        """
+        Get memory
+        :return:
+        """
         proc_meminfo = open("/proc/meminfo", "r")
         self.free_memory = 0
         self.system_memory = 0
@@ -86,6 +98,10 @@ class MemoryTest(Test):
         self.free_memory = self.free_memory/1024
 
     def memory_rw(self):
+        """
+        Test memory request
+        :return:
+        """
         if not self.system_memory:
             print("Error: get system memory fail.")
             return False
@@ -100,6 +116,10 @@ class MemoryTest(Test):
         return True
 
     def eat_memory(self):
+        """
+        Eat memory test
+        :return:
+        """
         print("\nEat memory testing...")
         print("System Memory: %u MB" % self.system_memory)
         print("Free Memory: %u MB" % self.free_memory)
@@ -124,6 +144,10 @@ class MemoryTest(Test):
         return True
 
     def hugetlb_test(self):
+        """
+        hugetlb test
+        :return:
+        """
         print("\nHugetlb testing...")
         self.get_memory()
         print("HugePages Total: %u" % self.hugepage_total)
@@ -135,10 +159,10 @@ class MemoryTest(Test):
         if not self.hugepage_total:
             os.system("hugeadm --create-mounts")
             os.system("hugeadm --pool-pages-min %dMB:%d" %
-                (self.hugepage_size, self.huge_pages))
+                      (self.hugepage_size, self.huge_pages))
         elif self.hugepage_free < self.huge_pages:
             os.system("hugeadm --pool-pages-min %dMB:%d" %
-                (self.hugepage_size, self.hugepage_total + self.huge_pages))
+                      (self.hugepage_size, self.hugepage_total + self.huge_pages))
         else:
             update_hugepage = 0
 
@@ -162,8 +186,11 @@ class MemoryTest(Test):
             return False
         return True
 
-    @staticmethod
-    def hot_plug_verify():
+    def hot_plug_verify(self):
+        """
+        Verify hot plug
+        :return:
+        """
         kernel = Command("uname -r").read()
         config_file = "/boot/config-" + kernel
         if not os.path.exists(config_file):
@@ -175,6 +202,11 @@ class MemoryTest(Test):
         return True
 
     def hotplug_memory_test(self, memory_path):
+        """
+        Hotplug memory test
+        :param memory_path:
+        :return:
+        """
         print("Keep %s online before test." % memory_path)
         if not self.online_memory(memory_path):
             return False
@@ -199,27 +231,39 @@ class MemoryTest(Test):
         if total_mem_3 != total_mem_1:
             return False
 
-    @staticmethod
-    def online_memory(memory_path):
+    def online_memory(self, memory_path):
+        """
+        Set memory online
+        :param memory_path:
+        :return:
+        """
         try:
             Command("echo 1 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("online")
             return True
-        except CertCommandError as e:
+        except:
             print("Error: fail to online %s." % memory_path)
             return False
 
-    @staticmethod
-    def offline_memory(memory_path):
+    def offline_memory(self, memory_path):
+        """
+        Set memory offline
+        :param memory_path:
+        :return:
+        """
         try:
             Command("echo 0 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("offline")
             return True
-        except CertCommandError as e:
+        except:
             print("Error: fail to online %s." % memory_path)
             return False
 
     def memory_hotplug(self):
+        """
+        Memory hotplug test
+        :return:
+        """
         print("\nMemory hotplug testing...")
         if not self.hot_plug_verify():
             print("Warning: memory hotplug test skipped.")
@@ -247,7 +291,7 @@ class MemoryTest(Test):
                 Command("cat %s/removable" % memory_path).get_str("1")
                 print("%s is removable, start testing..." % os.path.basename(memory_path))
                 test_flag = 1
-            except CertCommandError as e:
+            except:
                 continue
             if not self.hotplug_memory_test(memory_path):
                 print("%s hotplug test fail." % os.path.basename(memory_path))

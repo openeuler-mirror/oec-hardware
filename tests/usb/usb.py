@@ -12,24 +12,29 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
 import sys
 import time
 
 from hwcompatible.test import Test
 from hwcompatible.commandUI import CommandUI
-from hwcompatible.command import Command, CertCommandError
-from hwcompatible.device import CertDevice, Device
+from hwcompatible.command import Command
+from hwcompatible.device import CertDevice
 
 
 class UsbTest(Test):
-
+    """
+    Usb test
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["usbutils"]
         self.ui = CommandUI()
 
     def test(self):
+        """
+        Test case
+        :return:
+        """
         print("USB device:")
         Command("lsusb -t").echo()
         print("")
@@ -93,6 +98,10 @@ class UsbTest(Test):
                 return True
 
     def get_usb(self):
+        """
+        Get usb
+        :return:
+        """
         devices = CertDevice().get_devices()
         usb_devices = list()
         for device in devices:

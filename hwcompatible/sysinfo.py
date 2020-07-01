@@ -17,7 +17,10 @@ import re
 
 
 class SysInfo:
-    def __init__(self, file):
+    """
+    Get system information
+    """
+    def __init__(self, filename):
         self.product = None
         self.version = None
         self.update = None
@@ -28,23 +31,28 @@ class SysInfo:
         self.kerneldevel_rpm = None
         self.kernel_version = None
         self.debug_kernel = False
-        self.load(file)
+        self.load(filename)
 
-    def load(self, file):
+    def load(self, filename):
+        """
+        Collect system information
+        :param filename:
+        :return:
+        """
         try:
-            f = open(file)
+            f = open(filename)
             text = f.read()
             f.close()
-        except IOError:
+        except:
             print("Release file not found.")
             return
 
         if text:
-            pattern = re.compile('NAME="(\w+)"')
+            pattern = re.compile(r'NAME="(\w+)"')
             results = pattern.findall(text)
             self.product = results[0].strip() if results else ""
 
-            pattern = re.compile('VERSION="(.+)"')
+            pattern = re.compile(r'VERSION="(.+)"')
             results = pattern.findall(text)
             self.version = results[0].strip() if results else ""
 
@@ -59,5 +67,9 @@ class SysInfo:
             self.kernel_version = self.kernel.split('-')[0]
 
     def get_version(self):
+        """
+         Get system version information
+        :return:
+        """
         return self.version
 

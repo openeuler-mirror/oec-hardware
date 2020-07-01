@@ -24,7 +24,9 @@ from hwcompatible.command import Command, CertCommandError
 
 
 class CDRomTest(Test):
-
+    """
+    CDRom Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["dvd+rw-tools", "genisoimage", "wodim", "util-linux"]
@@ -36,12 +38,21 @@ class CDRomTest(Test):
         self.test_dir = "/usr/share/doc"
 
     def setup(self, args=None):
+        """
+        The Setup before testing
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(args, "device", None)
         self.type = self.get_type(self.device)
         self.get_mode(self.type)
 
     def test(self):
+        """
+        Test case
+        :return:
+        """
         if not (self.method and self.device and self.type):
             return False
 
@@ -66,8 +77,12 @@ class CDRomTest(Test):
             return False
         return True
 
-    @staticmethod
-    def get_type(device):
+    def get_type(self, device):
+        """
+        Get the type of CDROM
+        :param device:
+        :return:
+        """
         if not device:
             return None
 
@@ -77,17 +92,22 @@ class CDRomTest(Test):
         for bd_type in bd_types:
             if device.get_property("ID_CDROM_" + bd_type) == "1":
                 return bd_type
-        for bd_type in dvd_types:
-            if device.get_ertpropy("ID_CDROM_" + bd_type) == "1":
-                return bd_type
-        for bd_type in cd_types:
-            if device.get_property("ID_CDROM_" + bd_type) == "1":
-                return bd_type
+        for dvd_type in dvd_types:
+            if device.get_ertpropy("ID_CDROM_" + dvd_type) == "1":
+                return dvd_type
+        for cd_type in cd_types:
+            if device.get_property("ID_CDROM_" + cd_type) == "1":
+                return cd_type
 
         print("Can not find pr)oper test-type for %s." % device.get_name())
         return None
 
     def get_mode(self, device_type):
+        """
+        Get the read-write mode of CDROM
+        :param device_type:
+        :return:
+        """
         if not device_type:
             return
 
@@ -99,6 +119,10 @@ class CDRomTest(Test):
             self.method = "read_test"
 
     def rw_test(self):
+        """
+        RW mode test of CDROM
+        :return:
+        """
         try:
             devname = self.device.get_property("DEVNAME")
             Command("umount %s" % devname).run(ignore_errors=True)
@@ -119,7 +143,8 @@ class CDRomTest(Test):
             else:
                 print("Blanking ...")
                 sys.stdout.flush()
-                blankCommand = Command("cdrecord -v dev=%s blank=fast" % devname).echo()
+                # blankCommand = Command("cdrecord -v dev=%s blank=fast" % devname).echo()
+                Command("cdrecord -v dev=%s blank=fast" % devname).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return self.write_test()
@@ -127,6 +152,10 @@ class CDRomTest(Test):
             return False
 
     def write_test(self):
+        """
+        Write mode test of CDROM
+        :return:
+        """
         try:
             devname = self.device.get_property("DEVNAME")
             Command("umount %s" % devname).run(ignore_errors=True)
@@ -136,15 +165,17 @@ class CDRomTest(Test):
                 sys.stdout.flush()
                 return True
             else:
-                write_opts ="-sao"
+                write_opts = "-sao"
                 try:
                     command = Command("cdrecord dev=%s -checkdrive" % devname)
-                    modes = command.get_str(regex="^Supported modes[^:]*:(?P<modes>.*$)", regex_group="modes", single_line=False, ignore_errors=True)
+                    modes = command.get_str(regex="^Supported modes[^:]*:(?P<modes>.*$)", regex_group="modes",
+                                            single_line=False, ignore_errors=True)
                     if "TAO" in modes:
-                        write_opts="-tao"
+                        write_opts = "-tao"
                     if "SAO" in modes:
-                        write_opts="-sao"
-                    flags = command.get_str(regex="^Driver flags[^:]*:(?P<flags>.*$)", regex_group="flags", single_line=False, ignore_errors=True)
+                        write_opts = "-sao"
+                    flags = command.get_str(regex="^Driver flags[^:]*:(?P<flags>.*$)", regex_group="flags",
+                                            single_line=False, ignore_errors=True)
                     if "BURNFREE" in flags:
                         write_opts += " driveropts=burnfree"
                 except CertCommandError as e:
@@ -153,7 +184,8 @@ class CDRomTest(Test):
                 size = Command("mkisofs -quiet -R -print-size %s " % self.test_dir).get_str()
                 blocks = int(size)
 
-                Command("mkisofs -quiet -R %s | cdrecord -v %s dev=%s fs=32M tsize=%ss -" % (self.test_dir, write_opts, devname, blocks)).echo()
+                Command("mkisofs -quiet -R %s | cdrecord -v %s dev=%s fs=32M tsize=%ss -" %
+                        (self.test_dir, write_opts, devname, blocks)).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return True
@@ -161,6 +193,10 @@ class CDRomTest(Test):
             return False
 
     def read_test(self):
+        """
+        Read mode test of CDROM
+        :return:
+        """
         try:
             devname = self.device.get_property("DEVNAME")
             if os.path.exists("mnt_cdrom"):
@@ -197,8 +233,13 @@ class CDRomTest(Test):
             print(e)
             return False
 
-    @staticmethod
-    def cmp_tree(dir1, dir2):
+    def cmp_tree(self, dir1, dir2):
+        """
+        Compare the differences between the two directories
+        :param dir1:
+        :param dir2:
+        :return:
+        """
         if not (dir1 and dir2):
             print("Error: invalid input dir.")
             return False
@@ -210,6 +251,11 @@ class CDRomTest(Test):
             return False
 
     def reload_disc(self, device):
+        """
+        Reloading the media
+        :param device:
+        :return:
+        """
         if not device:
             return False
 
@@ -219,17 +265,16 @@ class CDRomTest(Test):
             Command("eject %s" % device).run()
             print("tray ejected.")
             sys.stdout.flush()
-        except CertCommandError as e:
+        except:
             pass
 
         try:
             Command("eject -t %s" % device).run()
             print("tray auto-closed.\n")
             sys.stdout.flush()
-        except CertCommandError as e:
+        except:
             print("Could not auto-close the tray, please close the tray manually.")
             self.ui.prompt_confirm("Done well?")
 
         time.sleep(20)
         return True
-

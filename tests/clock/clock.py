@@ -15,14 +15,19 @@
 import os
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
 
 clock_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class ClockTest(Test):
-    @staticmethod
-    def test():
+    """
+    Clock Test
+    """
+    def test(self):
+        """
+        Clock test case
+        :return:
+        """
         return 0 == os.system("cd %s; ./clock" % clock_dir)
 
 

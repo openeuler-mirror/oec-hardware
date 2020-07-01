@@ -16,11 +16,24 @@ import argparse
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command, CertCommandError
-from hwcompatible.device import CertDevice, Device
 
 
 class TapeTest(Test):
+    """
+    Tape test
+    """
+    def __init__(self):
+        Test.__init__(self)
+        self.args = None
+        self.device = None
+        self.tapeDevice = None
+
     def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(args, "device", None)
         self.tapeDevice = self.device.get_property("DEVNAME")
@@ -30,6 +43,10 @@ class TapeTest(Test):
             print("Found the Tape Device :\n %s" % self.tapeDevice)
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         if not self.tapeDevice:
             return False
 
@@ -38,19 +55,19 @@ class TapeTest(Test):
         bs = 64
         # rewind the tape
         try:
-            tapeRewind = Command("mt -f %s rewind 2>/dev/null" % self.tapeDevice).read()
-            print("Rewind tape : \n %s" % tapeRewind)
+            tape_rewind = Command("mt -f %s rewind 2>/dev/null" % self.tapeDevice).read()
+            print("Rewind tape : \n %s" % tape_rewind)
         except CertCommandError as exception:
             print(exception)
             return False
         # Write data
         try:
-            tapeWriteData = Command("tar -Pcb %s -f %s /usr" % (bs, self.tapeDevice)).read()
-            if tapeWriteData == 0:
+            tapewritedata = Command("tar -Pcb %s -f %s /usr" % (bs, self.tapeDevice)).read()
+            if tapewritedata == 0:
                 print("Write data done. Start comparing ...")
                 # Compare data
-                compareData = Command("tar -Pdb %s -f %s /usr" % (bs, self.tapeDevice)).read()
-                if compareData == 0:
+                comparedata = Command("tar -Pdb %s -f %s /usr" % (bs, self.tapeDevice)).read()
+                if comparedata == 0:
                     print("Tape test on device %s passed." % self.tapeDevice)
                     return True
                 else:

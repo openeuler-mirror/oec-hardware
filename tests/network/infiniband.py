@@ -12,15 +12,13 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
-import argparse
-
-from hwcompatible.test import Test
-from hwcompatible.command import Command
 from rdma import RDMATest
 
 
 class InfiniBandTest(RDMATest):
+    """
+    InfiniBand Test
+    """
     def __init__(self):
         RDMATest.__init__(self)
         self.link_layer = 'InfiniBand'
@@ -30,6 +28,10 @@ class InfiniBandTest(RDMATest):
         self.target_bandwidth_percent = 0.5
 
     def test_ib_link(self):
+        """
+        IB Link test
+        :return:
+        """
         if 'LinkUp' not in self.phys_state:
             print("[X] Device is not LinkUp.")
 

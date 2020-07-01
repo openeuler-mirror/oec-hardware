@@ -15,7 +15,6 @@
 import os
 import sys
 import time
-import re
 
 from hwcompatible.test import Test
 from hwcompatible.commandUI import CommandUI
@@ -23,7 +22,9 @@ from hwcompatible.command import Command, CertCommandError
 
 
 class WatchDogTest(Test):
-
+    """
+    WatchDog Test
+    """
     def __init__(self):
         Test.__init__(self)
         self.pri = 9
@@ -33,16 +34,21 @@ class WatchDogTest(Test):
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
 
     def test(self):
+        """
+        test case
+        :return:
+        """
         if not os.path.exists("/dev/watchdog"):
             os.system("modprobe softdog")
 
         os.chdir(self.test_dir)
         try:
-            timeout = Command("./watchdog -g").get_str(regex="^Watchdog timeout is (?P<timeout>[0-9]*) seconds.$",regex_group="timeout")
+            timeout = Command("./watchdog -g").get_str(regex="^Watchdog timeout is (?P<timeout>[0-9]*) seconds.$",
+                                                       regex_group="timeout")
             timeout = int(timeout)
             if timeout > self.max_timeout:
                 Command("./watchdog -s %d" % self.max_timeout).echo()
-        except Exception as e:
+        except CertCommandError as e:
             print(e)
             print("Set/get watchdog timeout failed.")
             return False
@@ -59,7 +65,10 @@ class WatchDogTest(Test):
             print("")
             return False
 
-    @staticmethod
-    def startup():
+    def startup(self):
+        """
+        Initialization before test
+        :return:
+        """
         print("Recover from watchdog.")
         return True

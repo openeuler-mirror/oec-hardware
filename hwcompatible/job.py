@@ -23,12 +23,13 @@ from .env import CertEnv
 from .command import Command, CertCommandError
 from .commandUI import CommandUI
 from .log import Logger
-from .document import FactoryDocument
 from .reboot import Reboot
 
 
 class Job(object):
-
+    """
+    Test task management
+    """
     def __init__(self, args=None):
         """
         Creates an instance of Job class.
@@ -50,13 +51,19 @@ class Job(object):
             for parameter_name, parameter_value in self.args.test_parameters:
                 self.test_parameters[parameter_name] = parameter_value
 
-    @staticmethod
-    def discover(testname, device, subtests_filter=None):
+    def discover(self, testname, subtests_filter=None):
+        """
+        discover test
+        :param testname:
+        :param subtests_filter:
+        :return:
+        """
         if not testname:
             print("testname not specified, discover test failed")
             return None
 
         filename = testname + ".py"
+        dirpath = ''
         for (dirpath, dirs, files) in os.walk(CertEnv.testdirectoy):
             if filename in files:
                 break
@@ -91,13 +98,18 @@ class Job(object):
         return None
 
     def create_test_suite(self, subtests_filter=None):
+        """
+        Create test suites
+        :param subtests_filter:
+        :return:
+        """
         if self.test_suite:
             return
 
         self.test_suite = []
         for test in self.test_factory:
             if test["run"]:
-                testclass = self.discover(test["name"], test["device"], subtests_filter)
+                testclass = self.discover(test["name"], subtests_filter)
                 if testclass:
                     testcase = dict()
                     testcase["test"] = testclass
@@ -114,6 +126,10 @@ class Job(object):
             print("No test found")
 
     def check_test_depends(self):
+        """
+        Install  dependency packages
+        :return: depending
+        """
         required_rpms = []
         for tests in self.test_suite:
             for pkg in tests["test"].requirements:
@@ -136,11 +152,19 @@ class Job(object):
         return True
 
     def _run_test(self, testcase, subtests_filter=None):
+        """
+        Start a testing item
+        :param testcase:
+        :param subtests_filter:
+        :return:
+        """
         name = testcase["name"]
         if testcase["device"].get_name():
             name = testcase["name"] + "-" + testcase["device"].get_name()
         logname = name + ".log"
         reboot = None
+        test = None
+        logger = None
         try:
             test = testcase["test"]
             logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
@@ -171,6 +195,11 @@ class Job(object):
         return return_code
 
     def run_tests(self, subtests_filter=None):
+        """
+        Start testing
+        :param subtests_filter:
+        :return:
+        """
         if not len(self.test_suite):
             print("No test to run.")
             return
@@ -183,6 +212,10 @@ class Job(object):
                 testcase["status"] = "FAIL"
 
     def run(self):
+        """
+        Test entrance
+        :return:
+        """
         logger = Logger("job.log", self.job_id, sys.stdout, sys.stderr)
         logger.start()
         self.create_test_suite(self.subtests_filter)
@@ -195,6 +228,10 @@ class Job(object):
         self.show_summary()
 
     def show_summary(self):
+        """
+        Command line interface display summary
+        :return:
+        """
         print("-------------  Summary  -------------")
         for test in self.test_factory:
             if test["run"]:
@@ -208,8 +245,11 @@ class Job(object):
         print("")
 
     def save_result(self):
+        """
+        Get test status
+        :return:
+        """
         for test in self.test_factory:
             for testcase in self.test_suite:
                 if test["name"] == testcase["name"] and test["device"].path == testcase["device"].path:
                     test["status"] = testcase["status"]
-

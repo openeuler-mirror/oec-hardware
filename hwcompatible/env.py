@@ -14,6 +14,9 @@
 
 
 class CertEnv:
+    """
+    Certification file path
+    """
     environmentfile = "/etc/oech.json"
     releasefile = "/etc/os-release"
     datadirectory = "/var/oech"

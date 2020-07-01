@@ -15,13 +15,16 @@
 import os
 import argparse
 
-from hwcompatible.test import Test
 from hwcompatible.env import CertEnv
 from hwcompatible.document import CertDocument
 from rdma import RDMATest
 
 
 class EthernetTest(RDMATest):
+    """
+    Ethernet Test
+
+    """
     def __init__(self):
         RDMATest.__init__(self)
         self.args = None
@@ -32,6 +35,10 @@ class EthernetTest(RDMATest):
         self.target_bandwidth_percent = 0.75
 
     def is_RoCE(self):
+        """
+        Judge whether ethernet is roce
+        :return:
+        """
         path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
         path_pci = path_netdev.split('net')[0]
         cmd = "ls %s | grep -q infiniband" % path_pci
@@ -39,6 +46,11 @@ class EthernetTest(RDMATest):
         return 0 == os.system(cmd)
 
     def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
@@ -50,7 +62,7 @@ class EthernetTest(RDMATest):
                 input = raw_input
             except NameError:
                 from builtins import input
-            choice = input("[!] RoCE interface found. " \
+            choice = input("[!] RoCE interface found. "
                            "Run RDMA tests instead? [y/N] ")
             if choice.lower() != "y":
                 return
@@ -61,6 +73,10 @@ class EthernetTest(RDMATest):
                              self.test_eth_link, self.test_icmp, self.test_rdma]
 
     def test(self):
+        """
+        Test case
+        :return:
+        """
         for subtest in self.subtests:
             if not subtest():
                 return False
