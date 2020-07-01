@@ -16,7 +16,7 @@ import sys
 import readline
 
 
-class CommandUI(object):
+class CommandUI:
     """
     Command user interface selection
     """

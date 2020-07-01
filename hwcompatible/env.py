@@ -13,7 +13,7 @@
 # Create: 2020-04-01
 
 
-class CertEnv(object):
+class CertEnv:
     """
     Certification file path
     """

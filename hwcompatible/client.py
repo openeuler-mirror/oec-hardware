@@ -23,7 +23,7 @@ except ImportError:
     from urllib2 import urlopen, Request, HTTPError
 
 
-class Client(object):
+class Client:
     """
     upload client
     """

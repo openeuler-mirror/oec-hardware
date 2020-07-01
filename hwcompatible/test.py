@@ -13,7 +13,7 @@
 # Create: 2020-04-01
 
 
-class Test(object):
+class Test:
     """
     Test set template
     """

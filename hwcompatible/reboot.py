@@ -19,7 +19,7 @@ from .env import CertEnv
 from .command import Command, CertCommandError
 
 
-class Reboot(object):
+class Reboot:
     """
     Special for restart tasks, so that the test can be continued after the machine is restarted
     """

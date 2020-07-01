@@ -21,7 +21,7 @@ from .sysinfo import SysInfo
 from .env import CertEnv
 
 
-class Document(object):
+class Document():
     """
     Read and write documents
     """
@@ -168,7 +168,7 @@ class FactoryDocument(Document):
         return factory
 
 
-class ConfigFile(object):
+class ConfigFile:
     """
     Get parameters from configuration file
     """

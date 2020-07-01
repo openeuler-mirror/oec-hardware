@@ -66,7 +66,7 @@ class Log(object):
         self.log = None
 
 
-class Logger(object):
+class Logger():
     """
      Output results to file
     """

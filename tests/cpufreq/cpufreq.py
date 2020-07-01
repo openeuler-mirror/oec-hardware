@@ -20,7 +20,7 @@ from hwcompatible.test import Test
 from hwcompatible.command import Command
 
 
-class CPU(object):
+class CPU:
     def __init__(self):
         self.cpu = None
         self.nums = None

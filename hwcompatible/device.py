@@ -34,7 +34,7 @@ def filter_char(string):
     return filtered
 
 
-class CertDevice(object):
+class CertDevice:
     """
     Certified device
     """
@@ -80,7 +80,7 @@ class CertDevice(object):
         return self.devices
 
 
-class Device(object):
+class Device:
     """
     get device properties
     """

@@ -16,7 +16,7 @@ import os
 import re
 
 
-class SysInfo(object):
+class SysInfo:
     """
     Get system information
     """

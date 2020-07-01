@@ -29,7 +29,7 @@ from .reboot import Reboot
 from .client import Client
 
 
-class EulerCertification(object):
+class EulerCertification():
     """
     Main program of oec-hardware
     """
