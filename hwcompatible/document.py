@@ -58,7 +58,7 @@ class CertDocument(Document):
     get hardware and release information
     """
     def __init__(self, filename, document=''):
-        super(CertDocument, self).__init__(filename, document)
+        # super(CertDocument, self).__init__(filename, document)
         self.document = dict()
         self.filename = filename
         if not document:
@@ -121,7 +121,7 @@ class DeviceDocument(Document):
     get device document
     """
     def __init__(self, filename, devices=''):
-        super(DeviceDocument, self).__init__(filename, devices)
+        # super(DeviceDocument, self).__init__(filename, devices)
         self.filename = filename
         self.document = list()
         if not devices:
@@ -137,7 +137,7 @@ class FactoryDocument(Document):
     """
 
     def __init__(self, filename, factory=''):
-        super(FactoryDocument, self).__init__(filename, factory)
+        # super(FactoryDocument, self).__init__(filename, factory)
         self.document = list()
         self.filename = filename
         if not factory:
