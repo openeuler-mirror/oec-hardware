@@ -71,6 +71,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
-* Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h2
+* Sun Jul 01 2020 Cui XuCui <cuixucui@huawei.com> - 1.0.0-h2
+* Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h1
 - Initial spec
 
