@@ -1,5 +1,5 @@
 %define version    1.0.0
-%define release    h1
+%define release    h2
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
@@ -11,7 +11,7 @@ Release:        %{release}
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
-Source0:        %{name}-%{version}-%{release}.tar.bz2
+Source0:        %{name}-%{version}.tar.bz2
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -71,6 +71,6 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
-* Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h1
+* Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h2
 - Initial spec
 
