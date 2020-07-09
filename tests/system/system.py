@@ -152,7 +152,8 @@ class SystemTest(Test):
             print("Error: could not determine if kernel is tainted.")
             return_code = False
 
-        if not os.system("rpm -V --nomtime --nomode --nocontexts %s" % kernel_rpm) is 0:
+        except_list = ["/modules.dep$", "/modules.symbols$", "/modules.dep.bin$", "/modules.symbols.bin$"]
+        if os.system("rpm -V --nomtime --nomode --nocontexts %s | grep -Ev '%s'" % (kernel_rpm, "|".join(except_list))) is 0:
             print("Error: files from %s were modified." % kernel_rpm)
             print("")
             return_code = False
