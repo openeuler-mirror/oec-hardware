@@ -1,5 +1,5 @@
 %define version    1.0.0
-%define release    3
+%define release    2
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
@@ -13,7 +13,7 @@ License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        %{name}-%{version}.tar.bz2
 
-#PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware project
+#PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware-1.0.0 project
 Patch0001:      oec-hardware-1.0.0-system.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
