@@ -266,12 +266,6 @@ class EulerCertification():
             if device.get_property("PCI_CLASS") == "30000" or device.get_property("PCI_CLASS") == "38000":
                 sort_devices["video"] = [device]
                 continue
-            if device.get_property("SUBSYSTEM") == "tape" and "/dev/st" in device.get_property("DEVNAME"):
-                try:
-                    sort_devices["tape"].extend([device])
-                except KeyError:
-                    sort_devices["tape"] = [device]
-                continue
             if (device.get_property("DEVTYPE") == "disk" and not device.get_property("ID_TYPE")) or \
                     device.get_property("ID_TYPE") == "disk":
                 if "nvme" in device.get_property("DEVPATH"):
