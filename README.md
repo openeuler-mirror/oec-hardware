@@ -100,27 +100,7 @@ openEuler硬件兼容性验证测试框架有如下特点：
 
 ## 获取安装包
 
-* 安装包从 openEuler 官方网站下载（暂未开放）。
-
-* 校验安装包的完整性。
-
-  1. 获取校验文件中的校验值：
-
-     ```
-     cat oec-hardware-*.rpm.sha256sum
-     ```
-
-  2. 计算文件的 sha256 校验值:
-
-     ```
-     sha256sum oec-hardware-*.rpm
-     ```
-
-     命令执行完成后，输出校验值。
-
-  3. 对比步骤1和步骤2计算的校验值是否一致。
-
-     如果校验值一致说明安装文件完整性没有破坏，如果校验值不一致则可以确认文件完整性已被破坏，需要重新获取。
+https://gitee.com/src-openeuler/oec-hardware/releases
 
 ## 安装过程
 
