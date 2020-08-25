@@ -353,16 +353,16 @@ class EulerCertification():
                     test["run"] = True
                 continue
 
-            num_lst = reply.split(" ")
-            for num in num_lst:
-                try:
-                    num = int(num)
-                except:
-                    continue
+            # num_lst = reply.split(" ")
+            # for num in num_lst:
+            try:
+                num = int(reply)
+            except:
+                continue
 
-                if num > 0 and num <= len(self.test_factory):
-                    self.test_factory[num - 1]["run"] = not self.test_factory[num - 1]["run"]
-                    continue
+            if num > 0 and num <= len(self.test_factory):
+                self.test_factory[num - 1]["run"] = not self.test_factory[num - 1]["run"]
+                continue
 
     def show_tests(self):
         """
