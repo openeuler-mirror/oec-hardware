@@ -315,15 +315,11 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
     使用 nvme-cli 工具对盘进行格式化、读写、查询测试。
 
-13. **tape**
-
-    测试磁带是否正常读写。
-
-14. **usb**
+13. **usb**
 
     插拔 usb 设备，测试 usb 接口能否正常识别。
 
-15. **acpi**
+14. **acpi**
 
     利用 acpidump 工具读取数据。
 
