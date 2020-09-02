@@ -14,6 +14,7 @@
 
 import os
 
+from hwcompatible.command import Command, CertCommandError
 from hwcompatible.test import Test
 
 clock_dir = os.path.dirname(os.path.realpath(__file__))
@@ -28,7 +29,12 @@ class ClockTest(Test):
         Clock test case
         :return:
         """
-        return 0 == os.system("cd %s; ./clock" % clock_dir)
+        try:
+            Command("cd %s; ./clock" % clock_dir).echo()
+            return True
+        except CertCommandError as e:
+            print(e)
+            return False
 
 
 if __name__ == '__main__':
