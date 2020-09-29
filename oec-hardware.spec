@@ -11,7 +11,7 @@ Release:        %{release}
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
-Source0:        %{name}-%{version}.tar.bz2
+Source0:        https://gitee.com/openeuler/oec-hardware/%{name}-%{version}.tar.bz2
 
 #PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware-1.0.0 project
 Patch0001:      oec-hardware-1.0.0-system.patch
