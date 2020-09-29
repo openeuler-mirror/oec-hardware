@@ -1,5 +1,5 @@
 %define version    1.0.0
-%define release    2
+%define release    4
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
@@ -12,6 +12,12 @@ Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        %{name}-%{version}.tar.bz2
+
+#PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware-1.0.0 project
+Patch0001:      oec-hardware-1.0.0-system.patch
+
+#PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware-1.0.0 project
+Patch0002:      oec-hardware-1.0.0-delete-tape.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -71,7 +77,9 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
-* Sun Jul 01 2020 Cui XuCui <cuixucui@huawei.com> - 1.0.0-2
+* Fri Jul 24 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-4
+* Sun Jul 18 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-3
+* Sun Jul 01 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-2
 * Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h1
 - Initial spec
 

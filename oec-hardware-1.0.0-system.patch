@@ -1,0 +1,6 @@
+diff tests/system_new.py tests/system.py > oec-hardware-1.0.0-system.patch
+155,156c155
+<         except_list = ["/modules.dep$", "/modules.symbols$", "/modules.dep.bin$", "/modules.symbols.bin$"]
+<         if os.system("rpm -V --nomtime --nomode --nocontexts %s | grep -Ev '%s'" % (kernel_rpm, "|".join(except_list))) is 0:
+---
+>         if not os.system("rpm -V --nomtime --nomode --nocontexts %s" % kernel_rpm) is 0:
