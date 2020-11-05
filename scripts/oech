@@ -18,12 +18,12 @@ import os
 import sys
 import fcntl
 import argparse
-import hwcompatible.version
-from hwcompatible.compatibility import EulerCertification
-
 
 sys.path.append("/usr/share/oech/lib/")
 os.putenv("PYTHONPATH", "/usr/share/oech/lib/")
+
+from hwcompatible.compatibility import EulerCertification
+import hwcompatible.version
 
 
 class CertLock:
