@@ -16,12 +16,13 @@ import datetime
 
 from .document import Document, FactoryDocument
 from .env import CertEnv
-from .command import Command, CertCommandError
+from .command import Command
 
 
 class Reboot:
     """
-    Special for restart tasks, so that the test can be continued after the machine is restarted
+    Special for restart tasks, so that the test can be continued
+    after the machine is restarted
     """
     def __init__(self, testname, job, rebootup):
         self.testname = testname
@@ -58,7 +59,8 @@ class Reboot:
             if test["run"] and self.testname == test["name"]:
                 test["reboot"] = True
                 test["status"] = "FAIL"
-        if not FactoryDocument(CertEnv.factoryfile, self.job.test_factory).save():
+        if not FactoryDocument(CertEnv.factoryfile,
+                               self.job.test_factory).save():
             print("Error: save testfactory doc fail before reboot.")
             return False
 
@@ -94,7 +96,8 @@ class Reboot:
             self.reboot = doc.document
             self.job.job_id = self.reboot["job_id"]
             self.job.subtests_filter = self.reboot["rebootup"]
-            time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
+            time_reboot = datetime.datetime.strptime(self.reboot["time"],
+                                                     "%Y%m%d%H%M%S")
         except:
             print("Error: reboot file format not as expect.")
             return False
@@ -102,10 +105,10 @@ class Reboot:
         time_now = datetime.datetime.now()
         time_delta = (time_now - time_reboot).seconds
         cmd = Command("last reboot -s '%s seconds ago'" % time_delta)
-        reboot_list = cmd.get_str("^reboot .*$", single_line=False, return_list=True)
+        reboot_list = cmd.get_str("^reboot .*$", single_line=False,
+                                  return_list=True)
         if len(reboot_list) != 1:
             print("Errot:reboot times check fail.")
             return False
 
         return True
-

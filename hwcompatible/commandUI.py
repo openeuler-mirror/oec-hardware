@@ -23,7 +23,7 @@ class CommandUI:
     def __init__(self, echoResponses=False):
         self.echo = echoResponses
 
-    def printPipe(self, pipe):
+    def print_pipe(self, pipe):
         """
         print pipe data
         :param pipe:
@@ -123,6 +123,7 @@ class CommandUI:
                 reply = input(label).strip()
                 if not choices or reply in choices:
                     return reply
-                print("Please enter one of the following: %s" % " | ".join(choices))
+                print("Please enter one of the "
+                      "following: %s" % " | ".join(choices))
             finally:
                 readline.set_startup_hook()

@@ -28,5 +28,3 @@ class CertEnv:
     logdirectoy = "/usr/share/oech/logs"
     resultdirectoy = "/usr/share/oech/lib/server/results"
     kernelinfo = "/usr/share/oech/kernelrelease.json"
-
-

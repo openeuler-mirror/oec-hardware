@@ -72,4 +72,3 @@ class SysInfo:
         :return:
         """
         return self.version
-
