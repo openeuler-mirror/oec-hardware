@@ -12,17 +12,18 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Special for restart tasks, so that the test can be continued after the machine is restarted"""
+
 import datetime
 
 from .document import Document, FactoryDocument
 from .env import CertEnv
-from .command import Command
+from .command import Command, CertCommandError
 
 
 class Reboot:
     """
-    Special for restart tasks, so that the test can be continued
-    after the machine is restarted
+    Special for restart tasks, so that the test can be continued after the machine is restarted
     """
     def __init__(self, testname, job, rebootup):
         self.testname = testname
@@ -59,8 +60,7 @@ class Reboot:
             if test["run"] and self.testname == test["name"]:
                 test["reboot"] = True
                 test["status"] = "FAIL"
-        if not FactoryDocument(CertEnv.factoryfile,
-                               self.job.test_factory).save():
+        if not FactoryDocument(CertEnv.factoryfile, self.job.test_factory).save():
             print("Error: save testfactory doc fail before reboot.")
             return False
 
@@ -75,7 +75,7 @@ class Reboot:
         try:
             Command("systemctl daemon-reload").run_quiet()
             Command("systemctl enable oech").run_quiet()
-        except:
+        except Exception:
             print("Error: enable oech.service fail.")
             return False
 
@@ -96,17 +96,15 @@ class Reboot:
             self.reboot = doc.document
             self.job.job_id = self.reboot["job_id"]
             self.job.subtests_filter = self.reboot["rebootup"]
-            time_reboot = datetime.datetime.strptime(self.reboot["time"],
-                                                     "%Y%m%d%H%M%S")
-        except:
+            time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
+        except Exception:
             print("Error: reboot file format not as expect.")
             return False
 
         time_now = datetime.datetime.now()
         time_delta = (time_now - time_reboot).seconds
         cmd = Command("last reboot -s '%s seconds ago'" % time_delta)
-        reboot_list = cmd.get_str("^reboot .*$", single_line=False,
-                                  return_list=True)
+        reboot_list = cmd.get_str("^reboot .*$", single_line=False, return_list=True)
         if len(reboot_list) != 1:
             print("Errot:reboot times check fail.")
             return False

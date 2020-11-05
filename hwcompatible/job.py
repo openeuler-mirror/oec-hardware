@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Test task management"""
+
 import os
 import sys
 import string
@@ -26,7 +28,7 @@ from .log import Logger
 from .reboot import Reboot
 
 
-class Job(object):
+class Job():
     """
     Test task management
     """
@@ -41,9 +43,8 @@ class Job(object):
         self.args = args or argparse.Namespace()
         self.test_factory = getattr(args, "test_factory", [])
         self.test_suite = []
-        self.job_id = ''.join(random.sample(string.ascii_letters +
-                                            string.digits, 10))
-        self.ui = CommandUI()
+        self.job_id = ''.join(random.sample(string.ascii_letters + string.digits, 10))
+        self.com_ui = CommandUI()
         self.subtests_filter = getattr(args, "subtests_filter", None)
 
         self.test_parameters = None
@@ -75,9 +76,9 @@ class Job(object):
         sys.path.insert(0, dirpath)
         try:
             module = __import__(testname, globals(), locals())
-        except Exception as e:
+        except Exception as concrete_error:
             print("Error: module import failed for %s" % testname)
-            print(e)
+            print(concrete_error)
             return None
 
         for thing in dir(module):
@@ -89,7 +90,7 @@ class Job(object):
             if isinstance(test_class, ct) and issubclass(test_class, Test):
                 if "test" not in dir(test_class):
                     continue
-                if subtests_filter and subtests_filter not in dir(test_class):
+                if (subtests_filter and not subtests_filter in dir(test_class)):
                     continue
                 test = test_class()
                 if "pri" not in dir(test):
@@ -137,17 +138,16 @@ class Job(object):
                 try:
                     Command("rpm -q " + pkg).run_quiet()
                 except CertCommandError:
-                    if pkg not in required_rpms:
+                    if not pkg in required_rpms:
                         required_rpms.append(pkg)
 
         if len(required_rpms):
-            print("Installing required packages: %s" %
-                  ", ".join(required_rpms))
+            print("Installing required packages: %s" % ", ".join(required_rpms))
             try:
                 cmd = Command("yum install -y " + " ".join(required_rpms))
                 cmd.echo()
-            except CertCommandError as e:
-                print(e)
+            except CertCommandError as concrete_error:
+                print(concrete_error)
                 print("Fail to install required packages.")
                 return False
 
@@ -175,8 +175,7 @@ class Job(object):
                 return_code = getattr(test, subtests_filter)()
             else:
                 print("----  start to run test %s  ----" % name)
-                args = argparse.Namespace(device=testcase["device"],
-                                          logdir=logger.log.dir)
+                args = argparse.Namespace(device=testcase["device"], logdir=logger.log.dir)
                 test.setup(args)
                 if test.reboot:
                     reboot = Reboot(testcase["name"], self, test.rebootup)
@@ -185,8 +184,8 @@ class Job(object):
                         return_code = test.test()
                 else:
                     return_code = test.test()
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return_code = False
 
         if reboot:
@@ -254,6 +253,6 @@ class Job(object):
         """
         for test in self.test_factory:
             for testcase in self.test_suite:
-                if test["name"] == testcase["name"] and \
-                        test["device"].path == testcase["device"].path:
+                if test["name"] == testcase["name"] and test["device"].path == \
+                        testcase["device"].path:
                     test["status"] = testcase["status"]

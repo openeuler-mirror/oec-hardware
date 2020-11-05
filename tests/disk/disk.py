@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""disk test"""
+
 import os
 import sys
 import shutil
@@ -23,12 +25,14 @@ from hwcompatible.device import CertDevice
 
 
 class DiskTest(Test):
-
+    """
+    disk test
+    """
     def __init__(self):
         Test.__init__(self)
         self.disks = list()
         self.filesystems = ["ext4"]
-        self.ui = CommandUI()
+        self.com_ui = CommandUI()
 
     def setup(self, args=None):
         """
@@ -52,18 +56,22 @@ class DiskTest(Test):
             Command("cat /proc/mdstat").echo(ignore_errors=True)
             sys.stdout.flush()
             print("\n")
-        except Exception as e:
+        except Exception as concrete_error:
             print("Warning: could not get disk info")
-            print(e)
+            print(concrete_error)
 
     def test(self):
+        """
+        start test
+        """
         self.get_disk()
         if len(self.disks) == 0:
             print("No suite disk found to test.")
             return False
 
         self.disks.append("all")
-        disk = self.ui.prompt_edit("Which disk would you like to test: ", self.disks[0], self.disks)
+        disk = self.com_ui.prompt_edit("Which disk would you like to test: ",\
+                                       self.disks[0], self.disks)
         return_code = True
         if disk == "all":
             for disk in self.disks[:-1]:
@@ -79,12 +87,16 @@ class DiskTest(Test):
         return return_code
 
     def get_disk(self):
+        """
+        get disk info
+        """
         self.disks = list()
         disks = list()
         devices = CertDevice().get_devices()
         for device in devices:
-            if (device.get_property("DEVTYPE") == "disk" and not device.get_property("ID_TYPE")) or \
-               device.get_property("ID_TYPE") == "disk":
+            if (device.get_property("DEVTYPE") == "disk" and not \
+                    device.get_property("ID_TYPE")) or device.\
+                    get_property("ID_TYPE") == "disk":
                 if "/host" in device.get_property("DEVPATH"):
                     disks.append(device.get_name())
 
@@ -123,6 +135,9 @@ class DiskTest(Test):
             print("These disks %s are in use now, skip them." % "|".join(un_suitable))
 
     def raw_test(self, disk):
+        """
+        raw test
+        """
         print("\n#############")
         print("%s raw IO test" % disk)
         device = "/dev/" + disk
@@ -147,7 +162,8 @@ class DiskTest(Test):
             return False
 
         print("\nStarting rand raw IO test...")
-        opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -group_reporting -name=file -runtime=300"
+        opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -group_\
+        reporting -name=file -runtime=300"
         if not self.do_fio(device, size, opts):
             print("%s rand raw IO test fail." % device)
             print("#############")
@@ -157,6 +173,9 @@ class DiskTest(Test):
         return True
 
     def vfs_test(self, disk):
+        """
+        vfs test
+        """
         print("\n#############")
         print("%s vfs test" % disk)
         device = "/dev/" + disk
@@ -179,12 +198,12 @@ class DiskTest(Test):
         path = os.path.join(os.getcwd(), "vfs_test")
 
         return_code = True
-        for fs in self.filesystems:
+        for file_sys in self.filesystems:
             try:
-                print("\nFormatting %s to %s ..." % (device, fs))
+                print("\nFormatting %s to %s ..." % (device, file_sys))
                 Command("umount %s" % device).echo(ignore_errors=True)
-                Command("mkfs -t %s -F %s 2>/dev/null" % (fs, device)).echo()
-                Command("mount -t %s %s %s" % (fs, device, "vfs_test")).echo()
+                Command("mkfs -t %s -F %s 2>/dev/null" % (file_sys, device)).echo()
+                Command("mount -t %s %s %s" % (file_sys, device, "vfs_test")).echo()
 
                 print("\nStarting sequential vfs IO test...")
                 opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -name=directoy -runtime=300"
@@ -197,8 +216,8 @@ class DiskTest(Test):
                 if not self.do_fio(path, size, opts):
                     return_code = False
                     break
-            except Exception as e:
-                print(e)
+            except Exception as concrete_error:
+                print(concrete_error)
                 return_code = False
                 break
 
@@ -208,17 +227,20 @@ class DiskTest(Test):
         return return_code
 
     def do_fio(self, filepath, size, option):
+        """
+        fio test
+        """
         if os.path.isdir(filepath):
             file_opt = "-directory=%s" % filepath
         else:
             file_opt = "-filename=%s" % filepath
         max_bs = 64
-        bs = 4
-        while bs <= max_bs:
-            if os.system("fio %s -size=%dK -bs=%dK %s" % (file_opt, size, bs, option)) != 0:
+        a_bs = 4
+        while a_bs <= max_bs:
+            if os.system("fio %s -size=%dK -bs=%dK %s" % (file_opt, size, a_bs, option)) != 0:
                 print("Error: %s fio failed." % filepath)
                 return False
             print("\n")
             sys.stdout.flush()
-            bs = bs * 2
+            a_bs = a_bs * 2
         return True

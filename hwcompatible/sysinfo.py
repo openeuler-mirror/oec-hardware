@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Get system information"""
+
 import os
 import re
 
@@ -40,10 +42,10 @@ class SysInfo:
         :return:
         """
         try:
-            f = open(filename)
-            text = f.read()
-            f.close()
-        except:
+            file_content = open(filename)
+            text = file_content.read()
+            file_content.close()
+        except Exception:
             print("Release file not found.")
             return
 
@@ -56,12 +58,12 @@ class SysInfo:
             results = pattern.findall(text)
             self.version = results[0].strip() if results else ""
 
-        with os.popen('uname -m') as p:
-            self.arch = p.readline().strip()
+        with os.popen('uname -m') as pop:
+            self.arch = pop.readline().strip()
             self.debug_kernel = "debug" in self.arch
 
-        with os.popen('uname -r') as p:
-            self.kernel = p.readline().strip()
+        with os.popen('uname -r') as pop:
+            self.kernel = pop.readline().strip()
             self.kernel_rpm = "kernel-{}".format(self.kernel)
             self.kerneldevel_rpm = "kernel-devel-{}".format(self.kernel)
             self.kernel_version = self.kernel.split('-')[0]

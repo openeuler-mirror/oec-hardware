@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""clock test"""
+
 import os
 
 from hwcompatible.command import Command, CertCommandError
@@ -32,8 +34,8 @@ class ClockTest(Test):
         try:
             Command("cd %s; ./clock" % clock_dir).echo()
             return True
-        except CertCommandError as e:
-            print(e)
+        except CertCommandError as concrete_error:
+            print(concrete_error)
             return False
 
 

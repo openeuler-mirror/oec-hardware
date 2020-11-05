@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Test set template"""
+
 
 class Test:
     """
@@ -24,7 +26,13 @@ class Test:
         self.rebootup = None
 
     def setup(self, args=None):
+        """
+        setup
+        """
         pass
 
     def teardown(self):
+        """
+        teardown
+        """
         pass

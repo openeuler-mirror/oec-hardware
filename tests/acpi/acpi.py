@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""acpi test"""
+
 from hwcompatible.test import Test
 from hwcompatible.command import Command
 
@@ -25,9 +27,12 @@ class AcpiTest(Test):
         self.requirements = ["acpica-tools"]
 
     def test(self):
+        """
+        start test
+        """
         try:
             Command("acpidump").echo()
             return True
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
