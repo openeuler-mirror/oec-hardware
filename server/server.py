@@ -126,6 +126,7 @@ def get_devices(host, oec_id, job):
     :param host:
     :param oec_id:
     :param job:
+    :param job:
     :return:
     """
     dir_job = os.path.join(dir_results, host, oec_id, job)

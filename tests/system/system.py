@@ -80,8 +80,10 @@ class SystemTest(Test):
             try:
                 rpm_verify.echo()
                 sys.stdout.flush()
+                print("files in %s have been not tampered." % cert_package)
                 if rpm_verify.output and len(rpm_verify.output) > 0:
                     return_code = False
+                    print("Error: files in %s have been tampered." % cert_package)
             except:
                 print("Error: files in %s have been tampered." % cert_package)
                 return_code = False
@@ -102,6 +104,8 @@ class SystemTest(Test):
         if self.sysinfo.debug_kernel:
             print("Error: debug kernel.")
             return_code = False
+        else:
+            print("The machine is release kernel.")
 
         kernel_dict = Document(CertEnv.kernelinfo)
         if not kernel_dict.load():
@@ -112,6 +116,8 @@ class SystemTest(Test):
             if kernel_dict.document[os_version] != self.sysinfo.kernel_version:
                 print("Error: kernel %s check GA status fail." % self.sysinfo.kernel_version)
                 return_code = False
+            else:
+                print("kernel %s check GA status success." % self.sysinfo.kernel_version)
         except:
             print("Error: %s is not supported." % os_version)
             return_code = False
@@ -145,6 +151,8 @@ class SystemTest(Test):
                     for module in modules:
                         print(module)
                     print("")
+            else:
+                print("kernel is not tainted.")
 
             tainted_file.close()
         except Exception as e:
@@ -155,8 +163,9 @@ class SystemTest(Test):
         except_list = ["/modules.dep$", "/modules.symbols$", "/modules.dep.bin$", "/modules.symbols.bin$"]
         if os.system("rpm -V --nomtime --nomode --nocontexts %s | grep -Ev '%s'" % (kernel_rpm, "|".join(except_list))) is 0:
             print("Error: files from %s were modified." % kernel_rpm)
-            print("")
             return_code = False
+        else:
+            print("The files from %s were not modified." % kernel_rpm)
 
         try:
             params = Command("cat /proc/cmdline").get_str()
