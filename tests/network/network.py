@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Network Test"""
+
 import os
 import time
 import argparse
@@ -58,7 +60,7 @@ class NetworkTest(Test):
         """
         os.system("ip link set down %s" % interface)
         for _ in range(5):
-            if 0 == os.system("ip link show %s | grep 'state DOWN'" % interface):
+            if os.system("ip link show %s | grep 'state DOWN'" % interface) == 0:
                 return True
             time.sleep(1)
         return False
@@ -72,7 +74,7 @@ class NetworkTest(Test):
         os.system("ip link set up %s" % interface)
         for _ in range(5):
             time.sleep(1)
-            if 0 == os.system("ip link show %s | grep 'state UP'" % interface):
+            if os.system("ip link show %s | grep 'state UP'" % interface) == 0:
                 return True
         return False
 
@@ -83,8 +85,8 @@ class NetworkTest(Test):
         """
         ignore_interfaces = ['^lo', '^v', 'docker', 'br', 'bond']
         cmd = "ip route show default | awk '/default/ {print $5}'"
-        c = Command(cmd)
-        management_interface = c.read()
+        com = Command(cmd)
+        management_interface = com.read()
         if management_interface:
             ignore_interfaces.append(management_interface)
             # print(cmd)
@@ -94,12 +96,12 @@ class NetworkTest(Test):
         # print(ignore_pattern)
         cmd = "ls /sys/class/net/ | grep -vE '%s'" % ignore_pattern
         # print(cmd)
-        c = Command(cmd)
+        com = Command(cmd)
         try:
-            c.run()
-            return c.output
-        except Exception as e:
-            print(e)
+            com.run()
+            return com.output
+        except Exception as concrete_error:
+            print(concrete_error)
             return []
 
     def set_other_interfaces_down(self):
@@ -128,12 +130,12 @@ class NetworkTest(Test):
         Get speed on the interface
         :return:
         """
-        c = Command("ethtool %s" % self.interface)
+        com = Command("ethtool %s" % self.interface)
         pattern = r".*Speed:\s+(?P<speed>\d+)Mb/s"
         try:
-            speed = c.get_str(pattern, 'speed', False)
+            speed = com.get_str(pattern, 'speed', False)
             return int(speed)
-        except Exception as e:
+        except Exception:
             print("[X] No speed found on the interface.")
             return None
 
@@ -142,12 +144,12 @@ class NetworkTest(Test):
         Get interface ip
         :return:
         """
-        c = Command("ip addr show %s" % self.interface)
+        com = Command("ip addr show %s" % self.interface)
         pattern = r".*inet.? (?P<ip>.+)/.*"
         try:
-            ip = c.get_str(pattern, 'ip', False)
-            return ip
-        except Exception as e:
+            ip_addr = com.get_str(pattern, 'ip', False)
+            return ip_addr
+        except Exception:
             print("[X] No available ip on the interface.")
             return None
 
@@ -157,18 +159,18 @@ class NetworkTest(Test):
         :return:
         """
         count = 500
-        c = Command("ping -q -c %d -i 0 %s" % (count, self.server_ip))
+        com = Command("ping -q -c %d -i 0 %s" % (count, self.server_ip))
         pattern = r".*, (?P<loss>\d+\.{0,1}\d*)% packet loss.*"
 
         for _ in range(self.retries):
             try:
-                print(c.command)
-                loss = c.get_str(pattern, 'loss', False)
-                c.print_output()
+                print(com.command)
+                loss = com.get_str(pattern, 'loss', False)
+                com.print_output()
                 if float(loss) == 0:
                     return True
-            except Exception as e:
-                print(e)
+            except Exception as concrete_error:
+                print(concrete_error)
         return False
 
     def call_remote_server(self, cmd, act='start', ib_server_ip=''):
@@ -191,8 +193,8 @@ class NetworkTest(Test):
         try:
             request = Request(url, data=data, headers=headers)
             response = urlopen(request)
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
         print("Status: %u %s" % (response.code, response.msg))
         return int(response.code) == 200
@@ -205,15 +207,18 @@ class NetworkTest(Test):
         cmd = "qperf %s udp_lat" % self.server_ip
         print(cmd)
         for _ in range(self.retries):
-            if 0 == os.system(cmd):
+            if os.system(cmd) == 0:
                 return True
         return False
 
     def test_tcp_latency(self):
+        """
+        tcp test
+        """
         cmd = "qperf %s tcp_lat" % self.server_ip
         print(cmd)
         for _ in range(self.retries):
-            if 0 == os.system(cmd):
+            if os.system(cmd) == 0:
                 return True
         return False
 
@@ -224,24 +229,24 @@ class NetworkTest(Test):
         """
         cmd = "qperf %s tcp_bw" % self.server_ip
         print(cmd)
-        c = Command(cmd)
+        com = Command(cmd)
         pattern = r"\s+bw\s+=\s+(?P<bandwidth>[\.0-9]+ [MG]B/sec)"
         for _ in range(self.retries):
             try:
-                bandwidth = c.get_str(pattern, 'bandwidth', False)
-                bw = bandwidth.split()
-                if 'GB' in bw[1]:
-                    bandwidth = float(bw[0]) * 8 * 1024
+                bandwidth = com.get_str(pattern, 'bandwidth', False)
+                band_width = bandwidth.split()
+                if 'GB' in band_width[1]:
+                    bandwidth = float(band_width[0]) * 8 * 1024
                 else:
-                    bandwidth = float(bw[0]) * 8
+                    bandwidth = float(band_width[0]) * 8
 
                 target_bandwidth = self.target_bandwidth_percent * self.speed
                 print("Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
                       (bandwidth, target_bandwidth))
                 if bandwidth > target_bandwidth:
                     return True
-            except Exception as e:
-                print(e)
+            except Exception as concrete_error:
+                print(concrete_error)
         return False
 
     def create_testfile(self):
@@ -249,10 +254,10 @@ class NetworkTest(Test):
         Create testfile
         :return:
         """
-        bs = 128
+        b_s = 128
         count = self.speed/8
-        cmd = "dd if=/dev/urandom of=%s bs=%uk count=%u" % (self.testfile, bs, count)
-        return 0 == os.system(cmd)
+        cmd = "dd if=/dev/urandom of=%s bs=%uk count=%u" % (self.testfile, b_s, count)
+        return os.system(cmd) == 0
 
     def test_http_upload(self):
         """
@@ -264,10 +269,10 @@ class NetworkTest(Test):
         filename = os.path.basename(self.testfile)
 
         try:
-            with open(self.testfile, 'rb') as f:
-                filetext = base64.b64encode(f.read())
-        except Exception as e:
-            print(e)
+            with open(self.testfile, 'rb') as file_info:
+                filetext = base64.b64encode(file_info.read())
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
         form['filename'] = filename
@@ -283,8 +288,8 @@ class NetworkTest(Test):
         try:
             request = Request(url, data=data, headers=headers)
             response = urlopen(request)
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
         time_stop = time.time()
         time_upload = time_stop - time_start
@@ -306,8 +311,8 @@ class NetworkTest(Test):
         time_start = time.time()
         try:
             response = urlopen(url)
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
         time_stop = time.time()
         time_download = time_stop - time_start
@@ -316,10 +321,10 @@ class NetworkTest(Test):
         print(response.headers)
         filetext = response.read()
         try:
-            with open(self.testfile, 'wb') as f:
-                f.write(filetext)
-        except Exception as e:
-            print(e)
+            with open(self.testfile, 'wb') as file_info:
+                file_info.write(filetext)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
         size = os.path.getsize(self.testfile)

@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""kdump test"""
+
 import os
 import sys
 import time
@@ -26,6 +28,7 @@ class KdumpTest(Test):
     """
     Kdump Test
     """
+
     def __init__(self):
         Test.__init__(self)
         self.pri = 9
@@ -42,7 +45,7 @@ class KdumpTest(Test):
         """
         try:
             Command("cat /proc/cmdline").get_str(r"crashkernel=[^\ ]*")
-        except:
+        except Exception:
             print("Error: no crashkernel found.")
             return False
 
@@ -58,8 +61,9 @@ class KdumpTest(Test):
 
         try:
             Command("systemctl restart kdump").run()
-            Command("systemctl status kdump").get_str(regex="Active: active", single_line=False)
-        except:
+            Command("systemctl status kdump").get_str(regex="Active: active",
+                                                      single_line=False)
+        except Exception:
             print("Error: kdump service not working.")
             return False
 
@@ -68,8 +72,8 @@ class KdumpTest(Test):
         config.dump()
         print("#############")
 
-        ui = CommandUI()
-        if ui.prompt_confirm("System will reboot, are you ready?"):
+        com_ui = CommandUI()
+        if com_ui.prompt_confirm("System will reboot, are you ready?"):
             print("\ntrigger crash...")
             sys.stdout.flush()
             os.system("sync")
@@ -89,8 +93,9 @@ class KdumpTest(Test):
         if config.get_parameter("path"):
             self.vmcore_path = config.get_parameter("path")
 
-        dir_pattern = re.compile(r'(?P<ipaddr>[0-9]+\.[0-9]+\.[0-9]+)-(?P<date>[0-9]+[-.][0-9]+[-.][0-9]+)-'
-                                 r'(?P<time>[0-9]+:[0-9]+:[0-9]+)')
+        dir_pattern = re.compile(
+            r'(?P<ipaddr>[0-9]+\.[0-9]+\.[0-9]+)-(?P<date>[0-9]+[-.][0-9]+[-.][0-9]+)-'
+            r'(?P<time>[0-9]+:[0-9]+:[0-9]+)')
 
         vmcore_dirs = list()
         for (root, dirs, files) in os.walk(self.vmcore_path):
@@ -101,10 +106,12 @@ class KdumpTest(Test):
         vmcore_file = os.path.join(self.vmcore_path, vmcore_dirs[-1], "vmcore")
 
         try:
-            Command("echo \"sys\nq\" | crash -s %s /usr/lib/debug/lib/modules/`uname -r`/vmlinux" % vmcore_file).echo()
+            Command(
+                "echo \"sys\nq\" | crash -s %s /usr/lib/debug/lib/modules/`uname -r`/vmlinux" % \
+                vmcore_file).echo()
             print("kdump image %s verified" % vmcore_file)
             return True
-        except CertCommandError as e:
+        except CertCommandError as concrete_error:
             print("Error: could not verify kdump image %s" % vmcore_file)
-            print(e)
+            print(concrete_error)
             return False

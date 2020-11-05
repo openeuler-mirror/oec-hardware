@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Certification file path"""
+
 
 class CertEnv:
     """

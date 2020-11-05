@@ -12,6 +12,7 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""WatchDog Test"""
 import os
 import sys
 import time
@@ -43,18 +44,19 @@ class WatchDogTest(Test):
 
         os.chdir(self.test_dir)
         try:
-            timeout = Command("./watchdog -g").get_str(regex="^Watchdog timeout is (?P<timeout>[0-9]*) seconds.$",
+            timeout = Command("./watchdog -g").get_str(regex=\
+                                                           "^Watchdog timeout \is (?P<timeout>[0-9]*) seconds.$",
                                                        regex_group="timeout")
             timeout = int(timeout)
             if timeout > self.max_timeout:
                 Command("./watchdog -s %d" % self.max_timeout).echo()
-        except CertCommandError as e:
-            print(e)
+        except CertCommandError as concrete_error:
+            print(concrete_error)
             print("Set/get watchdog timeout failed.")
             return False
 
-        ui = CommandUI()
-        if ui.prompt_confirm("System will reboot, are you ready?"):
+        com_ui = CommandUI()
+        if com_ui.prompt_confirm("System will reboot, are you ready?"):
             print("")
             sys.stdout.flush()
             os.system("sync")

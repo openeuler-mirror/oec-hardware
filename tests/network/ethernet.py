@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""ethernet test"""
+
 import os
 import argparse
 
@@ -43,7 +45,7 @@ class EthernetTest(RDMATest):
         path_pci = path_netdev.split('net')[0]
         cmd = "ls %s | grep -q infiniband" % path_pci
         print(cmd)
-        return 0 == os.system(cmd)
+        return os.system(cmd) == 0
 
     def setup(self, args=None):
         """

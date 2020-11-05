@@ -12,11 +12,14 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""call test_case"""
+
 import decimal
 import time
 
 
 def cal():
+    """call test_case"""
     decimal.getcontext().prec = 1000
     one = decimal.Decimal(1)
     for i in range(1000):

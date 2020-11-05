@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Usb test"""
+
 import sys
 import time
 
@@ -28,7 +30,7 @@ class UsbTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["usbutils"]
-        self.ui = CommandUI()
+        self.com_ui = CommandUI()
 
     def test(self):
         """
@@ -46,7 +48,7 @@ class UsbTest(Test):
             print("#############")
             while True:
                 print("Please plug in a USB device.")
-                if self.ui.prompt_confirm("Done well?"):
+                if self.com_ui.prompt_confirm("Done well?"):
                     break
             time.sleep(1)
 
@@ -73,7 +75,7 @@ class UsbTest(Test):
             plugged_device = new_plugged
             while True:
                 print("Please unplug the USB device you plugged in just now.")
-                if self.ui.prompt_confirm("Done well?"):
+                if self.com_ui.prompt_confirm("Done well?"):
                     break
             time.sleep(1)
 
@@ -94,7 +96,7 @@ class UsbTest(Test):
             sys.stdout.flush()
             plugged_device = new_plugged
 
-            if self.ui.prompt_confirm("All usb sockets have been tested?"):
+            if self.com_ui.prompt_confirm("All usb sockets have been tested?"):
                 return True
 
     def get_usb(self):
