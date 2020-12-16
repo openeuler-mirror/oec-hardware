@@ -12,15 +12,16 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""upload file"""
+
 import os
 import base64
 try:
     from urllib.parse import urlencode
     from urllib.request import urlopen, Request
-    from urllib.error import HTTPError
 except ImportError:
     from urllib import urlencode
-    from urllib2 import urlopen, Request, HTTPError
+    from urllib2 import urlopen, Request
 
 
 class Client:
@@ -29,7 +30,7 @@ class Client:
     """
     def __init__(self, host, oec_id):
         self.host = host
-        self.id = oec_id
+        self.oec_id = oec_id
         self.form = {}
 
     def upload(self, files, server='localhost'):
@@ -42,17 +43,17 @@ class Client:
         filename = os.path.basename(files)
         try:
             job = filename.split('.')[0]
-            with open(files, 'rb') as f:
-                filetext = base64.b64encode(f.read())
-        except Exception as e:
-            print(e)
+            with open(files, 'rb') as file:
+                filetext = base64.b64encode(file.read())
+        except Exception as excp:
+            print(excp)
             return False
 
-        if not self.host or not self.id:
-            print("Missing host({0}) or id({1})".format(self.host, self.id))
+        if not self.host or not self.oec_id:
+            print("Missing host({0}) or id({1})".format(self.host, self.oec_id))
             return False
         self.form['host'] = self.host
-        self.form['id'] = self.id
+        self.form['id'] = self.oec_id
         self.form['job'] = job
         self.form['filetext'] = filetext
 
@@ -70,8 +71,8 @@ class Client:
                 print("Error: upload failed, %s" % res.msg)
                 return False
             return True
-        except Exception as e:
-            print(e)
+        except Exception as excp:
+            print(excp)
             return False
 
 

@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""cpufreq test"""
+
 from random import randint
 from time import sleep
 
@@ -21,6 +23,9 @@ from hwcompatible.command import Command
 
 
 class CPU:
+    """
+    cpufreq test
+    """
     def __init__(self):
         self.cpu = None
         self.nums = None
@@ -39,8 +44,8 @@ class CPU:
         cmd = Command("lscpu")
         try:
             nums = cmd.get_str(r'^CPU\S*:\s+(?P<cpus>\d+)$', 'cpus', False)
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
         self.nums = int(nums)
         self.list = range(self.nums)
@@ -48,16 +53,16 @@ class CPU:
         cmd = Command("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq")
         try:
             max_freq = cmd.get_str()
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
         self.max_freq = int(max_freq)
 
         cmd = Command("cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq")
         try:
             min_freq = cmd.get_str()
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
         self.min_freq = int(min_freq)
 
@@ -74,8 +79,8 @@ class CPU:
         try:
             cmd.run()
             return cmd.returncode
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
     def get_freq(self, cpu):
@@ -87,8 +92,8 @@ class CPU:
         cmd = Command("cpupower -c %s frequency-info -w" % cpu)
         try:
             return int(cmd.get_str(r'.* frequency: (?P<freq>\d+) .*', 'freq', False))
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
     def set_governor(self, governor, cpu='all'):
@@ -102,8 +107,8 @@ class CPU:
         try:
             cmd.run()
             return cmd.returncode
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
     def get_governor(self, cpu):
@@ -115,8 +120,8 @@ class CPU:
         cmd = Command("cpupower -c %s frequency-info -p" % cpu)
         try:
             return cmd.get_str(r'.* governor "(?P<governor>\w+)".*', 'governor', False)
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
     def find_path(self, parent_dir, target_name):
@@ -130,8 +135,8 @@ class CPU:
         try:
             cmd.run()
             return cmd.returncode
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
 
@@ -141,7 +146,8 @@ class Load:
     """
     def __init__(self, cpu):
         self.cpu = cpu
-        self.process = Command("taskset -c {} python -u {}/cpufreq/cal.py".format(self.cpu, CertEnv.testdirectoy))
+        self.process = Command("taskset -c {} python -u {}/cpufreq/cal.py".\
+                               format(self.cpu, CertEnv.testdirectoy))
         self.returncode = None
 
     def run(self):

@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""server"""
+
 import os
 import json
 import time
@@ -40,27 +42,42 @@ dir_files = os.path.join(dir_server, 'files')
 
 
 @app.errorhandler(400)
-def bad_request(e):
+def bad_request():
+    """
+    bad request
+    """
     return render_template('error.html', error='400 - Bad Request'), 400
 
 
 @app.errorhandler(404)
 def page_not_found(e):
+    """
+    page not fount
+    """
     return render_template('error.html', error='404 - Page Not Found'), 404
 
 
 @app.errorhandler(500)
 def internal_server_error(e):
+    """
+    internal server error
+    """
     return render_template('error.html', error='500 - Internal Server Error'), 500
 
 
 @app.route('/')
 def index():
+    """
+    index
+    """
     return render_template('index.html')
 
 
 @app.route('/results')
 def get_results():
+    """
+    get results
+    """
     results = {}
     for host in next(os.walk(dir_results))[1]:
         dir_host = os.path.join(dir_results, host)
@@ -85,11 +102,11 @@ def get_job(host, oec_id, job):
     json_info = os.path.join(dir_job, 'compatibility.json')
     json_results = os.path.join(dir_job, 'factory.json')
     try:
-        with open(json_info, 'r') as f:
-            info = json.load(f)
-        with open(json_results, 'r') as f:
-            results = json.load(f)
-    except Exception as e:
+        with open(json_info, 'r') as file_content:
+            info = json.load(file_content)
+        with open(json_results, 'r') as file_content:
+            results = json.load(file_content)
+    except Exception:
         abort(404)
     return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
@@ -107,9 +124,9 @@ def get_device(host, oec_id, job, interface):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_results = os.path.join(dir_job, 'factory.json')
     try:
-        with open(json_results, 'r') as f:
-            results = json.load(f)
-    except Exception as e:
+        with open(json_results, 'r') as file_content:
+            results = json.load(file_content)
+    except Exception:
         abort(404)
     for testcase in results:
         device = testcase.get('device')
@@ -131,9 +148,9 @@ def get_devices(host, oec_id, job):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_devices = os.path.join(dir_job, 'device.json')
     try:
-        with open(json_devices, 'r') as f:
-            devices = json.load(f)
-    except Exception as e:
+        with open(json_devices, 'r') as file_content:
+            devices = json.load(file_content)
+    except Exception:
         abort(404)
     return render_template('devices.html', devices=devices)
 
@@ -169,9 +186,9 @@ def get_log(host, oec_id, job, name):
     if not os.path.exists(logpath):
         logpath = os.path.join(dir_job, 'job.log')
     try:
-        with open(logpath, 'r') as f:
-            log = f.read().split('\n')
-    except Exception as e:
+        with open(logpath, 'r') as file_content:
+            log = file_content.read().split('\n')
+    except Exception:
         abort(404)
     return render_template('log.html', name=name, log=log)
 
@@ -189,12 +206,12 @@ def submit(host, oec_id, job):
     tar_job = dir_job + '.tar.gz'
     json_cert = os.path.join(dir_job, 'compatibility.json')
     try:
-        with open(json_cert, 'r') as f:
-            cert = json.load(f)
-        with open(tar_job, 'rb') as f:
-            attachment = base64.b64encode(f.read())
-    except Exception as e:
-        print(e)
+        with open(json_cert, 'r') as file_content:
+            cert = json.load(file_content)
+        with open(tar_job, 'rb') as file_content:
+            attachment = base64.b64encode(file_content.read())
+    except Exception as concrete_error:
+        print(concrete_error)
         abort(500)
 
     form = {}
@@ -211,9 +228,9 @@ def submit(host, oec_id, job):
     try:
         req = Request(url, data=data, headers=headers)
         res = urlopen(req)
-    except HTTPError as e:
-        print(e)
-        res = e
+    except HTTPError as concrete_error:
+        print(concrete_error)
+        res = concrete_error
 
     if res.code == 200:
         flash('Submit Successful', 'success')
@@ -242,11 +259,11 @@ def upload_job():
     if not os.path.exists(dir_job):
         os.makedirs(dir_job)
     try:
-        with open(tar_job, 'wb') as f:
-            f.write(base64.b64decode(filetext))
+        with open(tar_job, 'wb') as file_content:
+            file_content.write(base64.b64decode(filetext))
         os.system("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
-    except Exception as e:
-        print(e)
+    except Exception as concrete_error:
+        print(concrete_error)
         abort(400)
     return render_template('upload.html', host=host, id=oec_id, job=job,
                            filetext=filetext, ret='Successful')
@@ -254,17 +271,26 @@ def upload_job():
 
 @app.route('/files')
 def get_files():
+    """
+    get files
+    """
     files = os.listdir(dir_files)
     return render_template('files.html', files=files)
 
 
 @app.route('/files/<path:path>')
 def download_file(path):
+    """
+    download file
+    """
     return send_from_directory('files', path, as_attachment=True)
 
 
 @app.route('/api/file/upload', methods=['GET', 'POST'])
 def upload_file():
+    """
+    upload_file
+    """
     filename = request.values.get('filename', '')
     filetext = request.values.get('filetext', '')
     if not(all([filename, filetext])):
@@ -275,10 +301,10 @@ def upload_file():
     if not os.path.exists(dir_files):
         os.makedirs(dir_files)
     try:
-        with open(filepath, 'wb') as f:
-            f.write(base64.b64decode(filetext))
-    except Exception as e:
-        print(e)
+        with open(filepath, 'wb') as file_content:
+            file_content.write(base64.b64decode(filetext))
+    except Exception as concrete_error:
+        print(concrete_error)
         abort(400)
     return render_template('upload.html', filename=filename, filetext=filetext,
                            ret='Successful')
@@ -286,6 +312,9 @@ def upload_file():
 
 @app.route('/api/<act>', methods=['GET', 'POST'])
 def test_server(act):
+    """
+    test server
+    """
     valid_commands = ['rping', 'rcopy', 'ib_read_bw', 'ib_write_bw', 'ib_send_bw',
                       'qperf']
     cmd = request.values.get('cmd', '')
@@ -295,7 +324,7 @@ def test_server(act):
         abort(400)
 
     if act == 'start':
-        if 'rping' == cmd[0]:
+        if cmd[0] == 'rping':
             cmd = ['rping', '-s']
 
         if 'ib_' in cmd[0]:
@@ -309,7 +338,7 @@ def test_server(act):
                 abort(400)
             cmd.extend(['-d', ibdev, '-i', ibport])
     elif act == 'stop':
-        if 'all' == cmd[0]:
+        if cmd[0] == 'all':
             cmd = ['killall', '-9'] + valid_commands
         else:
             cmd = ['killall', '-9', cmd[0]]
@@ -351,11 +380,10 @@ def __get_ib_dev_port(ib_server_ip):
         ibport = str(ibport)
 
         return ibdev, ibport
-    except Exception as e:
-        print(e)
+    except Exception as concrete_error:
+        print(concrete_error)
         return None, None
 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)
-

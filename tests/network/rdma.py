@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""RDMA Test"""
+
 import os
 import re
 import argparse
@@ -58,20 +60,20 @@ class RDMATest(NetworkTest):
         path_ibdev = 'infiniband_verbs/uverb*/ibdev'
         path_ibdev = ''.join([path_pci, path_ibdev])
         cmd = "cat %s" % path_ibdev
-        c = Command(cmd)
+        com = Command(cmd)
         try:
-            self.ib_device = c.read()
-        except Exception as e:
-            print(e)
+            self.ib_device = com.read()
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
         path_ibport = '/sys/class/net/%s/dev_id' % self.interface
         cmd = "cat %s" % path_ibport
-        c = Command(cmd)
+        com = Command(cmd)
         try:
-            self.ib_port = int(c.read(), 16) + 1
-        except Exception as e:
-            print(e)
+            self.ib_port = int(com.read(), 16) + 1
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
         ib_str = "Infiniband device '%s' port %d" % (self.ib_device, self.ib_port)
@@ -79,9 +81,9 @@ class RDMATest(NetworkTest):
 
         cmd = "ibstatus"
         print(cmd)
-        c = Command(cmd)
+        com = Command(cmd)
         try:
-            output = c.read()
+            output = com.read()
             for info in output.split('\n\n'):
                 if ib_str not in info:
                     continue
@@ -93,8 +95,8 @@ class RDMATest(NetworkTest):
                 self.phys_state = re.search(r"phys state:\s+(.*)", info).group(1)
                 self.link_layer = re.search(r"link_layer:\s+(.*)", info).group(1)
                 self.speed = int(re.search(r"rate:\s+(\d*)", info).group(1)) * 1024
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             return False
 
         return True
@@ -110,7 +112,7 @@ class RDMATest(NetworkTest):
 
         cmd = "rping -c -a %s -C 50 -v" % self.server_ip
         print(cmd)
-        if 0 == os.system(cmd):
+        if os.system(cmd) == 0:
             return True
         else:
             self.call_remote_server('rping', 'stop')
@@ -129,7 +131,7 @@ class RDMATest(NetworkTest):
         print(cmd)
         ret = os.system(cmd)
         self.call_remote_server('rcopy', 'stop')
-        return 0 == ret
+        return ret == 0
 
     def test_bw(self, cmd):
         """
@@ -146,18 +148,18 @@ class RDMATest(NetworkTest):
 
         cmd = "%s %s -d %s -i %s" % (cmd, self.server_ip, self.ib_device, self.ib_port)
         print(cmd)
-        c = Command(cmd)
+        com = Command(cmd)
         pattern = r"\s+(\d+)\s+(\d+)\s+([\.\d]+)\s+(?P<avg_bw>[\.\d]+)\s+([\.\d]+)"
         try:
-            avg_bw = c.get_str(pattern, 'avg_bw', False)   # MB/sec
+            avg_bw = com.get_str(pattern, 'avg_bw', False)   # MB/sec
             avg_bw = float(avg_bw) * 8
 
             tgt_bw = self.target_bandwidth_percent * self.speed
             print("Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
                   (avg_bw, tgt_bw))
             return avg_bw > tgt_bw
-        except Exception as e:
-            print(e)
+        except Exception as concrete_error:
+            print(concrete_error)
             self.call_remote_server(cmd, 'stop')
             return False
 
@@ -203,11 +205,11 @@ class RDMATest(NetworkTest):
         Test ibstatus
         :return:
         """
-        if 0 != os.system("systemctl start opensm"):
+        if os.system("systemctl start opensm") != 0:
             print("[X] start opensm failed.")
             return False
 
-        if 0 != os.system("modprobe ib_umad"):
+        if os.system("modprobe ib_umad") != 0:
             print("[X] modprobe ib_umad failed.")
             return False
 

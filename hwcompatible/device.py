@@ -12,7 +12,7 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-from .command import Command, CertCommandError
+from .command import Command
 
 
 def filter_char(string):
@@ -25,8 +25,8 @@ def filter_char(string):
     filtered = u''
     start = 0
     for i in range(len(string)):
-        c = string[i]
-        if c in ascii_blacklist or (type(string) != unicode and ord(c) >= 128):
+        char_filter = string[i]
+        if char_filter in ascii_blacklist or (type(string) != unicode and ord(char_filter) >= 128):
             if start < i:
                 filtered += string[start:i]
             start = i + 1
@@ -110,10 +110,8 @@ class Device:
         """
         if "INTERFACE" in self.properties.keys():
             return self.properties["INTERFACE"]
-        elif "DEVNAME" in self.properties.keys():
+        if "DEVNAME" in self.properties.keys():
             return self.properties["DEVNAME"].split("/")[-1]
-        elif self.path:
+        if self.path:
             return self.path.split("/")[-1]
-        else:
-            return ""
-
+        return ""

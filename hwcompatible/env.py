@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Certification file path"""
+
 
 class CertEnv:
     """
@@ -28,5 +30,3 @@ class CertEnv:
     logdirectoy = "/usr/share/oech/logs"
     resultdirectoy = "/usr/share/oech/lib/server/results"
     kernelinfo = "/usr/share/oech/kernelrelease.json"
-
-

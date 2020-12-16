@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Special for restart tasks, so that the test can be continued after the machine is restarted"""
+
 import datetime
 
 from .document import Document, FactoryDocument
@@ -73,7 +75,7 @@ class Reboot:
         try:
             Command("systemctl daemon-reload").run_quiet()
             Command("systemctl enable oech").run_quiet()
-        except:
+        except Exception:
             print("Error: enable oech.service fail.")
             return False
 
@@ -95,7 +97,7 @@ class Reboot:
             self.job.job_id = self.reboot["job_id"]
             self.job.subtests_filter = self.reboot["rebootup"]
             time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
-        except:
+        except Exception:
             print("Error: reboot file format not as expect.")
             return False
 
@@ -108,4 +110,3 @@ class Reboot:
             return False
 
         return True
-

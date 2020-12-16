@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""Test Non-Volatile Memory express"""
+
 import os
 import sys
 import argparse
@@ -63,7 +65,8 @@ class NvmeTest(Test):
             sys.stdout.flush()
 
             print("\nWritting...")
-            Command("nvme write -z %d -s 0 -d /dev/urandom /dev/%s 2> /dev/null" % (size, disk)).echo()
+            Command("nvme write -z %d -s 0 -d /dev/urandom /dev/%s 2> /dev/null" \
+                    % (size, disk)).echo()
             sys.stdout.flush()
 
             print("\nReading...")
@@ -81,9 +84,9 @@ class NvmeTest(Test):
 
             Command("nvme list").echo(ignore_errors=True)
             return True
-        except Exception as e:
+        except Exception as concrete_error:
             print("Error: nvme cmd fail.")
-            print(e)
+            print(concrete_error)
             return False
 
     def in_use(self, disk):

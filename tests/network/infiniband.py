@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""InfiniBand Test"""
+
 from rdma import RDMATest
 
 
@@ -38,12 +40,12 @@ class InfiniBandTest(RDMATest):
         if 'ACTIVE' not in self.state:
             print("[X] Link is not ACTIVE.")
 
-        if 0x0 == self.base_lid:
+        if self.base_lid == 0x0:
             print("[X] Fail to get base lid of %s." % self.interface)
             return False
         print("[.] The base lid is %s" % self.base_lid)
 
-        if 0x0 == self.sm_lid:
+        if self.sm_lid == 0x0:
             print("[X] Fail to get subnet manager lid of %s." % self.interface)
             return False
         print("[.] The subnet manager lid is %s" % self.sm_lid)

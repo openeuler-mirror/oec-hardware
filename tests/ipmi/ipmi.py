@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""ipmi test"""
+
 from hwcompatible.test import Test
 from hwcompatible.command import Command
 
@@ -31,8 +33,9 @@ class IpmiTest(Test):
         """
         try:
             Command("systemctl start ipmi").run()
-            Command("systemctl status ipmi.service").get_str(regex="Active: active", single_line=False)
-        except:
+            Command("systemctl status ipmi.service").get_str(regex="Active: active", \
+                                                             single_line=False)
+        except Exception:
             print("ipmi service cant't be started")
             return False
         return True
@@ -46,7 +49,7 @@ class IpmiTest(Test):
         for cmd in cmd_list:
             try:
                 Command(cmd).echo()
-            except:
+            except Exception:
                 print("%s return error." % cmd)
                 return False
         return True

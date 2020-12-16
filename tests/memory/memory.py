@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""memory test"""
+
 import os
 import time
 import re
@@ -79,18 +81,18 @@ class MemoryTest(Test):
             if line:
                 tokens = line.split()
                 if len(tokens) == 3:
-                    if "MemTotal:" == tokens[0].strip():
+                    if tokens[0].strip() == "MemTotal:":
                         self.system_memory = int(tokens[1].strip())/1024
                     elif tokens[0].strip() in ["MemFree:", "Cached:", "Buffers:"]:
                         self.free_memory += int(tokens[1].strip())
-                    elif "SwapTotal:" == tokens[0].strip():
+                    elif tokens[0].strip() == "SwapTotal:":
                         self.swap_memory = int(tokens[1].strip())/1024
-                    elif "Hugepagesize:" == tokens[0].strip():
+                    elif tokens[0].strip() == "Hugepagesize:":
                         self.hugepage_size = int(tokens[1].strip())/1024
                 elif len(tokens) == 2:
-                    if "HugePages_Total:" == tokens[0].strip():
+                    if tokens[0].strip() == "HugePages_Total:":
                         self.hugepage_total = int(tokens[1].strip())
-                    elif "HugePages_Free:" == tokens[0].strip():
+                    elif tokens[0].strip() == "HugePages_Free:":
                         self.hugepage_free = int(tokens[1].strip())
             else:
                 break
@@ -180,8 +182,8 @@ class MemoryTest(Test):
         try:
             Command("cd %s; ./hugetlb_test" % self.test_dir).echo()
             print("Hugetlb test succ.\n")
-        except CertCommandError as e:
-            print(e)
+        except CertCommandError as concrete_error:
+            print(concrete_error)
             print("Error: hugepages test fail.\n")
             return False
         return True
@@ -241,7 +243,7 @@ class MemoryTest(Test):
             Command("echo 1 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("online")
             return True
-        except:
+        except Exception:
             print("Error: fail to online %s." % memory_path)
             return False
 
@@ -255,7 +257,7 @@ class MemoryTest(Test):
             Command("echo 0 > %s/online" % memory_path).run()
             Command("cat %s/state" % memory_path).get_str("offline")
             return True
-        except:
+        except Exception:
             print("Error: fail to online %s." % memory_path)
             return False
 

@@ -12,6 +12,8 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+"""cdrom test"""
+
 import os
 import sys
 import time
@@ -34,7 +36,7 @@ class CDRomTest(Test):
         self.device = None
         self.type = None
         self.args = None
-        self.ui = CommandUI()
+        self.com_ui = CommandUI()
         self.test_dir = "/usr/share/doc"
 
     def setup(self, args=None):
@@ -62,12 +64,13 @@ class CDRomTest(Test):
         devname = self.device.get_property("DEVNAME")
         Command("eject %s" % devname).run(ignore_errors=True)
         while True:
-            print("Please insert %s disc into %s, then close the tray manually." % (self.type.lower(), devname))
+            print("Please insert %s disc into %s, then close the tray manually."\
+                  % (self.type.lower(), devname))
             if self.method == "write_test":
                 print("  tips:disc should be new.")
             elif self.method == "read_test":
                 print("  tips:disc should not be blank.")
-            if self.ui.prompt_confirm("Done well?"):
+            if self.com_ui.prompt_confirm("Done well?"):
                 break
         Command("eject -t %s" % devname).run(ignore_errors=True)
         print("Waiting media..).")
@@ -86,7 +89,7 @@ class CDRomTest(Test):
         if not device:
             return None
 
-        bd_types = ["BD_RE",  "BD_R", "BD"]
+        bd_types = ["BD_RE", "BD_R", "BD"]
         dvd_types = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD"]
         cd_types = ["CD_RW", "CD_R", "CD"]
         for bd_type in bd_types:
@@ -148,7 +151,7 @@ class CDRomTest(Test):
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return self.write_test()
-        except CertCommandError as e:
+        except CertCommandError:
             return False
 
     def write_test(self):
@@ -168,18 +171,20 @@ class CDRomTest(Test):
                 write_opts = "-sao"
                 try:
                     command = Command("cdrecord dev=%s -checkdrive" % devname)
-                    modes = command.get_str(regex="^Supported modes[^:]*:(?P<modes>.*$)", regex_group="modes",
+                    modes = command.get_str(regex="^Supported modes[^:]*:(?P<modes>.*$)", \
+                                            regex_group="modes",
                                             single_line=False, ignore_errors=True)
                     if "TAO" in modes:
                         write_opts = "-tao"
                     if "SAO" in modes:
                         write_opts = "-sao"
-                    flags = command.get_str(regex="^Driver flags[^:]*:(?P<flags>.*$)", regex_group="flags",
+                    flags = command.get_str(regex="^Driver flags[^:]*:(?P<flags>.*$)", \
+                                            regex_group="flags",
                                             single_line=False, ignore_errors=True)
                     if "BURNFREE" in flags:
                         write_opts += " driveropts=burnfree"
-                except CertCommandError as e:
-                    print(e)
+                except CertCommandError as concrete_error:
+                    print(concrete_error)
 
                 size = Command("mkisofs -quiet -R -print-size %s " % self.test_dir).get_str()
                 blocks = int(size)
@@ -189,7 +194,7 @@ class CDRomTest(Test):
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return True
-        except CertCommandError as e:
+        except CertCommandError as concrete_error:
             return False
 
     def read_test(self):
@@ -229,8 +234,8 @@ class CDRomTest(Test):
             Command("umount ./mnt_cdrom").run(ignore_errors=True)
             Command("rm -rf ./mnt_cdrom ./device_dir").run(ignore_errors=True)
             return return_code
-        except CertCommandError as e:
-            print(e)
+        except CertCommandError as concrete_error:
+            print(concrete_error)
             return False
 
     def cmp_tree(self, dir1, dir2):
@@ -246,7 +251,7 @@ class CDRomTest(Test):
         try:
             Command("diff -r %s %s" % (dir1, dir2)).run()
             return True
-        except CertCommandError as e:
+        except CertCommandError:
             print("Error: file comparison failed.")
             return False
 
@@ -265,16 +270,16 @@ class CDRomTest(Test):
             Command("eject %s" % device).run()
             print("tray ejected.")
             sys.stdout.flush()
-        except:
+        except Exception:
             pass
 
         try:
             Command("eject -t %s" % device).run()
             print("tray auto-closed.\n")
             sys.stdout.flush()
-        except:
+        except Exception:
             print("Could not auto-close the tray, please close the tray manually.")
-            self.ui.prompt_confirm("Done well?")
+            self.com_ui.prompt_confirm("Done well?")
 
         time.sleep(20)
         return True

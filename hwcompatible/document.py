@@ -12,8 +12,9 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import json
+"""Document processing"""
 
+import json
 from .commandUI import CommandUI
 from .command import Command
 from .device import Device
@@ -33,23 +34,25 @@ class Document():
         print("doc new")
 
     def save(self):
+        """save file"""
         try:
             with open(self.filename, "w+") as save_f:
                 json.dump(self.document, save_f, indent=4)
                 save_f.close()
-        except Exception as e:
+        except Exception as concrete_error:
             print("Error: doc save fail.")
-            print(e)
+            print(concrete_error)
             return False
         return True
 
     def load(self):
+        """load file"""
         try:
             with open(self.filename, "r") as load_f:
                 self.document = json.load(load_f)
                 load_f.close()
                 return True
-        except:
+        except Exception:
             return False
 
 
@@ -86,33 +89,53 @@ class CertDocument(Document):
                             self.document[key] = value
                 else:
                     break
-        except Exception as e:
+        except Exception as concrete_error:
             print("Error: get hardware info fail.")
-            print(e)
+            print(concrete_error)
 
         sysinfo = SysInfo(CertEnv.releasefile)
         self.document["OS"] = sysinfo.product + " " + sysinfo.get_version()
         self.document["kernel"] = sysinfo.kernel
         self.document["ID"] = CommandUI().prompt("Please provide your Compatibility Test ID:")
         self.document["Product URL"] = CommandUI().prompt("Please provide your Product URL:")
-        self.document["server"] = CommandUI().prompt("Please provide the Compatibility Test Server (Hostname or Ipaddr):")
+        self.document["server"] = CommandUI().prompt("Please provide the Compatibility Test "
+                                                     "Server (Hostname or Ipaddr):")
 
     def get_hardware(self):
-        return self.document["Manufacturer"] + " " + self.document["Product Name"] + " " + self.document["Version"]
+        """
+        Get hardware information
+        """
+        return self.document["Manufacturer"] + " " + self.document["Product Name"] + " " \
+               + self.document["Version"]
 
     def get_os(self):
+        """
+        Get os information
+        """
         return self.document["OS"]
 
     def get_server(self):
+        """
+        Get server information
+        """
         return self.document["server"]
 
     def get_url(self):
+        """
+        Get url
+        """
         return self.document["Product URL"]
 
     def get_certify(self):
+        """
+        Get certify
+        """
         return self.document["ID"]
 
     def get_kernel(self):
+        """
+        Get kernel information
+        """
         return self.document["kernel"]
 
 
@@ -179,17 +202,23 @@ class ConfigFile:
         self.load()
 
     def load(self):
-        fp = open(self.filename)
-        self.config = fp.readlines()
+        """
+        Load config file
+        """
+        fp_info = open(self.filename)
+        self.config = fp_info.readlines()
         for line in self.config:
             if line.strip() and line.strip()[0] == "#":
                 continue
             words = line.strip().split(" ")
             if words[0]:
                 self.parameters[words[0]] = " ".join(words[1:])
-        fp.close()
+        fp_info.close()
 
     def get_parameter(self, name):
+        """
+        Get parameter
+        """
         if self.parameters:
             try:
                 return self.parameters[name]
@@ -198,6 +227,9 @@ class ConfigFile:
         return None
 
     def dump(self):
+        """
+        Dump
+        """
         for line in self.config:
             string = line.strip()
             if not string or string[0] == "#":
@@ -205,6 +237,9 @@ class ConfigFile:
             print(string)
 
     def add_parameter(self, name, value):
+        """
+        add parameter
+        """
         if not self.getParameter(name):
             self.parameters[name] = value
             self.config.append("%s %s\n" % (name, value))
@@ -238,7 +273,7 @@ class ConfigFile:
         Save the config property value to a file
         :return:
         """
-        fp = open(self.filename, "w")
+        fp_info = open(self.filename, "w")
         for line in self.config:
-            fp.write(line)
-        fp.close()
+            fp_info.write(line)
+        fp_info.close()
