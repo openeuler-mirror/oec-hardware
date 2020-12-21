@@ -162,8 +162,8 @@ class DiskTest(Test):
             return False
 
         print("\nStarting rand raw IO test...")
-        opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -group_\
-        reporting -name=file -runtime=300"
+        opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 " \
+               "-group_reporting -name=file -runtime=300"
         if not self.do_fio(device, size, opts):
             print("%s rand raw IO test fail." % device)
             print("#############")
