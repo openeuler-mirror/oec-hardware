@@ -1,5 +1,5 @@
 %define version    1.0.0
-%define release    5
+%define release    6
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
@@ -42,6 +42,9 @@ openEuler Hardware Compatibility Test Server
 %setup -q -c
 
 %build
+
+sed -i '15i CFLAGS+=-fstack-protector-strong' tests/memory/Makefile
+
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
 DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
 
@@ -77,6 +80,8 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Fri Mar 19 2021 caodongxia <caodongxia@huawei.com> - 1.0.0-6
+* Tue Sep 29 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-5
 * Fri Jul 24 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-4
 * Sun Jul 18 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-3
 * Sun Jul 01 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-2
