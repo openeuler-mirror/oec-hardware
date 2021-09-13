@@ -5,7 +5,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.0.0
-Release:        7
+Release:        8
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -19,6 +19,7 @@ Patch0002:      oec-hardware-1.0.0-delete-tape.patch
 
 Patch0003:      oec-hardware-1.0.0-fix-cdrom.patch
 Patch0004:      oec-hardware-1.0.0-fix-cpufreq.patch
+Patch0005:      oec-hardware-1.0.0-optimization.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -41,8 +42,10 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
+%patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 
 %build
 
@@ -83,6 +86,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Thu Sep 09 2021 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-8
 * Thu Jul 15 2021 zhangzikang <zhangzikang@kylinos.cn> - 1.0.0-7
 - Fix cdrom and cpufreq test failed
 
