@@ -1,13 +1,11 @@
-%define version    1.0.0
-%define release    5
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
-Version:        %{version}
-Release:        %{release}
+Version:        1.0.0
+Release:        7
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -18,6 +16,9 @@ Patch0001:      oec-hardware-1.0.0-system.patch
 
 #PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware-1.0.0 project
 Patch0002:      oec-hardware-1.0.0-delete-tape.patch
+
+Patch0003:      oec-hardware-1.0.0-fix-cdrom.patch
+Patch0004:      oec-hardware-1.0.0-fix-cpufreq.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -40,8 +41,13 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
+%patch3 -p1
+%patch4 -p1
 
 %build
+
+sed -i '15i CFLAGS+=-fstack-protector-strong' tests/memory/Makefile
+
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
 DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
 
@@ -77,6 +83,11 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Thu Jul 15 2021 zhangzikang <zhangzikang@kylinos.cn> - 1.0.0-7
+- Fix cdrom and cpufreq test failed
+
+* Fri Mar 19 2021 caodongxia <caodongxia@huawei.com> - 1.0.0-6
+* Tue Sep 29 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-5
 * Fri Jul 24 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-4
 * Sun Jul 18 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-3
 * Sun Jul 01 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-2
