@@ -26,6 +26,7 @@ from .command import Command, CertCommandError
 from .commandUI import CommandUI
 from .log import Logger
 from .reboot import Reboot
+from .constants import *
 
 
 class Job():
@@ -88,7 +89,7 @@ class Job():
             except ImportError:
                 ct = type
             if isinstance(test_class, ct) and issubclass(test_class, Test):
-                if "test" not in dir(test_class):
+                if TEST not in dir(test_class):
                     continue
                 if (subtests_filter and not subtests_filter in dir(test_class)):
                     continue
@@ -111,18 +112,18 @@ class Job():
         self.test_suite = []
         for test in self.test_factory:
             if test["run"]:
-                testclass = self.discover(test["name"], subtests_filter)
+                testclass = self.discover(test[NAME], subtests_filter)
                 if testclass:
                     testcase = dict()
-                    testcase["test"] = testclass
-                    testcase["name"] = test["name"]
-                    testcase["device"] = test["device"]
-                    testcase["status"] = "FAIL"
+                    testcase[TEST] = testclass
+                    testcase[NAME] = test[NAME]
+                    testcase[DEVICE] = test[DEVICE]
+                    testcase[STATUS] = FAIL
                     self.test_suite.append(testcase)
                 else:
                     if not subtests_filter:
-                        test["status"] = "FAIL"
-                        print("not found %s" % test["name"])
+                        test[STATUS] = FAIL
+                        print("not found %s" % test[NAME])
 
         if not len(self.test_suite):
             print("No test found")
@@ -134,7 +135,7 @@ class Job():
         """
         required_rpms = []
         for tests in self.test_suite:
-            for pkg in tests["test"].requirements:
+            for pkg in tests[TEST].requirements:
                 try:
                     Command("rpm -q " + pkg).run_quiet()
                 except CertCommandError:
@@ -160,25 +161,25 @@ class Job():
         :param subtests_filter:
         :return:
         """
-        name = testcase["name"]
-        if testcase["device"].get_name():
-            name = testcase["name"] + "-" + testcase["device"].get_name()
+        name = testcase[NAME]
+        if testcase[DEVICE].get_name():
+            name = testcase[NAME] + "-" + testcase[DEVICE].get_name()
         logname = name + ".log"
         reboot = None
         test = None
         logger = None
         try:
-            test = testcase["test"]
+            test = testcase[TEST]
             logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
             logger.start()
             if subtests_filter:
                 return_code = getattr(test, subtests_filter)()
             else:
                 print("----  start to run test %s  ----" % name)
-                args = argparse.Namespace(device=testcase["device"], logdir=logger.log.dir)
+                args = argparse.Namespace(device=testcase[DEVICE], logdir=logger.log.dir)
                 test.setup(args)
                 if test.reboot:
-                    reboot = Reboot(testcase["name"], self, test.rebootup)
+                    reboot = Reboot(testcase[NAME], self, test.rebootup)
                     return_code = False
                     if reboot.setup():
                         return_code = test.test()
@@ -206,12 +207,12 @@ class Job():
             print("No test to run.")
             return
 
-        self.test_suite.sort(key=lambda k: k["test"].pri)
+        self.test_suite.sort(key=lambda k: k[TEST].pri)
         for testcase in self.test_suite:
             if self._run_test(testcase, subtests_filter):
-                testcase["status"] = "PASS"
+                testcase[STATUS] = PASS
             else:
-                testcase["status"] = "FAIL"
+                testcase[STATUS] = FAIL
 
     def run(self):
         """
@@ -237,10 +238,10 @@ class Job():
         print("-------------  Summary  -------------")
         for test in self.test_factory:
             if test["run"]:
-                name = test["name"]
-                if test["device"].get_name():
-                    name = test["name"] + "-" + test["device"].get_name()
-                if test["status"] == "PASS":
+                name = test[NAME]
+                if test[DEVICE].get_name():
+                    name = test[NAME] + "-" + test[DEVICE].get_name()
+                if test[STATUS] == PASS:
                     print(name.ljust(33) + "\033[0;32mPASS\033[0m")
                 else:
                     print(name.ljust(33) + "\033[0;31mFAIL\033[0m")
@@ -253,6 +254,7 @@ class Job():
         """
         for test in self.test_factory:
             for testcase in self.test_suite:
-                if test["name"] == testcase["name"] and test["device"].path == \
-                        testcase["device"].path:
-                    test["status"] = testcase["status"]
+                if test[NAME] == testcase[NAME] and test[DEVICE].path == \
+                        testcase[DEVICE].path:
+                    test[STATUS] = testcase[STATUS]
+

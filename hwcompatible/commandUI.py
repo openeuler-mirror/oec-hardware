@@ -14,12 +14,13 @@
 
 import sys
 import readline
-
+from .constants import SAMEASYES, YES, SAMEASNO, NO
 
 class CommandUI:
     """
     Command user interface selection
     """
+
     def __init__(self, echoResponses=False):
         self.echo = echoResponses
 
@@ -86,10 +87,6 @@ class CommandUI:
         :param question:
         :return:
         """
-        YES = "y"
-        SAMEASYES = ["y", "yes"]
-        NO = "n"
-        SAMEASNO = ["n", "no"]
         while True:
             reply = self.prompt(question, (YES, NO))
             if reply.lower() in SAMEASYES:
@@ -127,3 +124,4 @@ class CommandUI:
                       "following: %s" % " | ".join(choices))
             finally:
                 readline.set_startup_hook()
+

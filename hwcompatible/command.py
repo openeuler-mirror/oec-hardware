@@ -4,7 +4,7 @@
 # Copyright (c) 2020 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
-# You may obtain a copy of Mulan PSL v2 at:
+# You may ob tain a copy of Mulan PSL v2 at:
 #     http://license.coscl.org.cn/MulanPSL2
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
@@ -80,7 +80,6 @@ class Command:
 
             if self.errors and len(self.errors) > 0:
                 self.print_errors()
-            #     raise CertCommandError(self, "has output on stderr")
 
     def run_quiet(self):
         """quiet after running command"""
@@ -95,7 +94,7 @@ class Command:
 
     def print_output(self):
         """
-        结果显示
+        Result display
         :return:
         """
         if self.output:
@@ -106,7 +105,7 @@ class Command:
 
     def print_errors(self):
         """
-        页面显示错误信息
+        Print error messages on model
         :return:
         """
         if self.errors:
@@ -117,7 +116,7 @@ class Command:
 
     def pid(self):
         """
-        获取管道pid值
+        Get pipe pid
         :return:
         """
         if self.pipe:
@@ -125,7 +124,7 @@ class Command:
 
     def readline(self):
         """
-        按行读取输出信息
+        Read line to get messages
         :return
         """
         if self.pipe:
@@ -133,7 +132,7 @@ class Command:
 
     def read(self):
         """
-        执行命令，并读取结果
+        Execute command and get results
         :return:
         """
         self.pipe = subprocess.Popen(self.command, shell=True,
@@ -173,28 +172,30 @@ class Command:
 
         # otherwise
         raise CertCommandError(self, "no match for regular "
-                                         "expression %s" % self.regex)
+                               "expression %s" % self.regex)
 
     def _get_str_multi_line(self, result, pattern, return_list):
-        if self.output:
-            for line in self.output:
-                if self.regex_group:
-                    match = pattern.match(line)
-                    if match:
-                        if self.regex_group:
-                            if return_list:
-                                result.append(match.group(self.regex_group))
-                            else:
-                                return match.group(self.regex_group)
+        if self.output == None:
+            return None
+
+        for line in self.output:
+            if self.regex_group:
+                match = pattern.match(line)
+                if match and self.regex_group:
+                    if return_list:
+                        result.append(match.group(self.regex_group))
+                    else:
+                        return match.group(self.regex_group)
+            else:
+                # otherwise, return the matching line
+                match = pattern.search(line)
+                if match == None:
+                    continue
+                if return_list:
+                    result.append(match.group())
                 else:
-                    # otherwise, return the matching line
-                    match = pattern.search(line)
-                    if match:
-                        if return_list:
-                            result.append(match.group())
-                        else:
-                            return match.group()
-            return result
+                    return match.group()
+        return result
 
     def _get_str(self, regex=None, regex_group=None,
                  single_line=True, return_list=False):
@@ -219,23 +220,19 @@ class Command:
 
     def get_str(self, regex=None, regex_group=None, single_line=True,
                 return_list=False, ignore_errors=False):
-        """获取命令执行结果中匹配的值"""
+        """Get matching value in results"""
         result = self._get_str(regex, regex_group, single_line, return_list)
         if not ignore_errors:
             if self.returncode != 0:
                 self.print_output()
                 self.print_errors()
                 raise CertCommandError(self, "returned %d" % self.returncode)
-
-            # if self.errors and len(self.errors) > 0:
-            #     raise CertCommandError(self, "has output on stderr")
-
         return result
 
 
 class CertCommandError(Exception):
     """
-    Cert command error  handling
+    Cert command error handling
     """
     def __init__(self, command, message):
         Exception.__init__(self)
@@ -252,3 +249,4 @@ class CertCommandError(Exception):
     def _set_message(self, value):
         self.__message = value
     message = property(_get_message, _set_message)
+
