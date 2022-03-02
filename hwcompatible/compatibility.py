@@ -27,7 +27,7 @@ from .commandUI import CommandUI
 from .job import Job
 from .reboot import Reboot
 from .client import Client
-
+from .constants import *
 
 class EulerCertification():
     """
@@ -59,9 +59,6 @@ class EulerCertification():
             oec_devices = certdevice.get_devices()
             self.devices = DeviceDocument(CertEnv.devicefile, oec_devices)
             self.devices.save()
-
-            # test_factory format example: [{"name":"nvme", "device":device,
-            # "run":True, "status":"PASS", "reboot":False}]
             test_factory = self.get_tests(oec_devices)
             self.update_factory(test_factory)
             if not self.choose_tests():
@@ -216,8 +213,6 @@ class EulerCertification():
         :param devices:
         :return:
         """
-        nodevice = ["cpufreq", "memory", "clock", "profiler", "system",
-                    "stress", "kdump", "perf", "acpi", "watchdog"]
         sort_devices = self.sort_tests(devices)
         empty_device = Device()
         test_factory = list()
@@ -233,19 +228,19 @@ class EulerCertification():
             if sort_devices.get(testname):
                 for device in sort_devices[testname]:
                     test = dict()
-                    test["name"] = testname
-                    test["device"] = device
-                    test["run"] = True
-                    test["status"] = "NotRun"
-                    test["reboot"] = False
+                    test[NAME] = testname
+                    test[DEVICE] = device
+                    test[RUN] = True
+                    test[STATUS] = NOTRUN
+                    test[REBOOT] = False
                     test_factory.append(test)
-            elif testname in nodevice:
+            elif testname in NODEVICE:
                 test = dict()
-                test["name"] = testname
-                test["device"] = empty_device
-                test["run"] = True
-                test["status"] = "NotRun"
-                test["reboot"] = False
+                test[NAME] = testname
+                test[DEVICE] = empty_device
+                test[RUN] = True
+                test[STATUS] = NOTRUN
+                test[REBOOT] = False
                 test_factory.append(test)
         return test_factory
 
@@ -258,28 +253,28 @@ class EulerCertification():
         sort_devices = dict()
         empty_device = Device()
         for device in devices:
-            if device.get_property("SUBSYSTEM") == "usb" and \
+            if device.get_property("SUBSYSTEM") == USB and \
                     device.get_property("ID_VENDOR_FROM_DATABASE") == \
                     "Linux Foundation" and \
                     ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or
                      "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
-                sort_devices["usb"] = [empty_device]
+                sort_devices[USB] = [empty_device]
                 continue
             if device.get_property("PCI_CLASS") == "30000" or \
                     device.get_property("PCI_CLASS") == "38000":
-                sort_devices["video"] = [device]
+                sort_devices[VIDEO] = [device]
                 continue
-            if (device.get_property("DEVTYPE") == "disk" and
+            if (device.get_property("DEVTYPE") == DISK and
                 not device.get_property("ID_TYPE")) or \
-                    device.get_property("ID_TYPE") == "disk":
-                if "nvme" in device.get_property("DEVPATH"):
-                    sort_devices["disk"] = [empty_device]
+                    device.get_property("ID_TYPE") == DISK:
+                if NVME in device.get_property("DEVPATH"):
+                    sort_devices[DISK] = [empty_device]
                     try:
-                        sort_devices["nvme"].extend([device])
+                        sort_devices[NVME].extend([device])
                     except KeyError:
-                        sort_devices["nvme"] = [device]
+                        sort_devices[NVME] = [device]
                 elif "/host" in device.get_property("DEVPATH"):
-                    sort_devices["disk"] = [empty_device]
+                    sort_devices[DISK] = [empty_device]
             if device.get_property("SUBSYSTEM") == "net" and \
                     device.get_property("INTERFACE"):
                 interface = device.get_property("INTERFACE")
@@ -293,35 +288,33 @@ class EulerCertification():
                                 sort_devices["infiniband"].extend([device])
                             except KeyError:
                                 sort_devices["infiniband"] = [device]
-                        elif interface in line and "ethernet" in line:
+                        elif interface in line and ETHERNET in line:
                             try:
-                                sort_devices["ethernet"].extend([device])
+                                sort_devices[ETHERNET].extend([device])
                             except KeyError:
-                                sort_devices["ethernet"] = [device]
-                        elif interface in line and "wifi" in line:
+                                sort_devices[ETHERNET] = [device]
+                        elif interface in line and WIFI in line:
                             try:
-                                sort_devices["wlan"].extend([device])
+                                sort_devices[WLAN].extend([device])
                             except KeyError:
-                                sort_devices["wlan"] = [device]
+                                sort_devices[WLAN] = [device]
                     else:
                         break
                 continue
             if device.get_property("ID_CDROM") == "1":
-                types = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
-                         "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD"]
-                for dev_type in types:
+                for dev_type in CDTYPES:
                     if device.get_property("ID_CDROM_" + dev_type) == "1":
                         try:
-                            sort_devices["cdrom"].extend([device])
+                            sort_devices[CDROM].extend([device])
                         except KeyError:
-                            sort_devices["cdrom"] = [device]
+                            sort_devices[CDROM] = [device]
                         break
-            if device.get_property("SUBSYSTEM") == "ipmi":
-                sort_devices["ipmi"] = [empty_device]
+            if device.get_property("SUBSYSTEM") == IPMI:
+                sort_devices[IPMI] = [empty_device]
         try:
             Command("dmidecode").get_str("IPMI Device Information",
                                          single_line=False)
-            sort_devices["ipmi"] = [empty_device]
+            sort_devices[IPMI] = [empty_device]
         except:
             pass
 
@@ -334,10 +327,10 @@ class EulerCertification():
         """
         while True:
             for test in self.test_factory:
-                if test["name"] == "system":
-                    test["run"] = True
-                    if test["status"] == "PASS":
-                        test["status"] = "Force"
+                if test[NAME] == SYSTEM:
+                    test[RUN] = True
+                    if test[STATUS] == PASS:
+                        test[STATUS] = FORCE
 
             os.system("clear")
             print("Select tests to run:")
@@ -350,11 +343,11 @@ class EulerCertification():
                 return False
             if reply in ["n", "none"]:
                 for test in self.test_factory:
-                    test["run"] = False
+                    test[RUN] = False
                 continue
             if reply in ["a", "all"]:
                 for test in self.test_factory:
-                    test["run"] = True
+                    test[RUN] = True
                 continue
 
             num_lst = reply.split(" ")
@@ -365,8 +358,8 @@ class EulerCertification():
                     continue
 
                 if 0 < num <= len(self.test_factory):
-                    self.test_factory[num - 1]["run"] = not \
-                        self.test_factory[num - 1]["run"]
+                    self.test_factory[num - 1][RUN] = not \
+                        self.test_factory[num - 1][RUN]
                     continue
 
     def show_tests(self):
@@ -375,29 +368,29 @@ class EulerCertification():
         :return:
         """
         print("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10)
-              + "Status".ljust(8) + "Class".ljust(14) + "Device\033[0m")
+              + STATUS.ljust(8) + "Class".ljust(14) + "Device\033[0m")
         num = 0
         for test in self.test_factory:
-            name = test["name"]
-            if name == "system":
-                test["run"] = True
-                if test["status"] == "PASS":
-                    test["status"] = "Force"
+            name = test[NAME]
+            if name == SYSTEM:
+                test[RUN] = True
+                if test[STATUS] == PASS:
+                    test[STATUS] = FORCE
 
-            status = test["status"]
-            device = test["device"].get_name()
+            status = test[STATUS]
+            device = test[DEVICE].get_name()
             run = "no"
-            if test["run"] is True:
+            if test[RUN] is True:
                 run = "yes"
 
             num = num + 1
-            if status == "PASS":
+            if status == PASS:
                 print("%-6d" % num + run.ljust(8) + "\033[0;32mPASS    \033[0m"
                       + name.ljust(14) + "%s" % device)
             elif status == "FAIL":
                 print("%-6d" % num + run.ljust(8) + "\033[0;31mFAIL    \033[0m"
                       + name.ljust(14) + "%s" % device)
-            elif status == "Force":
+            elif status == FORCE:
                 print("%-6d" % num + run.ljust(8) + "\033[0;33mForce   \033[0m"
                       + name.ljust(14) + "%s" % device)
             else:
@@ -410,10 +403,10 @@ class EulerCertification():
         :return:
         """
         for test in self.test_factory:
-            if test["status"] == "PASS":
-                test["run"] = False
+            if test[STATUS] == PASS:
+                test[RUN] = False
             else:
-                test["run"] = True
+                test[RUN] = True
         os.system("clear")
         print("These tests are recommended to "
               "complete the compatibility test:")
@@ -438,7 +431,7 @@ class EulerCertification():
         if len(self.test_factory) == 0:
             return False
         for test in self.test_factory:
-            if test["status"] != "PASS":
+            if test[STATUS] != PASS:
                 return False
         return True
 
@@ -454,14 +447,14 @@ class EulerCertification():
             for test in self.test_factory:
                 if not self.search_factory(test, test_factory):
                     self.test_factory.remove(test)
-                    print("delete %s test %s" % (test["name"],
-                                                 test["device"].get_name()))
+                    print("delete %s test %s" % (test[NAME],
+                                                 test[DEVICE].get_name()))
             for test in test_factory:
                 if not self.search_factory(test, self.test_factory):
                     self.test_factory.append(test)
-                    print("add %s test %s" % (test["name"],
-                                              test["device"].get_name()))
-        self.test_factory.sort(key=lambda k: k["name"])
+                    print("add %s test %s" % (test[NAME],
+                                              test[DEVICE].get_name()))
+        self.test_factory.sort(key=lambda k: k[NAME])
         FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
 
     def search_factory(self, obj_test, test_factory):
@@ -472,7 +465,8 @@ class EulerCertification():
         :return:
         """
         for test in test_factory:
-            if test["name"] == obj_test["name"] and \
-                    test["device"].path == obj_test["device"].path:
+            if test[NAME] == obj_test[NAME] and \
+                    test[DEVICE].path == obj_test[DEVICE].path:
                 return True
         return False
+

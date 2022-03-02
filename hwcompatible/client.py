@@ -64,7 +64,6 @@ class Client:
             'Accept': 'text/plain'
         }
         try:
-            # print(url)
             req = Request(url, data=data, headers=headers)
             res = urlopen(req)
             if res.code != 200:
@@ -81,3 +80,4 @@ if __name__ == '__main__':
     import sys
     file_name = sys.argv[1]
     c.upload(file_name)
+

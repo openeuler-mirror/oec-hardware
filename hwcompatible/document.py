@@ -20,12 +20,13 @@ from .command import Command
 from .device import Device
 from .sysinfo import SysInfo
 from .env import CertEnv
-
+from .constants import *
 
 class Document():
     """
     Read and write documents
     """
+
     def __init__(self, filename, document=''):
         self.document = document
         self.filename = filename
@@ -60,8 +61,8 @@ class CertDocument(Document):
     """
     get hardware and release information
     """
+
     def __init__(self, filename, document=''):
-        # super(CertDocument, self).__init__(filename, document)
         self.document = dict()
         self.filename = filename
         if not document:
@@ -72,7 +73,6 @@ class CertDocument(Document):
     def new(self):
         """
         new document object
-        :return:
         """
         try:
             pipe = Command("/usr/sbin/dmidecode -t 1")
@@ -82,11 +82,12 @@ class CertDocument(Document):
                 line = pipe.readline()
                 if line:
                     property_right = line.split(":", 1)
-                    if len(property_right) == 2:
-                        key = property_right[0].strip()
-                        value = property_right[1].strip()
-                        if key in ["Manufacturer", "Product Name", "Version"]:
-                            self.document[key] = value
+                    if len(property_right) != 2:
+                        continue
+                    key = property_right[0].strip()
+                    value = property_right[1].strip()
+                    if key in ["Manufacturer", "Product Name", "Version"]:
+                        self.document[key] = value
                 else:
                     break
         except Exception as concrete_error:
@@ -94,11 +95,13 @@ class CertDocument(Document):
             print(concrete_error)
 
         sysinfo = SysInfo(CertEnv.releasefile)
-        self.document["OS"] = sysinfo.product + " " + sysinfo.get_version()
-        self.document["kernel"] = sysinfo.kernel
-        self.document["ID"] = CommandUI().prompt("Please provide your Compatibility Test ID:")
-        self.document["Product URL"] = CommandUI().prompt("Please provide your Product URL:")
-        self.document["server"] = CommandUI().prompt("Please provide the Compatibility Test "
+        self.document[OS] = sysinfo.product + " " + sysinfo.get_version()
+        self.document[KERNEL] = sysinfo.kernel
+        self.document[ID] = CommandUI().prompt(
+            "Please provide your Compatibility Test ID:")
+        self.document[PRODUCTURL] = CommandUI().prompt(
+            "Please provide your Product URL:")
+        self.document[SERVER] = CommandUI().prompt("Please provide the Compatibility Test "
                                                      "Server (Hostname or Ipaddr):")
 
     def get_hardware(self):
@@ -106,45 +109,45 @@ class CertDocument(Document):
         Get hardware information
         """
         return self.document["Manufacturer"] + " " + self.document["Product Name"] + " " \
-               + self.document["Version"]
+            + self.document["Version"]
 
     def get_os(self):
         """
         Get os information
         """
-        return self.document["OS"]
+        return self.document[OS]
 
     def get_server(self):
         """
         Get server information
         """
-        return self.document["server"]
+        return self.document[SERVER]
 
     def get_url(self):
         """
         Get url
         """
-        return self.document["Product URL"]
+        return self.document[PRODUCTURL]
 
     def get_certify(self):
         """
         Get certify
         """
-        return self.document["ID"]
+        return self.document[ID]
 
     def get_kernel(self):
         """
         Get kernel information
         """
-        return self.document["kernel"]
+        return self.document[KERNEL]
 
 
 class DeviceDocument(Document):
     """
     get device document
     """
+
     def __init__(self, filename, devices=''):
-        # super(DeviceDocument, self).__init__(filename, devices)
         self.filename = filename
         self.document = list()
         if not devices:
@@ -160,7 +163,6 @@ class FactoryDocument(Document):
     """
 
     def __init__(self, filename, factory=''):
-        # super(FactoryDocument, self).__init__(filename, factory)
         self.document = list()
         self.filename = filename
         if not factory:
@@ -168,10 +170,10 @@ class FactoryDocument(Document):
         else:
             for member in factory:
                 element = dict()
-                element["name"] = member["name"]
-                element["device"] = member["device"].properties
-                element["run"] = member["run"]
-                element["status"] = member["status"]
+                element[NAME] = member[NAME]
+                element[DEVICE] = member[DEVICE].properties
+                element[RUN] = member[RUN]
+                element[STATUS] = member[STATUS]
                 self.document.append(element)
 
     def get_factory(self):
@@ -182,11 +184,11 @@ class FactoryDocument(Document):
         factory = list()
         for element in self.document:
             test = dict()
-            device = Device(element["device"])
-            test["device"] = device
-            test["name"] = element["name"]
-            test["run"] = element["run"]
-            test["status"] = element["status"]
+            device = Device(element[DEVICE])
+            test[DEVICE] = device
+            test[NAME] = element[NAME]
+            test[RUN] = element[RUN]
+            test[STATUS] = element[STATUS]
             factory.append(test)
         return factory
 
@@ -195,6 +197,7 @@ class ConfigFile:
     """
     Get parameters from configuration file
     """
+
     def __init__(self, filename):
         self.filename = filename
         self.parameters = dict()
@@ -277,3 +280,4 @@ class ConfigFile:
         for line in self.config:
             fp_info.write(line)
         fp_info.close()
+

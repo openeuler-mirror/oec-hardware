@@ -19,12 +19,14 @@ import datetime
 from .document import Document, FactoryDocument
 from .env import CertEnv
 from .command import Command, CertCommandError
+from .constants import *
 
 
 class Reboot:
     """
     Special for restart tasks, so that the test can be continued after the machine is restarted
     """
+
     def __init__(self, testname, job, rebootup):
         self.testname = testname
         self.rebootup = rebootup
@@ -40,8 +42,8 @@ class Reboot:
             return
 
         for test in self.job.test_factory:
-            if test["run"] and self.testname == test["name"]:
-                test["reboot"] = False
+            if test[RUN] and self.testname == test[NAME]:
+                test[REBOOT] = False
 
         Command("rm -rf %s" % CertEnv.rebootfile).run(ignore_errors=True)
         Command("systemctl disable oech").run(ignore_errors=True)
@@ -57,8 +59,8 @@ class Reboot:
 
         self.job.save_result()
         for test in self.job.test_factory:
-            if test["run"] and self.testname == test["name"]:
-                test["reboot"] = True
+            if test[RUN] and self.testname == test[NAME]:
+                test[REBOOT] = True
                 test["status"] = "FAIL"
         if not FactoryDocument(CertEnv.factoryfile, self.job.test_factory).save():
             print("Error: save testfactory doc fail before reboot.")
@@ -66,7 +68,7 @@ class Reboot:
 
         self.reboot["job_id"] = self.job.job_id
         self.reboot["time"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        self.reboot["test"] = self.testname
+        self.reboot[TEST] = self.testname
         self.reboot["rebootup"] = self.rebootup
         if not Document(CertEnv.rebootfile, self.reboot).save():
             print("Error: save reboot doc fail.")
@@ -92,11 +94,12 @@ class Reboot:
             return False
 
         try:
-            self.testname = doc.document["test"]
+            self.testname = doc.document[TEST]
             self.reboot = doc.document
             self.job.job_id = self.reboot["job_id"]
             self.job.subtests_filter = self.reboot["rebootup"]
-            time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
+            time_reboot = datetime.datetime.strptime(
+                self.reboot["time"], "%Y%m%d%H%M%S")
         except Exception:
             print("Error: reboot file format not as expect.")
             return False
@@ -104,9 +107,11 @@ class Reboot:
         time_now = datetime.datetime.now()
         time_delta = (time_now - time_reboot).seconds
         cmd = Command("last reboot -s '%s seconds ago'" % time_delta)
-        reboot_list = cmd.get_str("^reboot .*$", single_line=False, return_list=True)
+        reboot_list = cmd.get_str(
+            "^reboot .*$", single_line=False, return_list=True)
         if len(reboot_list) != 1:
             print("Errot:reboot times check fail.")
             return False
 
         return True
+
