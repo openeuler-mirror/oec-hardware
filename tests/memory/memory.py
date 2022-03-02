@@ -232,6 +232,8 @@ class MemoryTest(Test):
         total_mem_3 = self.system_memory
         if total_mem_3 != total_mem_1:
             return False
+        
+        return True
 
     def online_memory(self, memory_path):
         """
