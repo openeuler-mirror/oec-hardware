@@ -104,7 +104,7 @@ class SystemTest(Test):
         if self.sysinfo.debug_kernel:
             print("Error: debug kernel.")
             return_code = False
-
+            
         kernel_dict = Document(CertEnv.kernelinfo)
         if not kernel_dict.load():
             print("Error: get kernel info fail.")
