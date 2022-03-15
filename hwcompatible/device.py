@@ -38,6 +38,7 @@ class CertDevice:
     """
     Certified device
     """
+
     def __init__(self):
         self.devices = None
 
@@ -53,29 +54,26 @@ class CertDevice:
             properties = dict()
             while True:
                 line = pipe.readline()
-                if line:
-                    if line == "\n":
-                        if len(properties) > 0:
-                            device = Device(properties)
-                            if device.path != "":
-                                self.devices.append(device)
-                            properties = dict()
-                    else:
-                        prop = line.split(":", 1)
-                        if len(prop) == 2:
-                            tp = prop[0].strip('\ \'\n')
-                            attribute = prop[1].strip('\ \'\n')
-                            if tp == "E":
-                                keyvalue = attribute.split("=", 1)
-                                if len(keyvalue) == 2:
-                                    properties[keyvalue[0]] = keyvalue[1]
-                            elif tp == "P":
-                                properties["INFO"] = attribute
-                else:
+                if not line:
                     break
+                if line == "\n" and len(properties) > 0:
+                    device = Device(properties)
+                    if device.path != "":
+                        self.devices.append(device)
+                    properties = dict()
+                else:
+                    prop = line.split(":", 1)
+                    if len(prop) == 2:
+                        tp = prop[0].strip('\ \'\n')
+                        attribute = prop[1].strip('\ \'\n')
+                        if tp == "E":
+                            keyvalue = attribute.split("=", 1)
+                            if len(keyvalue) == 2:
+                                properties[keyvalue[0]] = keyvalue[1]
+                        elif tp == "P":
+                            properties["INFO"] = attribute
         except Exception as e:
-            print("Warning: get devices fail")
-            print(e)
+            print("Warning: get devices fail", e)
         self.devices.sort(key=lambda k: k.path)
         return self.devices
 
@@ -84,6 +82,7 @@ class Device:
     """
     get device properties
     """
+
     def __init__(self, properties=None):
         self.path = ""
         if properties:
@@ -98,10 +97,7 @@ class Device:
         :param prop:
         :return:
         """
-        try:
-            return self.properties[prop]
-        except KeyError:
-            return ""
+        return self.properties.get(prop, "")
 
     def get_name(self):
         """

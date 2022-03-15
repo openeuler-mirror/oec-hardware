@@ -22,6 +22,7 @@ from .sysinfo import SysInfo
 from .env import CertEnv
 from .constants import *
 
+
 class Document():
     """
     Read and write documents
@@ -41,8 +42,7 @@ class Document():
                 json.dump(self.document, save_f, indent=4)
                 save_f.close()
         except Exception as concrete_error:
-            print("Error: doc save fail.")
-            print(concrete_error)
+            print("Error: doc save fail.", concrete_error)
             return False
         return True
 
@@ -52,9 +52,9 @@ class Document():
             with open(self.filename, "r") as load_f:
                 self.document = json.load(load_f)
                 load_f.close()
-                return True
         except Exception:
             return False
+        return True
 
 
 class CertDocument(Document):
@@ -80,19 +80,17 @@ class CertDocument(Document):
             self.document = dict()
             while True:
                 line = pipe.readline()
-                if line:
-                    property_right = line.split(":", 1)
-                    if len(property_right) != 2:
-                        continue
-                    key = property_right[0].strip()
-                    value = property_right[1].strip()
-                    if key in ["Manufacturer", "Product Name", "Version"]:
-                        self.document[key] = value
-                else:
+                if not line:
                     break
+                property_right = line.split(":", 1)
+                if len(property_right) != 2:
+                    continue
+                key = property_right[0].strip()
+                value = property_right[1].strip()
+                if key in ["Manufacturer", "Product Name", "Version"]:
+                    self.document[key] = value
         except Exception as concrete_error:
-            print("Error: get hardware info fail.")
-            print(concrete_error)
+            print("Error: get hardware info fail.", concrete_error)
 
         sysinfo = SysInfo(CertEnv.releasefile)
         self.document[OS] = sysinfo.product + " " + sysinfo.get_version()
@@ -102,7 +100,7 @@ class CertDocument(Document):
         self.document[PRODUCTURL] = CommandUI().prompt(
             "Please provide your Product URL:")
         self.document[SERVER] = CommandUI().prompt("Please provide the Compatibility Test "
-                                                     "Server (Hostname or Ipaddr):")
+                                                   "Server (Hostname or Ipaddr):")
 
     def get_hardware(self):
         """
@@ -167,14 +165,14 @@ class FactoryDocument(Document):
         self.filename = filename
         if not factory:
             self.load()
-        else:
-            for member in factory:
-                element = dict()
-                element[NAME] = member[NAME]
-                element[DEVICE] = member[DEVICE].properties
-                element[RUN] = member[RUN]
-                element[STATUS] = member[STATUS]
-                self.document.append(element)
+            return
+        for member in factory:
+            element = dict()
+            element[NAME] = member[NAME]
+            element[DEVICE] = member[DEVICE].properties
+            element[RUN] = member[RUN]
+            element[STATUS] = member[STATUS]
+            self.document.append(element)
 
     def get_factory(self):
         """
@@ -222,12 +220,7 @@ class ConfigFile:
         """
         Get parameter
         """
-        if self.parameters:
-            try:
-                return self.parameters[name]
-            except KeyError:
-                pass
-        return None
+        return self.parameters.get(name, None)
 
     def dump(self):
         """
@@ -243,12 +236,12 @@ class ConfigFile:
         """
         add parameter
         """
-        if not self.getParameter(name):
-            self.parameters[name] = value
-            self.config.append("%s %s\n" % (name, value))
-            self.save()
-            return True
-        return False
+        if self.get_parameter(name):
+            return False
+        self.parameters[name] = value
+        self.config.append("%s %s\n" % (name, value))
+        self.save()
+        return True
 
     def remove_parameter(self, name):
         """
@@ -256,20 +249,21 @@ class ConfigFile:
         :param name:
         :return:
         """
-        if self.getParameter(name):
-            del self.parameters[name]
-            newconfig = list()
-            for line in self.config:
-                if line.strip() and line.strip()[0] == "#":
-                    newconfig.append(line)
-                    continue
-                words = line.strip().split(" ")
-                if words and words[0] == name:
-                    continue
-                else:
-                    newconfig.append(line)
-            self.config = newconfig
-            self.save()
+        if not self.get_parameter(name):
+            return
+        del self.parameters[name]
+        newconfig = list()
+        for line in self.config:
+            if line.strip() and line.strip()[0] == "#":
+                newconfig.append(line)
+                continue
+            words = line.strip().split(" ")
+            if words and words[0] == name:
+                continue
+            else:
+                newconfig.append(line)
+        self.config = newconfig
+        self.save()
 
     def save(self):
         """
@@ -280,4 +274,3 @@ class ConfigFile:
         for line in self.config:
             fp_info.write(line)
         fp_info.close()
-
