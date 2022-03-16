@@ -53,4 +53,7 @@ WIFI = "wifi"
 WLAN = "wlan"
 CDROM = "cdrom"
 IPMI = "ipmi"
+FC="fc"
+RAID="raid"
+GPU="gpu"
 

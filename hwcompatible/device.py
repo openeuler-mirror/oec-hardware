@@ -73,7 +73,7 @@ class CertDevice:
                         elif tp == "P":
                             properties["INFO"] = attribute
         except Exception as e:
-            print("Warning: get devices fail", e)
+            print("Warning: get devices fail.\n", e)
         self.devices.sort(key=lambda k: k.path)
         return self.devices
 

@@ -42,7 +42,7 @@ class Document():
                 json.dump(self.document, save_f, indent=4)
                 save_f.close()
         except Exception as concrete_error:
-            print("Error: doc save fail.", concrete_error)
+            print("Error: doc save fail.\n", concrete_error)
             return False
         return True
 
@@ -90,7 +90,7 @@ class CertDocument(Document):
                 if key in ["Manufacturer", "Product Name", "Version"]:
                     self.document[key] = value
         except Exception as concrete_error:
-            print("Error: get hardware info fail.", concrete_error)
+            print("Error: get hardware info fail.\n", concrete_error)
 
         sysinfo = SysInfo(CertEnv.releasefile)
         self.document[OS] = sysinfo.product + " " + sysinfo.get_version()
