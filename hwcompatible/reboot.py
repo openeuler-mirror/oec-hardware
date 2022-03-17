@@ -61,7 +61,7 @@ class Reboot:
         for test in self.job.test_factory:
             if test[RUN] and self.testname == test[NAME]:
                 test[REBOOT] = True
-                test["status"] = "FAIL"
+                test[STATUS] = FAIL
         if not FactoryDocument(CertEnv.factoryfile, self.job.test_factory).save():
             print("Error: save testfactory doc fail before reboot.")
             return False
@@ -114,4 +114,3 @@ class Reboot:
             return False
 
         return True
-

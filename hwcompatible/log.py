@@ -25,6 +25,7 @@ class Log(object):
     """
     Read and write log
     """
+
     def __init__(self, logname='oech.log', logdir='__temp__'):
         if not logdir:
             curtime = datetime.datetime.now().isoformat()
@@ -72,6 +73,7 @@ class Logger():
     """
      Output results to file
     """
+
     def __init__(self, logname, logdir, out, err):
         self.log = Log(logname, logdir)
         self.stdout = out
