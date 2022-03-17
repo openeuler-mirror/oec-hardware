@@ -96,13 +96,13 @@ class CDRomTest(Test):
             if device.get_property("ID_CDROM_" + bd_type) == "1":
                 return bd_type
         for dvd_type in dvd_types:
-            if device.get_ertpropy("ID_CDROM_" + dvd_type) == "1":
+            if device.get_property("ID_CDROM_" + dvd_type) == "1":
                 return dvd_type
         for cd_type in cd_types:
             if device.get_property("ID_CDROM_" + cd_type) == "1":
                 return cd_type
 
-        print("Can not find pr)oper test-type for %s." % device.get_name())
+        print("Can not find proper test-type for %s." % device.get_name())
         return None
 
     def get_mode(self, device_type):
