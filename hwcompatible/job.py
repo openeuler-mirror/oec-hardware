@@ -27,12 +27,13 @@ from .commandUI import CommandUI
 from .log import Logger
 from .reboot import Reboot
 from .constants import *
-
+from types import ClassType as ct
 
 class Job():
     """
     Test task management
     """
+
     def __init__(self, args=None):
         """
         Creates an instance of Job class.
@@ -44,7 +45,8 @@ class Job():
         self.args = args or argparse.Namespace()
         self.test_factory = getattr(args, "test_factory", [])
         self.test_suite = []
-        self.job_id = ''.join(random.sample(string.ascii_letters + string.digits, 10))
+        self.job_id = ''.join(random.sample(
+            string.ascii_letters + string.digits, 10))
         self.com_ui = CommandUI()
         self.subtests_filter = getattr(args, "subtests_filter", None)
 
@@ -78,16 +80,11 @@ class Job():
         try:
             module = __import__(testname, globals(), locals())
         except Exception as concrete_error:
-            print("Error: module import failed for %s" % testname)
-            print(concrete_error)
+            print("Error: module import failed for %s" % testname, concrete_error)
             return None
 
         for thing in dir(module):
             test_class = getattr(module, thing)
-            try:
-                from types import ClassType as ct
-            except ImportError:
-                ct = type
             if isinstance(test_class, ct) and issubclass(test_class, Test):
                 if TEST not in dir(test_class):
                     continue
@@ -111,19 +108,18 @@ class Job():
 
         self.test_suite = []
         for test in self.test_factory:
-            if test["run"]:
+            if test[RUN]:
                 testclass = self.discover(test[NAME], subtests_filter)
-                if testclass:
-                    testcase = dict()
-                    testcase[TEST] = testclass
-                    testcase[NAME] = test[NAME]
-                    testcase[DEVICE] = test[DEVICE]
-                    testcase[STATUS] = FAIL
-                    self.test_suite.append(testcase)
-                else:
-                    if not subtests_filter:
-                        test[STATUS] = FAIL
-                        print("not found %s" % test[NAME])
+                if not testclass and not subtests_filter:
+                    test[STATUS] = FAIL
+                    print("not found %s" % test[NAME])
+                    continue
+                testcase = dict()
+                testcase[TEST] = testclass
+                testcase[NAME] = test[NAME]
+                testcase[DEVICE] = test[DEVICE]
+                testcase[STATUS] = FAIL
+                self.test_suite.append(testcase)
 
         if not len(self.test_suite):
             print("No test found")
@@ -143,13 +139,13 @@ class Job():
                         required_rpms.append(pkg)
 
         if len(required_rpms):
-            print("Installing required packages: %s" % ", ".join(required_rpms))
+            print("Installing required packages: %s" %
+                  ", ".join(required_rpms))
             try:
                 cmd = Command("yum install -y " + " ".join(required_rpms))
                 cmd.echo()
             except CertCommandError as concrete_error:
-                print(concrete_error)
-                print("Fail to install required packages.")
+                print("Fail to install required packages. ", concrete_error)
                 return False
 
         return True
@@ -175,8 +171,9 @@ class Job():
             if subtests_filter:
                 return_code = getattr(test, subtests_filter)()
             else:
-                print("----  start to run test %s  ----" % name)
-                args = argparse.Namespace(device=testcase[DEVICE], logdir=logger.log.dir)
+                print("----  Start to run test %s  ----" % name)
+                args = argparse.Namespace(
+                    device=testcase[DEVICE], logdir=logger.log.dir)
                 test.setup(args)
                 if test.reboot:
                     reboot = Reboot(testcase[NAME], self, test.rebootup)
@@ -194,7 +191,7 @@ class Job():
         if not subtests_filter:
             test.teardown()
         logger.stop()
-        print("")
+        print("----  End to run test %s  ----" % name)
         return return_code
 
     def run_tests(self, subtests_filter=None):
@@ -237,7 +234,7 @@ class Job():
         """
         print("-------------  Summary  -------------")
         for test in self.test_factory:
-            if test["run"]:
+            if test[RUN]:
                 name = test[NAME]
                 if test[DEVICE].get_name():
                     name = test[NAME] + "-" + test[DEVICE].get_name()
@@ -245,7 +242,7 @@ class Job():
                     print(name.ljust(33) + "\033[0;32mPASS\033[0m")
                 else:
                     print(name.ljust(33) + "\033[0;31mFAIL\033[0m")
-        print("")
+        print("\n")
 
     def save_result(self):
         """
@@ -257,4 +254,3 @@ class Job():
                 if test[NAME] == testcase[NAME] and test[DEVICE].path == \
                         testcase[DEVICE].path:
                     test[STATUS] = testcase[STATUS]
-
