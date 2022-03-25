@@ -12,6 +12,7 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+
 """disk test"""
 
 import os
@@ -23,16 +24,17 @@ from hwcompatible.command import Command, CertCommandError
 from hwcompatible.commandUI import CommandUI
 from hwcompatible.device import CertDevice
 
-
 class DiskTest(Test):
     """
     disk test
     """
+
     def __init__(self):
         Test.__init__(self)
         self.disks = list()
         self.filesystems = ["ext4"]
         self.com_ui = CommandUI()
+        self.logpath = ""
 
     def setup(self, args=None):
         """
@@ -40,25 +42,27 @@ class DiskTest(Test):
         :return:
         """
         try:
-            print("Disk Info:")
-            Command("fdisk -l").echo(ignore_errors=True)
-            print("\nPartition Info:")
-            Command("df -h").echo(ignore_errors=True)
-            print("\nMount Info:")
-            Command("mount").echo(ignore_errors=True)
-            print("\nSwap Info:")
-            Command("cat /proc/swaps").echo(ignore_errors=True)
-            print("\nLVM Info:")
-            Command("pvdisplay").echo(ignore_errors=True)
-            Command("vgdisplay").echo(ignore_errors=True)
-            Command("lvdisplay").echo(ignore_errors=True)
-            print("Md Info:")
-            Command("cat /proc/mdstat").echo(ignore_errors=True)
+            self.args = args or argparse.Namespace()
+            self.logpath = getattr(args, "logdir", None) + "/disk.log"
+            os.system("echo 'Disk Info: ' >> %s" % self.logpath)
+            Command("fdisk -l &>> %s" % self.logpath).echo(ignore_errors=True)
+            os.system("echo 'Partition Info: ' >> %s" % self.logpath)
+            Command("df -h &>> %s" % self.logpath).echo(ignore_errors=True)
+            os.system("echo 'Mount Info: ' >> %s" % self.logpath)
+            Command("mount &>> %s" % self.logpath).echo(ignore_errors=True)
+            os.system("echo 'Swap Info: ' >> %s" % self.logpath)
+            Command("cat /proc/swaps &>> %s" %
+                    self.logpath).echo(ignore_errors=True)
+            os.system("echo 'LVM Info: ' >> %s" % self.logpath)
+            Command("pvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
+            Command("vgdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
+            Command("lvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
+            os.system("echo 'Md Info: ' >> %s" % self.logpath)
+            Command("cat /proc/mdstat &>> %s" %
+                    self.logpath).echo(ignore_errors=True)
             sys.stdout.flush()
-            print("\n")
         except Exception as concrete_error:
-            print("Warning: could not get disk info")
-            print(concrete_error)
+            print("Warning: could not get disk info.\n", concrete_error)
 
     def test(self):
         """
@@ -70,7 +74,7 @@ class DiskTest(Test):
             return False
 
         self.disks.append("all")
-        disk = self.com_ui.prompt_edit("Which disk would you like to test: ",\
+        disk = self.com_ui.prompt_edit("Which disk would you like to test: ",
                                        self.disks[0], self.disks)
         return_code = True
         if disk == "all":
@@ -94,7 +98,7 @@ class DiskTest(Test):
         disks = list()
         devices = CertDevice().get_devices()
         for device in devices:
-            if (device.get_property("DEVTYPE") == "disk" and not \
+            if (device.get_property("DEVTYPE") == "disk" and not
                     device.get_property("ID_TYPE")) or device.\
                     get_property("ID_TYPE") == "disk":
                 if "/host" in device.get_property("DEVPATH"):
@@ -132,7 +136,8 @@ class DiskTest(Test):
 
         un_suitable = list(set(disks).difference(set(self.disks)))
         if len(un_suitable) > 0:
-            print("These disks %s are in use now, skip them." % "|".join(un_suitable))
+            print("These disks %s are in use now, skip them." %
+                  "|".join(un_suitable))
 
     def raw_test(self, disk):
         """
@@ -202,8 +207,10 @@ class DiskTest(Test):
             try:
                 print("\nFormatting %s to %s ..." % (device, file_sys))
                 Command("umount %s" % device).echo(ignore_errors=True)
-                Command("mkfs -t %s -F %s 2>/dev/null" % (file_sys, device)).echo()
-                Command("mount -t %s %s %s" % (file_sys, device, "vfs_test")).echo()
+                Command("mkfs -t %s -F %s &>/dev/null" %
+                        (file_sys, device)).echo()
+                Command("mount -t %s %s %s" %
+                        (file_sys, device, "vfs_test")).echo()
 
                 print("\nStarting sequential vfs IO test...")
                 opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -name=directoy -runtime=300"
@@ -237,10 +244,9 @@ class DiskTest(Test):
         max_bs = 64
         a_bs = 4
         while a_bs <= max_bs:
-            if os.system("fio %s -size=%dK -bs=%dK %s" % (file_opt, size, a_bs, option)) != 0:
+            if os.system("fio %s -size=%dK -bs=%dK %s &>> %s" % (file_opt, size, a_bs, option, self.logpath)) != 0:
                 print("Error: %s fio failed." % filepath)
                 return False
-            print("\n")
             sys.stdout.flush()
             a_bs = a_bs * 2
         return True
