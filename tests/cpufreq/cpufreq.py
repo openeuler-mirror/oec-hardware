@@ -247,7 +247,7 @@ class CPUFreqTest(Test):
         tolerance = 1.0
         min_speedup = expected_speedup - (expected_speedup - 1.0) * tolerance
         max_speedup = expected_speedup + (expected_speedup - 1.0) * tolerance
-        if not min_speedup < measured_speedup < max_speedup:
+        if not min_speedup <= measured_speedup <= max_speedup:
             print("[X] The speedup(%.2f) is not between %.2f and %.2f" %
                   (measured_speedup, min_speedup, max_speedup))
             return False
@@ -332,7 +332,7 @@ class CPUFreqTest(Test):
         load_test.run()
         sleep(1)
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        if not self.cpu.min_freq < target_cpu_freq < self.cpu.max_freq:
+        if not self.cpu.min_freq <= target_cpu_freq <= self.cpu.max_freq:
             print("[X] The freq of CPU%s(%d) is not between %d~%d." %
                   (target_cpu, target_cpu_freq, self.cpu.min_freq, self.cpu.max_freq))
             return False
