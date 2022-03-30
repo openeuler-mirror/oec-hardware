@@ -15,7 +15,7 @@
 """clock test"""
 
 import os
-
+import subprocess
 from hwcompatible.command import Command, CertCommandError
 from hwcompatible.test import Test
 
@@ -26,16 +26,36 @@ class ClockTest(Test):
     """
     Clock Test
     """
+
+    def __init__(self):
+        Test.__init__(self)
+        self.logpath = None
+
+    def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
+        self.args = args or argparse.Namespace()
+        self.logpath = getattr(args, "logdir", None) + "/clock.log"
+
     def test(self):
         """
         Clock test case
         :return:
         """
         try:
-            Command("cd %s; ./clock" % clock_dir).echo()
-            return True
+            result = subprocess.getstatusoutput(
+                "cd %s; ./clock &> %s" % (clock_dir, clock_dir))
+            if result[0] == 0:
+                print("Test clock succeed.")
+                return True
+
+            print("Test clock failed.")
+            return False
         except CertCommandError as concrete_error:
-            print(concrete_error)
+            print("Test clock failed.\n %s" % concrete_error)
             return False
 
 

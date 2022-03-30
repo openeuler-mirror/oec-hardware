@@ -27,7 +27,6 @@ from .commandUI import CommandUI
 from .log import Logger
 from .reboot import Reboot
 from .constants import *
-from types import ClassType as ct
 
 class Job():
     """
@@ -49,7 +48,7 @@ class Job():
             string.ascii_letters + string.digits, 10))
         self.com_ui = CommandUI()
         self.subtests_filter = getattr(args, "subtests_filter", None)
-
+        self.logpath = CertEnv.logdirectoy +"/" + self.job_id+"/job.log"
         self.test_parameters = None
         if "test_parameters" in self.args:
             self.test_parameters = {}
@@ -82,7 +81,7 @@ class Job():
         except Exception as concrete_error:
             print("Error: module import failed for %s" % testname, concrete_error)
             return None
-
+        ct = type
         for thing in dir(module):
             test_class = getattr(module, thing)
             if isinstance(test_class, ct) and issubclass(test_class, Test):
@@ -124,6 +123,12 @@ class Job():
         if not len(self.test_suite):
             print("No test found")
 
+        global TOTAL_COUNT
+        global CURRENT_NUM
+        CURRENT_NUM = 0  
+        TOTAL_COUNT = len(self.test_suite)
+        print("There are %s selected test suites." % TOTAL_COUNT)
+
     def check_test_depends(self):
         """
         Install  dependency packages
@@ -133,7 +138,7 @@ class Job():
         for tests in self.test_suite:
             for pkg in tests[TEST].requirements:
                 try:
-                    Command("rpm -q " + pkg).run_quiet()
+                    Command("rpm -q %s &>> %s"%(pkg, self.logpath)).run_quiet()
                 except CertCommandError:
                     if not pkg in required_rpms:
                         required_rpms.append(pkg)
@@ -142,7 +147,7 @@ class Job():
             print("Installing required packages: %s" %
                   ", ".join(required_rpms))
             try:
-                cmd = Command("yum install -y " + " ".join(required_rpms))
+                cmd = Command("yum install -y %s &>> %s"%(" ".join(required_rpms), self.logpath))
                 cmd.echo()
             except CertCommandError as concrete_error:
                 print("Fail to install required packages. ", concrete_error)
@@ -164,6 +169,7 @@ class Job():
         reboot = None
         test = None
         logger = None
+        global CURRENT_NUM
         try:
             test = testcase[TEST]
             logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
@@ -171,7 +177,9 @@ class Job():
             if subtests_filter:
                 return_code = getattr(test, subtests_filter)()
             else:
-                print("----  Start to run test %s  ----" % name)
+                CURRENT_NUM += 1
+                print("Start to run %s/%s test suite: %s." %
+                      (CURRENT_NUM, TOTAL_COUNT, name))
                 args = argparse.Namespace(
                     device=testcase[DEVICE], logdir=logger.log.dir)
                 test.setup(args)
@@ -191,7 +199,8 @@ class Job():
         if not subtests_filter:
             test.teardown()
         logger.stop()
-        print("----  End to run test %s  ----" % name)
+        print("End to run %s/%s test suite: %s." %
+                      (CURRENT_NUM, TOTAL_COUNT, name))
         return return_code
 
     def run_tests(self, subtests_filter=None):

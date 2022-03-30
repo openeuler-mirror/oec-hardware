@@ -39,6 +39,7 @@ class EulerCertification():
         self.devices = None
         self.ui = CommandUI()
         self.client = None
+        self.dir_name = None
 
     def run(self):
         """
@@ -96,11 +97,11 @@ class EulerCertification():
         if self.ui.prompt_confirm("Are you sure to clean all "
                                   "compatibility test data?"):
             try:
-                Command("rm -rf %s" % CertEnv.certificationfile).run()
-                Command("rm -rf %s" % CertEnv.factoryfile).run()
-                Command("rm -rf %s" % CertEnv.devicefile).run()
+                Command("rm -rf %s" % CertEnv.certificationfile).run_quiet()
+                Command("rm -rf %s" % CertEnv.factoryfile).run_quiet()
+                Command("rm -rf %s" % CertEnv.devicefile).run_quiet()
             except Exception as e:
-                print(e)
+                print("Clean compatibility test data failed. \n", e)
                 return False
         return True
 
@@ -109,9 +110,7 @@ class EulerCertification():
         load certification
         :return:
         """
-        if not os.path.exists(CertEnv.datadirectory):
-            os.mkdir(CertEnv.datadirectory)
-
+        os.makedirs(os.path.dirname(CertEnv.datadirectory), exist_ok=True)
         if not self.certification:
             self.certification = CertDocument(CertEnv.certificationfile)
             if not self.certification.document:
@@ -148,17 +147,17 @@ class EulerCertification():
 
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
-        dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")\
+        self.dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")\
                    + "-" + job.job_id
-        pack_name = dir_name + ".tar"
-        cmd = Command("tar -cf %s %s" % (pack_name, dir_name))
+        pack_name = self.dir_name + ".tar"
+        cmd = Command("tar -cf %s %s" % (pack_name, self.dir_name))
         try:
-            os.rename(job.job_id, dir_name)
-            cmd.run()
+            os.rename(job.job_id, self.dir_name)
+            cmd.run_quiet()
         except CertCommandError:
-            print("Error:Job log collect failed.")
+            print("Error: Job log collect failed.")
             return
-        print("Log saved to %s succ." % os.path.join(os.getcwd(), pack_name))
+        print("Log saved to file: %s succeed." % os.path.join(os.getcwd(), pack_name))
         shutil.copy(pack_name, CertEnv.datadirectory)
         for (rootdir, dirs, filenams) in os.walk("./"):
             for dirname in dirs:
@@ -469,4 +468,3 @@ class EulerCertification():
                     test[DEVICE].path == obj_test[DEVICE].path:
                 return True
         return False
-

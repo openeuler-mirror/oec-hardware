@@ -16,6 +16,8 @@
 # **********************************************************************************
 """
 
+TOTAL_COUNT = 0
+CURRENT_NUM = 0
 YES = "y"
 SAMEASYES = ["y", "yes"]
 NO = "n"
@@ -56,4 +58,3 @@ IPMI = "ipmi"
 FC="fc"
 RAID="raid"
 GPU="gpu"
-

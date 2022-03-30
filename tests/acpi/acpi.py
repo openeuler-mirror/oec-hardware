@@ -13,7 +13,7 @@
 # Create: 2020-04-01
 
 """acpi test"""
-
+import subprocess
 from hwcompatible.test import Test
 from hwcompatible.command import Command
 
@@ -22,17 +22,34 @@ class AcpiTest(Test):
     """
     acpi test
     """
+
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["acpica-tools"]
+        self.logpath = None
+
+    def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
+        self.args = args or argparse.Namespace()
+        self.logpath = getattr(args, "logdir", None) + "/acpi.log"
 
     def test(self):
         """
         start test
         """
         try:
-            Command("acpidump").echo()
-            return True
+            result = subprocess.getstatusoutput(
+                "acpidump &> %s" % self.logpath)
+            if result[0] == 0:
+                print("Test acpi succeed.")
+                return True
+
+            print("Test acpi failed.")
+            return False
         except Exception as concrete_error:
-            print(concrete_error)
+            print("Test acpi failed.\n %s" % concrete_error)
             return False
