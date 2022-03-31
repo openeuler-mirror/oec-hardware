@@ -30,12 +30,13 @@ class SystemTest(Test):
     """
     System Test
     """
+
     def __init__(self):
         Test.__init__(self)
         self.pri = 1
         self.sysinfo = SysInfo(CertEnv.releasefile)
         self.args = None
-        self.logdir = None
+        self.logpath = ""
 
     def setup(self, args=None):
         """
@@ -44,18 +45,18 @@ class SystemTest(Test):
         :return:
         """
         self.args = args or argparse.Namespace()
-        self.logdir = getattr(args, "logdir", None)
+        self.logpath = getattr(args, "logdir", None) + "/system.log"
 
     def test(self):
         """
         test case
         :return:
         """
-        os.system("uname -a")
+        os.system("uname -a &>> %s" % self.logpath)
         print("")
-        os.system("lsmod")
+        os.system("lsmod &>> %s" % self.logpath)
         print("")
-        os.system("dmidecode")
+        os.system("dmidecode &>> %s" % self.logpath)
         sys.stdout.flush()
 
         return_code = True
@@ -78,7 +79,8 @@ class SystemTest(Test):
         print("\nChecking installed cert package...")
         return_code = True
         for cert_package in ["oec-hardware"]:
-            rpm_verify = Command("rpm -V --nomtime --nomode --nocontexts %s" % cert_package)
+            rpm_verify = Command(
+                "rpm -V --nomtime --nomode --nocontexts %s &>> %s" % (cert_package, self.logpath))
             try:
                 rpm_verify.echo()
                 sys.stdout.flush()
@@ -104,7 +106,7 @@ class SystemTest(Test):
         if self.sysinfo.debug_kernel:
             print("Error: debug kernel.")
             return_code = False
-            
+
         kernel_dict = Document(CertEnv.kernelinfo)
         if not kernel_dict.load():
             print("Error: get kernel info fail.")
@@ -112,7 +114,8 @@ class SystemTest(Test):
 
         try:
             if kernel_dict.document[os_version] != self.sysinfo.kernel_version:
-                print("Error: kernel %s check GA status fail." % self.sysinfo.kernel_version)
+                print("Error: kernel %s check GA status fail." %
+                      self.sysinfo.kernel_version)
                 return_code = False
         except Exception:
             print("Error: %s is not supported." % os_version)
@@ -150,24 +153,22 @@ class SystemTest(Test):
 
             tainted_file.close()
         except Exception as concrete_error:
-            print(concrete_error)
-            print("Error: could not determine if kernel is tainted.")
+            print("Error: could not determine if kernel is tainted. \n",
+                  concrete_error)
             return_code = False
 
-        except_list = ["/modules.dep$", "/modules.symbols$", "/modules.dep.bin$", \
+        except_list = ["/modules.dep$", "/modules.symbols$", "/modules.dep.bin$",
                        "/modules.symbols.bin$"]
-        if os.system("rpm -V --nomtime --nomode --nocontexts %s | grep -Ev '%s'" % \
-                     (kernel_rpm, "|".join(except_list))) is 0:
-            print("Error: files from %s were modified." % kernel_rpm)
-            print("")
+        if os.system("rpm -V --nomtime --nomode --nocontexts %s | grep -Ev '%s'" %
+                     (kernel_rpm, "|".join(except_list))) == 0:
+            print("Error: files from %s were modified.\n" % kernel_rpm)
             return_code = False
 
         try:
             params = Command("cat /proc/cmdline").get_str()
             print("Boot Parameters: %s" % params)
         except Exception as concrete_error:
-            print(concrete_error)
-            print("Error: could not determine boot parameters.")
+            print("Error: could not determine boot parameters. \n", concrete_error)
             return_code = False
 
         return return_code
@@ -197,7 +198,8 @@ class SystemTest(Test):
         """
         whitelist_path = [("/lib/modules/kabi-current/kabi_whitelist_" + self.sysinfo.arch),
                           ("/lib/modules/kabi/kabi_whitelist_" + self.sysinfo.arch),
-                          ("/usr/src/kernels/%s/kabi_whitelist" % self.sysinfo.kernel)
+                          ("/usr/src/kernels/%s/kabi_whitelist" %
+                           self.sysinfo.kernel)
                           ]
         whitelist = ""
         for whitelist in whitelist_path:
@@ -205,7 +207,8 @@ class SystemTest(Test):
                 break
 
         if not os.path.exists(whitelist):
-            print("Error: could not find whitelist file in any of the following locations:")
+            print(
+                "Error: could not find whitelist file in any of the following locations:")
             print("\n".join(whitelist_path))
             return False
 
@@ -320,12 +323,14 @@ class SystemTest(Test):
         :return:
         """
         print("\nChecking selinux...")
-        status = os.system("/usr/sbin/sestatus | grep 'SELinux status' | grep -qw 'enabled'")
-        mode = os.system("/usr/sbin/sestatus | grep 'Current mode' | grep -qw 'enforcing'")
+        status = os.system(
+            "/usr/sbin/sestatus | grep 'SELinux status' | grep -qw 'enabled'")
+        mode = os.system(
+            "/usr/sbin/sestatus | grep 'Current mode' | grep -qw 'enforcing'")
         if mode == 0 and status == 0:
-            print("SElinux is enforcing.")
+            print("SElinux is enforcing as expect.")
             return True
         else:
-            print("SElinux is not enforcing.")
+            print("SElinux is not enforcing, expect is enforcing.")
             os.system("/usr/sbin/sestatus")
             return False

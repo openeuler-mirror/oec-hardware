@@ -25,6 +25,7 @@ class MemoryTest(Test):
     """
     Memory Test
     """
+
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["libhugetlbfs-utils"]
@@ -36,6 +37,7 @@ class MemoryTest(Test):
         self.hugepage_total = 0
         self.hugepage_free = 0
         self.retry_list = list()
+        self.logpath = None
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
 
     def setup(self, args=None):
@@ -43,6 +45,8 @@ class MemoryTest(Test):
         Initialization before test
         :return:
         """
+        self.args = args or argparse.Namespace()
+        self.logpath = getattr(args, "logdir", None) + "/memory.log"
         self.get_memory()
 
     def test(self):
@@ -111,6 +115,7 @@ class MemoryTest(Test):
         test_mem = self.free_memory*90/100
         if test_mem > 1024*4:
             test_mem = 1024*4
+        
         if os.system("memtester %sM 1" % test_mem) != 0:
             print("Error: memtester fail.")
             return False
@@ -130,7 +135,8 @@ class MemoryTest(Test):
             print("Error: get system memory fail.")
             return False
         if self.swap_memory < 512:
-            print("Error: swap memory of %s MB is too small." % self.swap_memory)
+            print("Error: swap memory of %s MB is too small." %
+                  self.swap_memory)
             return False
 
         extra_mem = self.free_memory/100
@@ -159,12 +165,12 @@ class MemoryTest(Test):
         if self.hugepage_size >= 512:
             self.huge_pages = 10
         if not self.hugepage_total:
-            os.system("hugeadm --create-mounts")
-            os.system("hugeadm --pool-pages-min %dMB:%d" %
-                      (self.hugepage_size, self.huge_pages))
+            os.system("hugeadm --create-mounts &>> %s" % self.logpath)
+            os.system("hugeadm --pool-pages-min %dMB:%d &>> %s" %
+                      (self.hugepage_size, self.huge_pages, self.logpath))
         elif self.hugepage_free < self.huge_pages:
-            os.system("hugeadm --pool-pages-min %dMB:%d" %
-                      (self.hugepage_size, self.hugepage_total + self.huge_pages))
+            os.system("hugeadm --pool-pages-min %dMB:%d &>> %s" %
+                      (self.hugepage_size, self.hugepage_total + self.huge_pages, self.logpath))
         else:
             update_hugepage = 0
 
@@ -180,11 +186,11 @@ class MemoryTest(Test):
             return False
 
         try:
-            Command("cd %s; ./hugetlb_test" % self.test_dir).echo()
+            Command("cd %s; ./hugetlb_test &>> %s" %
+                    (self.test_dir, self.logpath)).echo()
             print("Hugetlb test succ.\n")
         except CertCommandError as concrete_error:
-            print(concrete_error)
-            print("Error: hugepages test fail.\n")
+            print("Error: hugepages test fail.\n", concrete_error)
             return False
         return True
 
@@ -209,11 +215,11 @@ class MemoryTest(Test):
         :param memory_path:
         :return:
         """
-        print("Keep %s online before test." % memory_path)
+        os.system("echo 'Keep %s online before test.' &>> %s"% (memory_path, self.logpath))
         if not self.online_memory(memory_path):
             return False
 
-        print("Try to offline...")
+        os.system("echo 'Try to offline...' &>> %s"%self.logpath)
         self.get_memory()
         total_mem_1 = self.system_memory
         if not self.offline_memory(memory_path):
@@ -224,7 +230,7 @@ class MemoryTest(Test):
         if total_mem_2 >= total_mem_1:
             return False
 
-        print("Try to online...")
+        os.system("echo 'Try to online...' &>> %s"%self.logpath)
         if not self.online_memory(memory_path):
             self.retry_list.append(memory_path)
             return False
@@ -232,7 +238,7 @@ class MemoryTest(Test):
         total_mem_3 = self.system_memory
         if total_mem_3 != total_mem_1:
             return False
-        
+
         return True
 
     def online_memory(self, memory_path):
@@ -293,7 +299,8 @@ class MemoryTest(Test):
         for memory_path in mem_path_list:
             try:
                 Command("cat %s/removable" % memory_path).get_str("1")
-                print("%s is removable, start testing..." % os.path.basename(memory_path))
+                print("%s is removable, start testing..." %
+                      os.path.basename(memory_path))
                 test_flag = 1
             except:
                 continue
