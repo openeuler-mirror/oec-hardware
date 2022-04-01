@@ -47,7 +47,7 @@ class ClockTest(Test):
         """
         try:
             result = subprocess.getstatusoutput(
-                "cd %s; ./clock &> %s" % (clock_dir, clock_dir))
+                "cd %s; ./clock &>> %s" % (clock_dir, self.logpath))
             if result[0] == 0:
                 print("Test clock succeed.")
                 return True
