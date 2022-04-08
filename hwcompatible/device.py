@@ -11,6 +11,7 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
+import re
 
 from .command import Command
 
@@ -108,6 +109,15 @@ class Device:
             return self.properties["INTERFACE"]
         if "DEVNAME" in self.properties.keys():
             return self.properties["DEVNAME"].split("/")[-1]
+        if "ID_PCI_SUBCLASS_FROM_DATABASE" in self.properties.keys() and \
+                self.properties["ID_PCI_SUBCLASS_FROM_DATABASE"] == "Fibre Channel":
+            return re.search(r'.*\((\S+)', self.properties["ID_MODEL_FROM_DATABASE"]).group(1)
+        if "ID_PCI_SUBCLASS_FROM_DATABASE" in self.properties.keys() and \
+                self.properties["ID_PCI_SUBCLASS_FROM_DATABASE"] == "RAID bus controller":
+            return '-'.join(self.properties["ID_MODEL_FROM_DATABASE"].split(" "))
+        if "PCI_CLASS" in self.properties.keys() and \
+                self.properties["PCI_CLASS"] == "30200":
+            return self.properties["ID_MODEL_FROM_DATABASE"].split(" ")[0]
         if self.path:
             return self.path.split("/")[-1]
         return ""

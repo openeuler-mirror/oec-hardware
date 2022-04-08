@@ -241,16 +241,16 @@ class Job():
         Command line interface display summary
         :return:
         """
-        print("-------------  Summary  -------------")
+        print("-----------------  Summary -----------------")
         for test in self.test_factory:
             if test[RUN]:
                 name = test[NAME]
                 if test[DEVICE].get_name():
                     name = test[NAME] + "-" + test[DEVICE].get_name()
                 if test[STATUS] == PASS:
-                    print(name.ljust(33) + "\033[0;32mPASS\033[0m")
+                    print(name.ljust(40) + "\033[0;32mPASS\033[0m")
                 else:
-                    print(name.ljust(33) + "\033[0;31mFAIL\033[0m")
+                    print(name.ljust(40) + "\033[0;31mFAIL\033[0m")
         print("\n")
 
     def save_result(self):

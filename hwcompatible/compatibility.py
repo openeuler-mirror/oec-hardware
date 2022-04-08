@@ -274,6 +274,30 @@ class EulerCertification():
                         sort_devices[NVME] = [device]
                 elif "/host" in device.get_property("DEVPATH"):
                     sort_devices[DISK] = [empty_device]
+            if "RAID" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE"):
+                if RAID in sort_devices.keys():
+                    sort_devices[RAID].extend([device])
+                else:
+                    sort_devices[RAID] = [device]
+                continue
+            if "Fibre Channel" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE"):
+                if FC in sort_devices.keys():
+                    count = 0
+                    for sort_device in sort_devices[FC]:
+                        pci_slot_name = sort_device.get_property("PCI_SLOT_NAME")
+                        if device.get_property("PCI_SLOT_NAME")[:-2] in pci_slot_name:
+                            count += 1
+                    if not count:
+                        sort_devices[FC].extend([device])
+                else:
+                    sort_devices[FC].extend([device])
+                continue
+            if device.get_property("PCI_CLASS") == "30200":
+                if GPU in sort_devices.keys():
+                    sort_devices[GPU].extend([device])
+                else:
+                    sort_devices[GPU] = [device]
+                continue
             if device.get_property("SUBSYSTEM") == "net" and \
                     device.get_property("INTERFACE"):
                 interface = device.get_property("INTERFACE")
