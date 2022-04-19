@@ -16,7 +16,6 @@
 
 import os
 import time
-import argparse
 import base64
 try:
     from urllib.parse import urlencode
@@ -28,9 +27,6 @@ except ImportError:
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
-from hwcompatible.document import CertDocument
-from hwcompatible.env import CertEnv
-
 
 class NetworkTest(Test):
     """
@@ -38,18 +34,8 @@ class NetworkTest(Test):
     """
     def __init__(self):
         Test.__init__(self)
-        self.args = None
-        self.cert = None
-        self.device = None
         self.requirements = ['ethtool', 'iproute', 'psmisc', 'qperf']
-        self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
-                         self.test_udp_tcp, self.test_http]
-        self.interface = None
-        self.other_interfaces = []
-        self.server_ip = None
         self.retries = 3
-        self.speed = 1000   # Mb/s
-        self.target_bandwidth_percent = 0.8
         self.testfile = 'testfile'
 
     def ifdown(self, interface):
@@ -77,53 +63,6 @@ class NetworkTest(Test):
             if os.system("ip link show %s | grep 'state UP'" % interface) == 0:
                 return True
         return False
-
-    def get_other_interfaces(self):
-        """
-        Get other interfaces
-        :return:
-        """
-        ignore_interfaces = ['^lo', '^v', 'docker', 'br', 'bond']
-        cmd = "ip route show default | awk '/default/ {print $5}'"
-        com = Command(cmd)
-        management_interface = com.read()
-        if management_interface:
-            ignore_interfaces.append(management_interface)
-            # print(cmd)
-            # print("Management interface: %s" % management_interface)
-
-        ignore_pattern = '|'.join(ignore_interfaces)
-        # print(ignore_pattern)
-        cmd = "ls /sys/class/net/ | grep -vE '%s'" % ignore_pattern
-        # print(cmd)
-        com = Command(cmd)
-        try:
-            com.run()
-            return com.output
-        except Exception as concrete_error:
-            print(concrete_error)
-            return []
-
-    def set_other_interfaces_down(self):
-        """
-        Judge whether the interface is closed
-        :return:
-        """
-        for interface in self.other_interfaces:
-            if not self.ifdown(interface):
-                return False
-        return True
-
-    def set_other_interfaces_up(self):
-        """
-        Set other interfaces to up
-        :return:
-        """
-        for interface in self.other_interfaces:
-            # Not ifup(), as some interfaces may not be linked
-            os.system("ip link set up %s" % interface)
-            # os.system("ip link | grep -w %s" % interface)
-        return True
 
     def get_speed(self):
         """
@@ -386,14 +325,6 @@ class NetworkTest(Test):
         Test eth link
         :return:
         """
-        self.other_interfaces = self.get_other_interfaces()
-        print("[+] Setting irrelevant interfaces down...")
-        if not self.set_other_interfaces_down():
-            print("[X] Fail to set irrelevant interfaces down.")
-            print("[X] Stop test and restore interfaces up...")
-            self.set_other_interfaces_up()
-            return False
-
         print("[+] Setting interface %s down..." % self.interface)
         if not self.ifdown(self.interface):
             print("[X] Fail to set interface %s down." % self.interface)
@@ -436,20 +367,7 @@ class NetworkTest(Test):
 
         return True
 
-    def setup(self, args=None):
-        """
-        Initialization before test
-        :param args:
-        :return:
-        """
-        self.args = args or argparse.Namespace()
-        self.device = getattr(self.args, 'device', None)
-        self.interface = self.device.get_property("INTERFACE")
-
-        self.cert = CertDocument(CertEnv.certificationfile)
-        self.server_ip = self.cert.get_server()
-
-    def test(self):
+    def tests(self):
         """
         test case
         :return:
@@ -466,8 +384,5 @@ class NetworkTest(Test):
         """
         print("[.] Stop all test servers...")
         self.call_remote_server('all', 'stop')
-
-        print("[.] Restore interfaces up...")
-        self.set_other_interfaces_up()
 
         print("[.] Test finished.")
