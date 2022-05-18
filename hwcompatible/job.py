@@ -109,9 +109,10 @@ class Job():
         for test in self.test_factory:
             if test[RUN]:
                 testclass = self.discover(test[NAME], subtests_filter)
-                if not testclass and not subtests_filter:
-                    test[STATUS] = FAIL
-                    print("not found %s" % test[NAME])
+                if not testclass:
+                    if not subtests_filter:
+                        test[STATUS] = FAIL
+                        print("not found %s" % test[NAME])
                     continue
                 testcase = dict()
                 testcase[TEST] = testclass
