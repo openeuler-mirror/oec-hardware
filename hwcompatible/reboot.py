@@ -97,6 +97,7 @@ class Reboot:
             self.testname = doc.document[TEST]
             self.reboot = doc.document
             self.job.job_id = self.reboot["job_id"]
+            self.job.logpath = CertEnv.logdirectoy + "/" + self.job.job_id + "/job.log"
             self.job.subtests_filter = self.reboot["rebootup"]
             time_reboot = datetime.datetime.strptime(
                 self.reboot["time"], "%Y%m%d%H%M%S")
