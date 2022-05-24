@@ -21,7 +21,6 @@ from hwcompatible.env import CertEnv
 from hwcompatible.document import CertDocument
 from rdma import RDMATest
 
-
 class EthernetTest(RDMATest):
     """
     Ethernet Test
@@ -79,7 +78,4 @@ class EthernetTest(RDMATest):
         Test case
         :return:
         """
-        for subtest in self.subtests:
-            if not subtest():
-                return False
-        return True
+        self.tests()
