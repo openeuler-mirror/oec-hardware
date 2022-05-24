@@ -181,7 +181,7 @@ class Job():
                 print("Start to run %s/%s test suite: %s." %
                       (CURRENT_NUM, TOTAL_COUNT, name))
                 args = argparse.Namespace(
-                    device=testcase[DEVICE], logdir=logger.log.dir)
+                    device=testcase[DEVICE], logdir=logger.log.dir, testname=name)
                 test.setup(args)
                 if test.reboot:
                     reboot = Reboot(testcase[NAME], self, test.rebootup)

@@ -17,11 +17,16 @@ CFLAGS=-Wall -D_LOG_TRACE_ -fPIC -I.
 LIBS = -L . -lswsds -lpthread
 OBJS=./TestSDS.o FunctionTest.o Util.o
 APPS=TestSDS
+ARCH := $(shell uname -m)
+SO=libswsds_$(ARCH).so
 
 all: $(APPS)
 
 install:
 	mkdir -p $(DEST)
+	cp $(SO) /usr/lib64/libswsds.so
+	cp $(SO) $(DEST)/libswsds.so
+	$(CC) -O2 -fPIC -Wl,--hash-style=sysv -o $(APPS) $(OBJS) $(LIBS) 
 	cp -a *.py $(DEST)
 	cp $(APPS) $(DEST)
 	chmod a+x $(DEST)/*.py
@@ -30,10 +35,12 @@ install:
 	$(CC) -O2 -c $(CFLAGS)  $< -o $@
 
 $(APPS):$(OBJS)
+	cp $(SO) /usr/lib64/libswsds.so
+	cp $(SO) libswsds.so
 	$(CC) -O2 -fPIC -Wl,--hash-style=sysv -o $(APPS) $(OBJS) $(LIBS) 
 	
 clean:
-	rm  -f *.o $(APPS)
+	rm  -f *.o $(APPS) libswsds.so
 
 cleanall:
-	rm  -f *.o $(APPS)
+	rm  -f *.o $(APPS) libswsds.so

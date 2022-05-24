@@ -334,6 +334,10 @@ class EulerCertification():
                         break
             if device.get_property("SUBSYSTEM") == IPMI:
                 sort_devices[IPMI] = [empty_device]
+
+            if device.get_property("ID_VENDOR_FROM_DATABASE") == "Xilinx Corporation":
+                sort_devices[KEYCARD] = [device]
+                continue
         try:
             Command("dmidecode").get_str("IPMI Device Information",
                                          single_line=False)
