@@ -63,9 +63,6 @@ class MemoryTest(Test):
         if not self.hugetlb_test():
             return False
 
-        if not self.memory_hotplug():
-            return False
-
         return True
 
     def get_memory(self):
