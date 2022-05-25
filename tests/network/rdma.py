@@ -245,4 +245,4 @@ class RDMATest(NetworkTest):
                    (default %s)\n> " % self.server_ip
         self.server_ip = input(message) or self.server_ip
         
-        self.tests()
+        return self.tests()
