@@ -78,4 +78,4 @@ class EthernetTest(RDMATest):
         Test case
         :return:
         """
-        self.tests()
+        return self.tests()
