@@ -37,13 +37,13 @@ SERVER = "server"
 NAME = "name"
 DEVICE = "device"
 STATUS = "status"
-REBOOT= "reboot"
+REBOOT = "reboot"
 SYSTEM = "system"
 
 NODEVICE = ["cpufreq", "memory", "clock", "profiler", "system",
             "stress", "kdump", "perf", "acpi", "watchdog"]
 CDTYPES = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
-            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD"]
+           "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD"]
 SUBSYSTEM = "SUBSYSTEM"
 PCI_CLASS = "PCI_CLASS"
 USB = "usb"
@@ -58,4 +58,6 @@ IPMI = "ipmi"
 FC = "fibrechannel"
 RAID = "raid"
 GPU = "gpu"
-KEYCARD="keycard"
+KEYCARD = "keycard"
+KEYCARD_VENDORS = ['Xilinx', 'Renesas', 'Texas', 'PLX']
+IB = "infiniband"

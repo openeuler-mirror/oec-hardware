@@ -29,10 +29,12 @@ from .reboot import Reboot
 from .client import Client
 from .constants import *
 
+
 class EulerCertification():
     """
     Main program of oec-hardware
     """
+
     def __init__(self):
         self.certification = None
         self.test_factory = list()
@@ -148,7 +150,7 @@ class EulerCertification():
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
         self.dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")\
-                   + "-" + job.job_id
+            + "-" + job.job_id
         pack_name = self.dir_name + ".tar"
         cmd = Command("tar -cf %s %s" % (pack_name, self.dir_name))
         try:
@@ -157,7 +159,8 @@ class EulerCertification():
         except CertCommandError:
             print("Error: Job log collect failed.")
             return
-        print("Log saved to file: %s succeed." % os.path.join(os.getcwd(), pack_name))
+        print("Log saved to file: %s succeed." %
+              os.path.join(os.getcwd(), pack_name))
         shutil.copy(pack_name, CertEnv.datadirectory)
         for (rootdir, dirs, filenams) in os.walk("./"):
             for dirname in dirs:
@@ -268,9 +271,9 @@ class EulerCertification():
                     device.get_property("ID_TYPE") == DISK:
                 if NVME in device.get_property("DEVPATH"):
                     sort_devices[DISK] = [empty_device]
-                    try:
+                    if NVME in sort_devices.keys():
                         sort_devices[NVME].extend([device])
-                    except KeyError:
+                    else:
                         sort_devices[NVME] = [device]
                 elif "/host" in device.get_property("DEVPATH"):
                     sort_devices[DISK] = [empty_device]
@@ -282,17 +285,12 @@ class EulerCertification():
                 continue
             if "Fibre Channel" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE"):
                 if FC in sort_devices.keys():
-                    count = 0
-                    for sort_device in sort_devices[FC]:
-                        pci_slot_name = sort_device.get_property("PCI_SLOT_NAME")
-                        if device.get_property("PCI_SLOT_NAME")[:-2] in pci_slot_name:
-                            count += 1
-                    if not count:
-                        sort_devices[FC].extend([device])
-                else:
                     sort_devices[FC].extend([device])
+                else:
+                    sort_devices[FC] = [device]
                 continue
-            if device.get_property("PCI_CLASS") == "30200":
+            if device.get_property("PCI_CLASS") == "30200" or \
+                    device.get_property("PCI_CLASS") == "120000":
                 if GPU in sort_devices.keys():
                     sort_devices[GPU].extend([device])
                 else:
@@ -306,20 +304,20 @@ class EulerCertification():
                 while True:
                     line = nmcli.readline()
                     if line:
-                        if interface in line and "infiniband" in line:
-                            try:
-                                sort_devices["infiniband"].extend([device])
-                            except KeyError:
-                                sort_devices["infiniband"] = [device]
+                        if interface in line and IB in line:
+                            if IB in sort_devices.keys():
+                                sort_devices[IB].extend([device])
+                            else:
+                                sort_devices[IB] = [device]
                         elif interface in line and ETHERNET in line:
-                            try:
+                            if ETHERNET in sort_devices.keys():
                                 sort_devices[ETHERNET].extend([device])
-                            except KeyError:
+                            else:
                                 sort_devices[ETHERNET] = [device]
                         elif interface in line and WIFI in line:
-                            try:
+                            if WLAN in sort_devices.keys():
                                 sort_devices[WLAN].extend([device])
-                            except KeyError:
+                            else:
                                 sort_devices[WLAN] = [device]
                     else:
                         break
@@ -327,15 +325,16 @@ class EulerCertification():
             if device.get_property("ID_CDROM") == "1":
                 for dev_type in CDTYPES:
                     if device.get_property("ID_CDROM_" + dev_type) == "1":
-                        try:
+                        if CDROM in sort_devices.keys():
                             sort_devices[CDROM].extend([device])
-                        except KeyError:
+                        else:
                             sort_devices[CDROM] = [device]
                         break
             if device.get_property("SUBSYSTEM") == IPMI:
                 sort_devices[IPMI] = [empty_device]
 
-            if device.get_property("ID_VENDOR_FROM_DATABASE") == "Xilinx Corporation":
+            id_vendor = device.get_property("ID_VENDOR_FROM_DATABASE")
+            if any([k in id_vendor for k in KEYCARD_VENDORS]):
                 sort_devices[KEYCARD] = [device]
                 continue
         try:
