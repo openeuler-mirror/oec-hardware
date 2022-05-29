@@ -44,6 +44,7 @@ class GpuTest(Test):
         self.cuda_samples_log = getattr(
             args, 'logdir', None) + '/cuda_samples.log'
         self.gpu_burn = getattr(args, 'logdir', None) + '/gpu_burn.log'
+        self.smi_name = "nvidia-smi"
 
     def current_card(self):
         print("Vendor Info:")
@@ -52,6 +53,9 @@ class GpuTest(Test):
 
         print("Driver Info:")
         driver = self.device.get_property("DRIVER")
+        if driver == "iluvatar-itr":
+            self.smi_name = "ixsmi"
+            driver = "bi_driver"
         Command('modinfo %s | head -n 13' % driver).echo()
         return pci_num
 
@@ -60,7 +64,7 @@ class GpuTest(Test):
         pci = []
         num = []
         pci_key = "GPU 0000" + self.current_card()
-        gpu = Command('nvidia-smi -q')
+        gpu = Command('%s -q' % self.smi_name)
         gpu.run_quiet()
         for line in gpu.output:
             if "GPU 0000" in line:
@@ -78,7 +82,7 @@ class GpuTest(Test):
                   self.gpu_burn)
         time.sleep(1)
         while not subprocess.call("ps -ef | grep 'gpu_burn' | grep -v grep >/dev/null", shell=True):
-            os.system('nvidia-smi &>>%s' % self.logpath)
+            os.system('%s &>>%s' % (self.smi_name, self.logpath))
             time.sleep(1)
 
     def test(self):

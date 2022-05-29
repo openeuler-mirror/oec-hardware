@@ -13,10 +13,25 @@
 
 function install_gpu_burn() {
     cd /opt
+    res_code=0
     git clone https://github.com/wilicc/gpu-burn.git
     cd gpu-burn
-    make &>/dev/null
-    return 0
+    lsmod | grep bi_driver >/dev/null
+    if [ $? -eq 0 ];then
+        COREX_PATH=${COREX_PATH:-/usr/local/corex}
+        clang++ compare.cu -o compare.ll -I${COREX_PATH}/include --cuda-gpu-arch=ivcore10 --cuda-path=${COREX_PATH} --cuda-device-only -S -x cuda || res_code=1
+        llc -mcpu=ivcore10 -mtriple=bi-iluvatar-ilurt -show-mc-encoding -filetype=obj compare.ll -o compare.o || res_code=1
+        lld -flavor ld.lld --no-undefined compare.o -o compare.ptx || res_code=1
+        rm compare.ll compare.o
+        sed -i '/cuFuncSet/d' gpu_burn-drv.cpp
+        sed -i '/cuParamSet/d' gpu_burn-drv.cpp
+        sed -i 's/nvidia-smi/ixsmi/g' gpu_burn-drv.cpp
+        sed -i 's/.*cuLaunchGridAsync.*/void\* kargs[] = {\&d_Cdata, \&d_faultyElemData, \&d_iters};checkError(cuLaunchKernel(d_function, SIZE\/g_blockSize, SIZE\/g_blockSize, 1, g_blockSize, g_blockSize, 1, 0, 0, kargs, nullptr));/g' gpu_burn-drv.cpp
+        clang++ -std=c++11 -I${COREX_PATH}/include -L${COREX_PATH}/lib64 -lcudart -lcuda -lcublas -o gpu_burn ./gpu_burn-drv.cpp || res_code=1
+    else
+        make &>/dev/null || res_code=1
+    fi
+    return $res_code
 }
 
 function install_cuda_samples() {
@@ -46,65 +61,25 @@ function test_nvidia_case() {
 }
 
 function test_iluvatar_case() {
-    logfile=$1
-    export CUDA_PATH=/usr/local/corex
+    casename=$1
+    logfile=$2
     res_code=0
+    CUDA_PATH=${CUDA_PATH:-/usr/local/corex}
     cd /opt/cuda-samples-master
-    path=$(find ./ -name simpleOccupancy)
+    path=$(find ./ -name $casename)
     cd $path
-    clang++ -std=c++11 -I../../common/inc -I$CUDA_PATH/include --cuda-path=$CUDA_PATH -L$CUDA_PATH/lib64 -lcudart -lixlogger -lcuda -o simpleOccupancy simpleOccupancy.cu
-    ./simpleOccupancy &>>$logfile
+    src_file=${casename}.cu
+    if [ ! -f ./$src_file ] && [ -f ./${casename}.cpp ];then
+        src_file=${casename}.cpp
+    fi
+    clang++ -std=c++11 -I../../../Common -I${CUDA_PATH}/include --cuda-path=${CUDA_PATH} -L${CUDA_PATH}/lib64 -lcudart -lixlogger -lcuda -lixthunk -o ${casename} ./${src_file}
+    ./$casename &>>$logfile
     if [[ $? -eq 0 ]]; then
-        echo "Test simpleOccupancy succeed." >>$logfile
+        echo "Test $casename succeed."
     else
-        echo "Test simpleOccupancy failed." >>$logfile
+        echo "Test $casename failed." 
         res_code=1
     fi
-
-    path=$(find ./ -name clock)
-    cd $path
-    clang++ --cuda-path=$CUDA_PATH -I$CUDA_PATH/include -L$CUDA_PATH/lib64 -I../../common/inc -lcudart -lixlogger -lcuda -o clock ./clock.cu
-    ./clock &>>$logfile
-    if [[ $? -eq 0 ]]; then
-        echo "Test clock succeed." >>$logfile
-    else
-        echo "Test clock failed." >>$logfile
-        res_code=1
-    fi
-
-    path=$(find ./ -name bandwidthTest)
-    cd $path
-    clang++ --cuda-path=$CUDA_PATH -I$CUDA_PATH/include -L$CUDA_PATH/lib64 -I../../common/inc -lcudart -lixlogger -lcuda -lixthunk -o bandwidthTest bandwidthTest.cu
-    ./bandwidthTest &>>$logfile
-    if [[ $? -eq 0 ]]; then
-        echo "Test bandwidthTest succeed." >>$logfile
-    else
-        echo "Test bandwidthTest failed." >>$logfile
-        res_code=1
-    fi
-
-    path=$(find ./ -name p2pBandwidthLatencyTest)
-    cd $path
-    clang++ --cuda-path=$CUDA_PATH -I$CUDA_PATH/include -L$CUDA_PATH/lib64 -I../../common/inc -lcudart -o p2pBandwidthLatencyTest p2pBandwidthLatencyTest.cu
-    ./p2pBandwidthLatencyTest &>>$logfile
-    if [[ $? -eq 0 ]]; then
-        echo "Test p2pBandwidthLatencyTest succeed." >>$logfile
-    else
-        echo "Test p2pBandwidthLatencyTest failed." >>$logfile
-        res_code=1
-    fi
-
-    path=$(find ./ -name deviceQuery)
-    cd $path
-    clang++ --cuda-path=$CUDA_PATH -I$CUDA_PATH/include -L$CUDA_PATH/lib64 -I../../common/inc -lcudart -lixlogger -lcuda -o deviceQuery deviceQuery.cpp
-    ./deviceQuery &>>$logfile
-    if [[ $? -eq 0 ]]; then
-        echo "Test deviceQuery succeed." >>$logfile
-    else
-        echo "Test deviceQuery failed." >>$logfile
-        res_code=1
-    fi
-
     return $res_code
 }
 
@@ -116,8 +91,12 @@ function test_cuda_samples() {
     cd /opt/cuda-samples-master
     lsmod | grep bi_driver
     if [[ $? -eq 0 ]]; then
-        test_iluvatar_case
-        res_code=$?
+        for casename in ${allcases[@]}; do
+            test_iluvatar_case $casename $logfile
+            if [[ $? -eq 1 ]]; then
+                res_code=1
+            fi
+        done
     else
         for casename in ${allcases[@]}; do
             test_nvidia_case $casename $logfile
