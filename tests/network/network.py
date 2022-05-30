@@ -17,14 +17,10 @@
 import os
 import time
 import base64
-try:
-    from urllib.parse import urlencode
-    from urllib.request import urlopen, Request
-    from urllib.error import HTTPError
-except ImportError:
-    from urllib import urlencode
-    from urllib2 import urlopen, Request, HTTPError
 
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
+from urllib.error import HTTPError
 from hwcompatible.test import Test
 from hwcompatible.command import Command
 

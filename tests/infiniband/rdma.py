@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -10,15 +10,13 @@
 # IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
-# Create: 2020-04-01
+# Create: 2022-05-24
 
 """RDMA Test"""
 
 import os
 import re
-import argparse
 
-from builtins import input
 from hwcompatible.command import Command
 from hwcompatible.document import CertDocument
 from hwcompatible.env import CertEnv
@@ -31,21 +29,16 @@ class RDMATest(NetworkTest):
     """
     def __init__(self):
         NetworkTest.__init__(self)
-        self.args = None
-        self.cert = None
         self.device = None
-        self.requirements = ['perftest', 'opensm', 'infiniband-diags',
-                             'librdmacm-utils', 'libibverbs-utils']
+        self.requirements = ['opensm', 'infiniband-diags', 'librdmacm-utils', 'libibverbs-utils']
         self.subtests = [self.test_ibstatus, self.test_icmp, self.test_rdma]
         self.interface = None
         self.ib_device = None
         self.ib_port = None
-        self.gid = None
         self.base_lid = None
         self.sm_lid = None
         self.state = None
         self.phys_state = None
-        self.link_layer = None
         self.server_ip = None
         self.speed = None   # Mb/s
         self.target_bandwidth_percent = 0.5
@@ -61,20 +54,16 @@ class RDMATest(NetworkTest):
         path_ibdev = ''.join([path_pci, path_ibdev])
         cmd = "cat %s" % path_ibdev
         com = Command(cmd)
-        try:
-            self.ib_device = com.read()
-        except Exception as concrete_error:
-            print(concrete_error)
+        self.ib_device = com.read()
+        if not self.ib_device:
             return False
 
         path_ibport = '/sys/class/net/%s/dev_id' % self.interface
         cmd = "cat %s" % path_ibport
         com = Command(cmd)
-        try:
-            self.ib_port = int(com.read(), 16) + 1
-        except Exception as concrete_error:
-            print(concrete_error)
+        if not com.read():
             return False
+        self.ib_port = int(com.read(), 16) + 1
 
         ib_str = "Infiniband device '%s' port %d" % (self.ib_device, self.ib_port)
         print("Interface %s ===> %s" % (self.interface, ib_str))
@@ -88,7 +77,6 @@ class RDMATest(NetworkTest):
                 if ib_str not in info:
                     continue
                 print(info)
-                self.gid = re.search(r"default gid:\s+(.*)", info).group(1)
                 self.base_lid = re.search(r"base lid:\s+(.*)", info).group(1)
                 self.sm_lid = re.search(r"sm lid:\s+(.*)", info).group(1)
                 self.state = re.search(r"state:\s+(.*)", info).group(1)
@@ -112,12 +100,8 @@ class RDMATest(NetworkTest):
 
         cmd = "rping -c -a %s -C 50 -v" % self.server_ip
         print(cmd)
-        if os.system(cmd) == 0:
-            return True
-        else:
-            self.call_remote_server('rping', 'stop')
-            return False
-
+        return os.system(cmd) == 0
+        
     def test_rcopy(self):
         """
         Test rcopy
@@ -214,31 +198,7 @@ class RDMATest(NetworkTest):
             return False
 
         if not self.get_ibstatus():
-            print("[X] Get status of InfiniBand/RoCE devices failed.")
+            print("[X] Get status of InfiniBand devices failed.")
             return False
 
         return True
-
-    def setup(self, args=None):
-        """
-        Initialization before test
-        :param args:
-        :return:
-        """
-        self.args = args or argparse.Namespace()
-        self.device = getattr(self.args, 'device', None)
-        self.interface = self.device.get_property("INTERFACE")
-
-        self.cert = CertDocument(CertEnv.certificationfile)
-        self.server_ip = self.cert.get_server()
-
-    def test(self):
-        """
-        test case
-        :return:
-        """
-        message = "Please enter the IP of InfiniBand interface on remote server: \
-                   (default %s)\n> " % self.server_ip
-        self.server_ip = input(message) or self.server_ip
-        
-        return self.tests()

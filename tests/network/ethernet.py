@@ -17,6 +17,7 @@
 import os
 import argparse
 
+from builtins import input
 from hwcompatible.env import CertEnv
 from hwcompatible.document import CertDocument
 from rdma import RDMATest
@@ -59,10 +60,6 @@ class EthernetTest(RDMATest):
         self.server_ip = self.cert.get_server()
 
         if self.is_RoCE():
-            try:
-                input = raw_input
-            except NameError:
-                from builtins import input
             choice = input("[!] RoCE interface found. "
                            "Run RDMA tests instead? [y/N] ")
             if choice.lower() != "y":
