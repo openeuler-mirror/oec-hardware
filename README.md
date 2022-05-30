@@ -152,7 +152,7 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
 * `/usr/share/oech/kernelrelease.json` 文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
 
-* 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能 `ping` 通服务端的 ip；如果客户端是对 InfiniBand 网卡进行测试，服务端也必须有一个 InfiniBand 网卡并提前配好 ip 。
+* 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能 `ping` 通服务端的 ip；如果客户端是对 InfiniBand 网卡进行测试，服务端也必须有一个 InfiniBand 网卡并提前配好 ip 。建议不要使用业务网口进行网卡测试。
 
 ## 使用步骤
 
@@ -251,6 +251,17 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
 在 **Result** 列展示测试结果，结果有两种：**PASS** 或者 **FAIL**。如果结果为**FAIL**，可以直接点击结果来查看执行日志，根据报错对照用例代码进行排查。
 
+
+## 测试结果审核
+
+如果测试的硬件、整机需要发布到openEuler的兼容性清单，请将以下测试结果全部上传至相关的适配issue下：
+
+   - oech测试日志
+
+   - oech生成的html测试报告
+
+   - 兼容性清单文件（请参考templates目录下的模板)
+
 # 附录：测试项说明
 
 ## 已有测试项
@@ -284,7 +295,7 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
    - 使用 ethtool 获取网卡信息和 ifconfig 对网卡进行 down/up 测试。
    - 使用 qperf 测试以太网卡tcp/udp延迟和带宽，以及 http 上传、下载速率。
-   - 使用 perftest 测试 InfiniBand 或 RoCE 网卡延迟和带宽。
+   - 使用 perftest 测试 infiniband(IB) 或 RoCE 网络协议的延迟和带宽。
    - **注意** 进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
 
 6. **disk**
@@ -322,12 +333,36 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 14. **acpi**
 
     利用 acpidump 工具读取数据。
+    
+15. **FC**
+
+    使用 fio 工具进行FC存储服务器的顺序/随机读写测试。
+
+16. **RAID**
+
+    使用 fio 工具进行RAID下硬盘的顺序/随机读写测试。
+
+17. **keycard**
+
+    测试加密卡是否能正常使用。
+
+18. **GPU**
+
+   - 使用gpu_burn工具对GPU进行加压测试。
+   - 使用cuda_samples测试GPU是否能正常使用。
+
+19. **infiniband**
+
+   - 使用 ethtool 获取网卡信息。
+   - 使用 perftest 测试 infiniband(IB) 网络协议的延迟和带宽。
+   - **注意** 进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
+
 
 ## 新增测试项
 
-1. 在 `tests/` 添加自己的测试模板，实现自己的测试类继承框架 `Test`。
+1. 在 `tests/` 目录下添加测试项模板，通过继承框架 `Test` 实现自己的测试类。
 
-2. 重要成员变量或函数。
+2. 测试类中的重要成员变量或函数介绍：
 
    - 函数 `test` - **必选**，测试主流程。
 
@@ -338,3 +373,5 @@ https://gitee.com/src-openeuler/oec-hardware/releases
    - 变量 `requirements` - 以数组形式存放测试依赖的 rpm 包名，测试开始前框架自动安装。
 
    - 变量 `reboot` 和 `rebootup` - 若 `reboot = True` 表示该测试套/测试用例会重启系统，且在重启后继续执行 `rebootup` 指定的函数，可以参考 kdump 测试。
+
+3. 在 `hwcompatible/compatibility.py` 文件中添加对应测试项的识别显示。
