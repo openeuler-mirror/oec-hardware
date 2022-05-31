@@ -1,96 +1,33 @@
 # oec-hardware
 
-## 背景介绍
-OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂商的合作，进行兼容性测试。OS 厂商制定一个测试标准，并提供测试用例，硬件厂商进行实际的测试。测试通过后，OS 厂商和硬件厂商将共同在对应的官网发布兼容性信息。
+## 工具介绍
 
-验证目的就是保证 OS 与硬件平台的兼容性，验证仅限于基本功能验证，不包括性能测试等其它测试。
+oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具，oec-hardware提供服务器整机、板卡与openEuler的兼容性验证测试，验证仅限于基本功能验证，不包括性能测试等其它测试。
 
-openEuler硬件兼容性测试框架有如下特点：
+硬件厂商在需要验证硬件产品与openEuler的兼容性时，可以使用oec-hardware。社区提供硬件兼容性测试流程，硬件厂商可以参考 [社区兼容性适配流程](https://www.openeuler.org/zh/compatibility/hardware/) 进行和openEuler的适配。
 
-1. 为满足可信要求，必须使用openEuler操作系统，不能随意重编/插入内核模块。
-2. 通过扫描机制自适应发现硬件列表，来确定要运行的测试用例集合。
-3. 面向对象抽象各种硬件类型以及测试用例类，用于扩展开发。
+通过oec-hardware工具测试的硬件产品，openEuler会在社区官网发布 [兼容性清单](https://www.openeuler.org/zh/compatibility/) ，硬件厂商会在厂商官网发布对应的兼容性信息。
 
-## 软件架构
-```
-.
-├── hwcompatible 框架主功能
-│   ├── compatibility.py  框架核心功能
-│   ├── client.py         上传测试结果到服务端
-│   ├── command.py        bash命令执行封装
-│   ├── commandUI.py      命令行交互工具
-│   ├── device.py         扫描设备信息
-│   ├── document.py       收集配置信息
-│   ├── env.py            全局变量，主要是各个配置文件或目录的路径
-│   ├── job.py            测试任务管理
-│   ├── log.py            日志模块
-│   ├── reboot.py         重启类任务专用，便于机器重启后仍能继续执行测试
-│   ├── sysinfo.py        收集系统信息
-│   └── test.py           测试套模板
-├── scripts   工具脚本
-│   ├── oech                  框架命令行工具
-│   ├── oech-server.service   框架服务端 service 文件，用于启动 web 服务器
-│   ├── oech.service          框架客户端 service 文件，用于接管 reboot 用例
-│   └── kernelrelease.json    规范可用于认证的系统和内核版本
-├── server   服务端
-│   ├── oech-server-pre.sh    服务预执行脚本
-│   ├── results/              测试结果存放目录
-│   ├── server.py             服务端主程序
-│   ├── static/               图片存放目录
-│   ├── templates/            网页模板存放目录
-│   ├── uwsgi.conf            nginx 服务配置
-│   └── uwsgi.ini             uwsgi 服务配置
-└── tests   测试套
-```
+## 安装介绍
 
-## 安装测试框架
+本工具支持在 openEuler 20.03 (LTS) 或更高版本上运行，详细支持版本请查看 [操作系统支持版本信息](https://gitee.com/openeuler/oec-hardware/blob/master/scripts/kernelrelease.json) 文件。
 
-### 前提条件
+### 客户端
 
-安装了 openEuler 20.03 (LTS) 或更高版本。
-
-### 获取安装包
-
-* 安装包从 openEuler 官方网站下载。
-
-* 校验安装包的完整性。
-
-  1. 获取校验文件中的校验值：
-
-     ```
-     cat oec-hardware-*.rpm.sha256sum
-     ```
-
-  2. 计算文件的 sha256 校验值:
-
-     ```
-     sha256sum oec-hardware-*.rpm
-     ```
-	 
-
-     命令执行完成后，输出校验值。
-
-  3. 对比步骤1和步骤2计算的校验值是否一致。
-
-     如果校验值一致说明安装文件完整性没有破坏，如果校验值不一致则可以确认文件完整性已被破坏，需要重新获取。
-
-### 安装过程
-
-#### 客户端
-
-1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，以20.03 LTS的版本的everyting源为例，路径为https://repo.openeuler.org/openEuler-20.03-LTS/everything/。使用 `dnf` 安装客户端 oec-hardware。
+1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 和 update 源，使用 `dnf` 安装客户端 oec-hardware。
 
    ```
-   dnf install oec-hardware-XXX.rpm
+   dnf install oec-hardware
    ```
 
+2. 输入 `oech` 命令，可正常运行，则表示安装成功。
 
-#### 服务端
+### 服务端
 
-1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，以20.03 LTS的版本的everyting源为例，路径为https://repo.openeuler.org/openEuler-20.03-LTS/everything/。使用 `dnf` 安装服务端 oec-hardware-server。
+1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 和 update 源，使用 `dnf` 安装服务端 oec-hardware-server。
 
    ```
-   dnf install oec-hardware-server-XXX.rpm
+   dnf install oec-hardware-server
    ```
 
 2. 服务端 web 展示页面需要的部分组件系统本身不提供，需要使用 `pip3` 安装（请自行配置可用 pip 源）。
@@ -114,9 +51,17 @@ openEuler硬件兼容性测试框架有如下特点：
    setenforce 0
    ```
 
-## 使用说明
+# 使用指导
 
-1. 在客户端启动测试框架。在客户端启动 `oech`，其中 `ID` 和 `URL` 可以按需填写，`ID` 建议填写 gitee 上的 issue ID，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
+## 前提条件
+
+* `/usr/share/oech/kernelrelease.json` 文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
+
+* 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能 `ping` 通服务端的 ip；如果客户端是对 InfiniBand 网卡进行测试，服务端也必须有一个 InfiniBand 网卡并提前配好 ip 。建议不要使用业务网口进行网卡测试。
+
+## 使用步骤
+
+1. 在客户端启动测试框架。在客户端启动 `oech`，填写`ID`、`URL`、`Server`配置项，`ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
 
    ```
    # oech
@@ -147,7 +92,7 @@ openEuler硬件兼容性测试框架有如下特点：
    Ready to begin testing? (run|edit|quit)
    ```
 
-3. 选择测试套。`all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
+3. 选择测试套。`all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消，多次执行成功后 `system` 的状态会变为`Force`）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
 
    ```
    Select tests to run:
@@ -176,15 +121,16 @@ openEuler硬件兼容性测试框架有如下特点：
    ...
    -------------  Summary  -------------
    ethernet-enp3s0                  PASS
-   system                           FAIL
+   system                           PASS
    Log saved to /usr/share/oech/logs/oech-20200228210118-TnvUJxFb50.tar succ.
    Do you want to submit last result? (y|n) y
    Uploading...
    Successfully uploaded result to server X.X.X.X.
    ```
-## 查看结果
 
-### 如何查看
+# 结果获取
+
+## 查看结果
 
 1. 浏览器打开服务端 IP 地址，点击导航栏 `Results` 界面，找到对应的测试 id 进入。
 
@@ -197,10 +143,20 @@ openEuler硬件兼容性测试框架有如下特点：
 
    - `Runtime` 查看测试运行日志。
 
-   - `Attachment` 下载测试附件
+   - `Attachment` 下载测试附件。
 
-
-### 结果说明&建议
+## 结果说明
 
 在 **Result** 列展示测试结果，结果有两种：**PASS** 或者 **FAIL**。如果结果为**FAIL**，可以直接点击结果来查看执行日志，根据报错对照用例代码进行排查。
 
+## 测试结果审核
+
+如果测试的硬件、整机需要发布到openEuler的兼容性清单，请将以下测试结果全部上传至相关的适配issue下：
+
+   - oech测试日志
+
+   - oech生成的html测试报告
+
+   - 兼容性清单文件（请参考templates目录下的模板)
+
+        整机适配需要测试至少一张RAID卡、一张网卡，并提供对应的信息。
