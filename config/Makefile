@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -7,19 +7,18 @@
 # IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
-# Create: 2020-04-01
+# Create: 2022-06-08
 
-.PHONY: all clean install
+.PHONY: install clean
 
-SUBDIRS := hwcompatible config tests server scripts
+HWCERT_CLASS_LIB := /usr/share/oech/lib
 
-all:
-	for i in $(SUBDIRS); do $(MAKE) -C $$i DESTDIR=$(DESTDIR); done
+all: ;
 
 install:
-	mkdir -p $(DESTDIR)/usr/share/oech
-	mkdir -p $(DESTDIR)/var/oech
-	for i in $(SUBDIRS); do $(MAKE) -C $$i DESTDIR=$(DESTDIR) install; done
+	mkdir -p $(DESTDIR)$(HWCERT_CLASS_LIB)/config
+	cp version.config $(DESTDIR)$(HWCERT_CLASS_LIB)/config/
 
 clean:
-	for i in $(SUBDIRS); do $(MAKE) -C $$i DESTDIR=$(DESTDIR) clean; done
+	rm -rf $(DESTDIR)$(HWCERT_CLASS_LIB)/config
+

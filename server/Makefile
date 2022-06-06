@@ -28,7 +28,6 @@ HWCERT_CLASS_LIB := /usr/share/oech/lib
 all: ;
 
 install:
-	rm -rf $(DESTDIR)$(HWCERT_CLASS_LIB)/server
 	mkdir -p $(DESTDIR)$(HWCERT_CLASS_LIB)/server
 	cp -raf `ls | grep -v Makefile` $(DESTDIR)$(HWCERT_CLASS_LIB)/server/
 	chmod u+x $(DESTDIR)$(HWCERT_CLASS_LIB)/server/*

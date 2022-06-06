@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# Copyright (c) 2022 Huawei Technologies Co., Ltd.
+# oec-hardware is licensed under the Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+#     http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+# PURPOSE.
+# See the Mulan PSL v2 for more details.
+# Create: 2022-06-08
+
+"""Operation of server"""
+
+import os
+import sys
+import argparse
+import configparser
+
+sys.path.append("/usr/share/oech/lib/")
+
+
+if __name__ == '__main__':
+    """
+    Get oech-server version
+    :return:
+    """
+    parser = argparse.ArgumentParser(description="Run openEuler Hardware Server")
+    parser.add_argument('--version', action='store_true',
+                help='Show testsuite version.')
+    args = parser.parse_args()
+    config = configparser.ConfigParser()
+    config.read('/usr/share/oech/lib/config/version.config')
+    name = config.get("NAME", "server_name")
+    version = config.get("VERSION", "version")
+
+    if args.version:
+        print("%s %s" % (name, version))
+    sys.exit(0)

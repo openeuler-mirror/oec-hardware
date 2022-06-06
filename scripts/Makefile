@@ -26,10 +26,11 @@
 all: ;
 
 install:
-	rm -rf $(DESTDIR)/usr/bin/oech
 	mkdir -p $(DESTDIR)/usr/bin
 	cp oech $(DESTDIR)/usr/bin
 	chmod u+x $(DESTDIR)/usr/bin/oech
+	cp oech-server $(DESTDIR)/usr/bin
+	chmod u+x $(DESTDIR)/usr/bin/oech-server
 	mkdir -p $(DESTDIR)/usr/share/oech/lib
 	cp kernelrelease.json $(DESTDIR)/usr/share/oech/
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system/
