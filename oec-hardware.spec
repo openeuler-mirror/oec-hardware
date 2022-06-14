@@ -54,6 +54,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 /usr/bin/oech
 /usr/share/oech/kernelrelease.json
 /usr/share/oech/lib/hwcompatible
+/usr/share/oech/lib/config
 /usr/share/oech/lib/tests
 /usr/lib/systemd/system/oech.service
 %dir /var/oech
@@ -62,7 +63,9 @@ DESTDIR=$RPM_BUILD_ROOT make install
 
 %files server
 %defattr(-,root,root)
+/usr/bin/oech-server
 /usr/share/oech/lib/server
+/usr/share/oech/lib/config
 /usr/share/oech/lib/server/uwsgi.ini
 /usr/share/oech/lib/server/uwsgi.conf
 /usr/lib/systemd/system/oech-server.service

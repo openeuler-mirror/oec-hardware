@@ -18,13 +18,13 @@ import os
 import sys
 import fcntl
 import argparse
+import configparser
 
 sys.path.append("/usr/share/oech/lib/")
 os.putenv("PYTHONPATH", "/usr/share/oech/lib/")
 
 from hwcompatible.compatibility import EulerCertification
-import hwcompatible.version
-
+from hwcompatible.env import CertEnv
 
 class CertLock:
     """
@@ -67,6 +67,10 @@ if __name__ == '__main__':
     parser.add_argument('--version', action='store_true',
                         help='Show testsuite version.')
     args = parser.parse_args()
+    config = configparser.ConfigParser()
+    config.read(CertEnv.versionfile)
+    name = config.get("NAME", "client_name")
+    version = config.get("VERSION", "version")
 
     lock = CertLock("/var/lock/oech.lock")
     if not lock.acquire():
@@ -83,7 +87,7 @@ if __name__ == '__main__':
             lock.release()
             sys.exit(1)
     elif args.version:
-        print("version: %s" % hwcompatible.version.version)
+        print("%s %s" % (name, version))
     else:
         if not cert.run():
             lock.release()
