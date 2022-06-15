@@ -94,7 +94,7 @@ rm -rf /var/lock/oech.lock
 * Tue Sep 29 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-5
 * Fri Jul 24 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-4
 * Sun Jul 18 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-3
-* Sun Jul 01 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-2
+* Wed Jul 01 2020 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-2
 * Fri Jul 26 2019 Lu Tianxiong <lutianxiong@huawei.com> - 1.0.0-h1
 - Initial spec
 
