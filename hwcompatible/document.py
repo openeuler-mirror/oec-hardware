@@ -15,6 +15,8 @@
 """Document processing"""
 
 import json
+import configparser
+
 from .commandUI import CommandUI
 from .command import Command
 from .device import Device
@@ -101,6 +103,17 @@ class CertDocument(Document):
             "Please provide your Product URL:")
         self.document[SERVER] = CommandUI().prompt("Please provide the Compatibility Test "
                                                    "Server (Hostname or Ipaddr):")
+
+    def get_oech_value(self, prop, value):
+        """
+        Get oech version or name
+        """
+        config = configparser.ConfigParser()
+        config.read(CertEnv.versionfile)
+        if prop == 'VERSION':
+            self.document[OECH_VERSION] = config.get(prop, value)
+        self.document[OECH_NAME] = config.get(prop, value)
+        return config.get(prop, value)
 
     def get_hardware(self):
         """

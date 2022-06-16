@@ -31,6 +31,8 @@ NOTRUN = "NotRun"
 
 OS = "OS"
 KERNEL = "kernel"
+OECH_VERSION = "oech_version"
+OECH_NAME = "oech_name"
 ID = "ID"
 PRODUCTURL = "Product URL"
 SERVER = "server"
