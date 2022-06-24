@@ -14,7 +14,9 @@
 function install_gpu_burn() {
     cd /opt
     res_code=0
-    git clone https://github.com/wilicc/gpu-burn.git
+    if [ ! -d gpu-burn ];then
+        git clone https://github.com/wilicc/gpu-burn.git
+    fi
     cd gpu-burn
     lsmod | grep bi_driver >/dev/null
     if [ $? -eq 0 ];then
@@ -36,9 +38,11 @@ function install_gpu_burn() {
 
 function install_cuda_samples() {
     cd /opt
-    wget https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip
-    unzip master.zip >/dev/null
-    rm -rf master.zip
+    if [ ! -d cuda-samples-master ];then
+        wget https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip
+        unzip master.zip >/dev/null
+        rm -rf master.zip
+    fi
     return 0
 }
 
@@ -47,7 +51,7 @@ function test_nvidia_case() {
     logfile=$2
     res_code=0
     cd /opt/cuda-samples-master
-    path=$(find ./ -name $casename)
+    path=$(find ./ -name $casename -type d)
     cd $path
     make &>/dev/null
     ./$casename &>>$logfile

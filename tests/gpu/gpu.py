@@ -48,7 +48,7 @@ class GpuTest(Test):
 
     def current_card(self):
         print("Vendor Info:")
-        pci_num = self.device.get_property("DEVPATH").split('/')[-1]
+        pci_num = self.device.get_property("DEVPATH").split('/')[-1].upper()
         Command('lspci -s %s -v' % pci_num).echo()
 
         print("Driver Info:")
@@ -75,7 +75,7 @@ class GpuTest(Test):
         output = dict(zip(pci, num))
         if pci_key in output.keys():
             id_num = str(re.findall("\d+", output[pci_key])).strip("['']")
-        os.environ['CUDA_VISIBLE_DEVICES'] = id_num
+            os.environ['CUDA_VISIBLE_DEVICES'] = id_num
 
         os.system("bash %s/test_gpu.sh install_gpu_burn" % gpu_dir)
         os.system('cd /opt/gpu-burn && nohup ./gpu_burn 10 &> %s &' %
@@ -110,6 +110,3 @@ class GpuTest(Test):
         except Exception as e:
             print("Failed to run the script because compiling or setting variables", e)
             return False
-
-    def teardown(self):
-        os.system("rm -rf /opt/gpu-burn /opt/cuda-samples-master")
