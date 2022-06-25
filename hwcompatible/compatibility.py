@@ -117,7 +117,6 @@ class EulerCertification():
             self.certification = CertDocument(CertEnv.certificationfile)
             if not self.certification.document:
                 self.certification.new()
-                self.certification.save()
         if not self.test_factory:
             factory_doc = FactoryDocument(CertEnv.factoryfile)
             self.test_factory = factory_doc.get_factory()
@@ -125,6 +124,10 @@ class EulerCertification():
         oec_id = self.certification.get_certify()
         hardware_info = self.certification.get_hardware()
         self.client = Client(hardware_info, oec_id)
+        version = self.certification.get_oech_value("VERSION", "version")
+        name = self.certification.get_oech_value("NAME", "client_name")
+        self.certification.save()
+        print("    %s: ".ljust(20) % name + version)
         print("    Compatibility Test ID: ".ljust(30) + oec_id)
         print("    Hardware Info: ".ljust(30) + hardware_info)
         print("    Product URL: ".ljust(30) + self.certification.get_url())
