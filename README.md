@@ -1,45 +1,104 @@
 <!-- TOC -->
 
 - [概述](#概述)
-  - [背景介绍](#背景介绍)
-  - [原理简介](#原理简介)
-    - [框架概览](#框架概览)
-    - [测试流程](#测试流程)
+  - [工具介绍](#工具介绍)
+  - [兼容性结论继承说明](#兼容性结论继承说明)
+    - [整机兼容性结论继承策略](#整机兼容性结论继承策略)
+    - [板卡兼容性结论继承策略](#板卡兼容性结论继承策略)
+  - [版本发布](#版本发布)
+    - [版本维护声明](#版本维护声明)
+  - [工具使用](#工具使用)
+    - [原理简介](#原理简介)
+        - [框架概览](#框架概览)
+        - [框架特点](#框架特点)
+        - [测试流程](#测试流程)
   - [使用流程](#使用流程)
     - [用户使用流程](#用户使用流程)
-    - [组网图](#组网图)
-- [安装测试框架](#安装测试框架)
+  - [运行环境](#运行环境)
+    - [运行环境依赖组件](#运行环境依赖组件)
+    - [运行环境组网](#运行环境组网)
+- [工具安装](#工具安装)
   - [前提条件](#前提条件)
   - [获取安装包](#获取安装包)
   - [安装过程](#安装过程)
     - [客户端](#客户端)
     - [服务端](#服务端)
-  - [验证安装正确性](#验证安装正确性)
 - [使用指导](#使用指导)
   - [前提条件](#前提条件-1)
   - [使用步骤](#使用步骤)
-- [查看结果](#查看结果)
-  - [如何查看](#如何查看)
-  - [结果说明&建议](#结果说明建议)
-- [附录：测试项说明](#附录测试项说明)
+- [结果获取](#结果获取)
+  - [查看结果](#查看结果)
+  - [结果说明](#结果说明)
+  - [测试结果审核](#测试结果审核)
+- [测试项介绍](#测试项介绍)
   - [已有测试项](#已有测试项)
+- [社区开发者参与介绍](#社区开发者参与介绍)
+  - [环境部署](#环境部署)
   - [新增测试项](#新增测试项)
+- [FAQ](#FAQ)
 
 <!-- /TOC -->
 
 # 概述
 
-## 背景介绍
+## 工具介绍
 
-OS 厂商为了扩大自己产品的兼容性范围，常常寻求与硬件厂商的合作，进行兼容性测试。OS 厂商制定一个测试标准，并提供测试用例，硬件厂商进行实际的测试。测试通过后，OS 厂商和硬件厂商将共同在对应的官网发布兼容性信息。
+oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具，oec-hardware提供服务器整机、板卡与openEuler的兼容性验证测试，验证仅限于基本功能验证，不包括性能测试等其它测试。
 
-验证目的就是保证 OS 与硬件平台的兼容性，验证仅限于基本功能验证，不包括性能测试等其它测试。
+硬件厂商在需要验证硬件产品与openEuler的兼容性时，可以使用oec-hardware。社区提供硬件兼容性测试流程，硬件厂商可以参考 [社区兼容性适配流程](https://www.openeuler.org/zh/compatibility/hardware/) 进行和openEuler的适配。
 
-openEuler硬件兼容性验证测试框架有如下特点：
+通过oec-hardware工具测试的硬件产品，openEuler会在社区官网发布 [兼容性清单](https://www.openeuler.org/zh/compatibility/) ，硬件厂商会在厂商官网发布对应的兼容性信息。
 
-1. 为满足可信要求，必须使用openEuler操作系统，不能随意重编/插入内核模块。
-2. 通过扫描机制自适应发现硬件列表，来确定要运行的测试用例集合。
-3. 面向对象抽象各种硬件类型以及测试用例类，用于扩展开发。
+# 兼容性结论继承说明
+
+## 整机兼容性结论继承策略
+
+如果验证适配的服务器共主板，可以继承兼容性结论。
+
+## 板卡兼容性结论继承策略
+
+板卡型号一般通过四元组来进行确认。
+
+    四元组信息：
+        vendorID：芯片厂商ID
+        deviceID: 芯片型号ID
+        svID：板卡厂商ID
+        ssID: 板卡型号ID
+    
+    四元组查看方式：
+        - 通过iBMC查看
+        - 在系统中执行命令"lspci -nvv"查看
+            
+
+板卡兼容性结论继承有以下三点:
+
+1. vendorID和deviceID不同
+
+    无法继承兼容性结论。
+
+2. vendorID和deviceID，svID不同
+
+    芯片型号相同但是板卡厂商不同，无法继承兼容性结论。
+
+3. vendorID、deviceID、svID相同
+
+    代表同一个板卡厂商，使用同一种芯片做成的不同板卡，可以继承兼容性结论。
+
+4. vendorID、deviceID、svID、ssID相同
+
+    代表同一个板卡厂商，使用同一种芯片做成的同一系列板卡，四元组信息相同，可以继承兼容性结论。厂商自行评估此系列板卡，可以写代表性的板卡名称。
+
+板卡厂商参考社区的兼容性清单以及正在适配中的板卡，如果可以继承兼容性结论，需要在对应的适配issue中进行说明，兼容性sig组会进行人工审核，审核通过后会发布对应的兼容性清单。
+
+# 版本发布
+
+详细版本发布策略和版本发布方案请见`docs/design_docs/oech_rpm_version_design.md`
+
+## 版本维护声明
+
+oec-hardware-1.0.0 版本将不再进行更新维护，请获取最新版本的oec-hardware进行安装使用。
+
+# 工具使用
 
 ## 原理简介
 
@@ -60,11 +119,12 @@ openEuler硬件兼容性验证测试框架有如下特点：
 │   ├── reboot.py         重启类任务专用，便于机器重启后仍能继续执行测试
 │   ├── sysinfo.py        收集系统信息
 │   └── test.py           测试套模板
+│   └── version.py        工具版本声明
 ├── scripts   工具脚本
 │   ├── oech                  框架命令行工具
 │   ├── oech-server.service   框架服务端 service 文件，用于启动 web 服务器
 │   ├── oech.service          框架客户端 service 文件，用于接管 reboot 用例
-│   └── kernelrelease.json    规范可用于认证的系统和内核版本
+│   └── kernelrelease.json    工具支持认证的系统和内核版本
 ├── server   服务端
 │   ├── oech-server-pre.sh    服务预执行脚本
 │   ├── results/              测试结果存放目录
@@ -73,30 +133,58 @@ openEuler硬件兼容性验证测试框架有如下特点：
 │   ├── templates/            网页模板存放目录
 │   ├── uwsgi.conf            nginx 服务配置
 │   └── uwsgi.ini             uwsgi 服务配置
-└── tests   测试套
+├── templates                 兼容性清单模板存放目录
+├── tests   测试套
+└──vendor_tests               厂商测试工具存放目录
 ```
 
+### 框架特点
 
+oec-hardware工具框架有如下特点：
+
+1. 为满足可信要求，必须使用openEuler操作系统，不能随意重编/插入内核模块。
+
+2. 通过扫描机制自适应发现硬件列表，来确定要运行的测试用例集合。
+
+3. 面向对象抽象各种硬件类型以及测试用例类，用于扩展开发。
 
 ### 测试流程
 
-![test-flow](docs/test-flow.png)
+![test-flow](docs/pictures/test-flow.png)
 
 ## 使用流程
 
 ### 用户使用流程
 
-![user-flow](docs/user-flow.png)
+![user-flow](docs/pictures/user-flow.png)
 
-### 组网图
+## 运行环境
 
-![test-network](docs/test-network.png)
+### 运行环境依赖组件
 
-# 安装测试框架
+以下是oech工具客户端的运行环境依赖组件:
+| 组件      | 组件描述  | 可获得性 |
+| --------- | ------ | ----------- |
+| python    | python3 及以上 | 可先通过python --version命令查看，如果没有该版本，需要下载安装，并设置/usr/bin/python的软链接 |
+
+以下是oech工具服务端的运行环境依赖组件:
+
+| 组件      | 组件描述  | 可获得性 |
+| --------- | ------- | ----------- |
+| python   | python3 及以上 | 可先通过python --version命令查看，如果没有该版本，需要下载安装，并设置/usr/bin/python的软链接 |
+| Flask    | v2.1.2 及以上版本        | 可使用pip3进行安装   |
+| Flask-bootstrap    | v3.3.7.1 及以上版本        | 可使用pip3进行安装  |
+| uwsgi    | v2.0.20 及以上版本        | 可使用pip3进行安装   |
+
+### 运行环境组网
+
+![test-network](docs/pictures/test-network.png)
+
+# 工具安装
 
 ## 前提条件
 
-安装了 openEuler 20.03 (LTS) 或更高版本。
+本工具支持在 openEuler 20.03 (LTS) 或更高版本上运行，详细支持操作系统版本信息请查看 `oec-hardware/scripts/kernelrelease.json` 文件。
 
 ## 获取安装包
 
@@ -112,6 +200,7 @@ https://gitee.com/src-openeuler/oec-hardware/releases
    dnf install oec-hardware-XXX.rpm
    ```
 
+2. 输入 `oech` 命令，可正常运行，则表示安装成功。
 
 ### 服务端
 
@@ -142,10 +231,6 @@ https://gitee.com/src-openeuler/oec-hardware/releases
    setenforce 0
    ```
 
-## 验证安装正确性
-
-客户端输入 `oech` 命令，可正常运行，则表示安装成功。如果安装有任何问题，可反馈至该邮箱：oecompatibility@openeuler.org 。
-
 # 使用指导
 
 ## 前提条件
@@ -156,7 +241,7 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
 ## 使用步骤
 
-1. 在客户端启动测试框架。在客户端启动 `oech`，其中 `ID` 和 `URL` 可以按需填写，`ID` 建议填写 gitee 上的 issue ID，`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
+1. 在客户端启动测试框架。在客户端启动 `oech`，填写`ID`、`URL`、`Server`配置项，`ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
 
    ```
    # oech
@@ -187,7 +272,7 @@ https://gitee.com/src-openeuler/oec-hardware/releases
    Ready to begin testing? (run|edit|quit)
    ```
 
-3. 选择测试套。`all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
+3. 选择测试套。`all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消，多次执行成功后 `system` 的状态会变为`Force`）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
 
    ```
    Select tests to run:
@@ -216,22 +301,20 @@ https://gitee.com/src-openeuler/oec-hardware/releases
    ...
    -------------  Summary  -------------
    ethernet-enp3s0                  PASS
-   system                           FAIL
+   system                           PASS
    Log saved to /usr/share/oech/logs/oech-20200228210118-TnvUJxFb50.tar succ.
    Do you want to submit last result? (y|n) y
    Uploading...
    Successfully uploaded result to server X.X.X.X.
    ```
 
+# 结果获取
 
-
-# 查看结果
-
-## 如何查看
+## 查看结果
 
 1. 浏览器打开服务端 IP 地址，点击导航栏 `Results` 界面，找到对应的测试 id 进入。
 
-   ![results](docs/results.png)
+   ![results](docs/pictures/results.png)
 
 2. 进入单个任务页可以看到具体的测试结果展示，包括环境信息和执行结果等。
 
@@ -243,14 +326,13 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
    - `Attachment` 下载测试附件。
 
-     ![result-qemu](docs/result-qemu.png)
+     ![result-qemu](docs/pictures/result-qemu.png)
 
 
 
-## 结果说明&建议
+## 结果说明
 
 在 **Result** 列展示测试结果，结果有两种：**PASS** 或者 **FAIL**。如果结果为**FAIL**，可以直接点击结果来查看执行日志，根据报错对照用例代码进行排查。
-
 
 ## 测试结果审核
 
@@ -262,7 +344,9 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
    - 兼容性清单文件（请参考templates目录下的模板)
 
-# 附录：测试项说明
+        整机适配需要测试至少一张RAID卡、一张网卡，并提供对应的信息。
+
+# 测试项介绍
 
 ## 已有测试项
 
@@ -348,15 +432,43 @@ https://gitee.com/src-openeuler/oec-hardware/releases
 
 18. **GPU**
 
-   - 使用gpu_burn工具对GPU进行加压测试。
-   - 使用cuda_samples测试GPU是否能正常使用。
+    - 使用gpu_burn工具对GPU进行加压测试。
+    - 使用cuda_samples测试GPU是否能正常使用。
 
 19. **infiniband**
 
-   - 使用 ethtool 获取网卡信息。
-   - 使用 perftest 测试 infiniband(IB) 网络协议的延迟和带宽。
-   - **注意** 进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
+    - 使用 ethtool 获取网卡信息。
+    - 使用 perftest 测试 infiniband(IB) 网络协议的延迟和带宽。
+    - **注意** 进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
 
+# 社区开发者参与介绍
+
+## 环境部署
+1. 将oec-hardware源码仓库fork到个人空间；
+
+2. 克隆仓库源码；
+
+    ```
+    git clone https://gitee.com/${gitee_id}/oec-hardware.git
+    ```
+
+3. 进入对应的目录，编译安装；
+
+    ```
+    cd oec-hardware
+    make && make install
+    ```
+    
+4. 如果要进行打包验证，请安装4.17版本以上的rpm-build软件包，此处以1.0.0版本为例进行打包，具体打包的版本请以spec文件里的版本为准。
+
+    ```
+    dnf install -y rpm-build 
+    cd oec-hardware
+    tar oec-hardware-1.0.0.tar.bz2 *
+    mkdir -p /root/rpmbuild/SOURCES
+    cp oec-hardware-1.0.0.tar.bz2 /root/rpmbuild/SOURCES/
+    rpmbuild -ba oec-hardware.spec
+    ```
 
 ## 新增测试项
 
@@ -375,3 +487,9 @@ https://gitee.com/src-openeuler/oec-hardware/releases
    - 变量 `reboot` 和 `rebootup` - 若 `reboot = True` 表示该测试套/测试用例会重启系统，且在重启后继续执行 `rebootup` 指定的函数，可以参考 kdump 测试。
 
 3. 在 `hwcompatible/compatibility.py` 文件中添加对应测试项的识别显示。
+
+# FAQ
+
+ [鲲鹏小智](https://ic-openlabs.huawei.com/chat/#/)提供了oec-hardware测试过程中可能遇到的问题的解决方案，如果在适配过程中遇到问题，可以优先通过鲲鹏小智获取支撑。
+
+如果鲲鹏小智无法解决，可在本仓库下提issue反馈或者发邮件至openEuler社区兼容性SIG组邮箱：oecompatibility@openeuler.org。
