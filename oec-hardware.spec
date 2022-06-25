@@ -1,4 +1,5 @@
 %define version    1.1.0
+%define release    0
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
@@ -6,6 +7,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        %{version}
+Release:        %{release}
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -64,8 +66,6 @@ DESTDIR=$RPM_BUILD_ROOT make install
 /usr/bin/oech-server
 /usr/share/oech/lib/server
 /usr/share/oech/lib/config
-/usr/share/oech/lib/server/uwsgi.ini
-/usr/share/oech/lib/server/uwsgi.conf
 /usr/lib/systemd/system/oech-server.service
 
 %postun
