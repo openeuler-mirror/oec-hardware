@@ -289,8 +289,8 @@ class EulerCertification():
                 else:
                     sort_devices[FC] = [device]
                 continue
-            if device.get_property("PCI_CLASS") == "30200" or \
-                    device.get_property("PCI_CLASS") == "120000":
+            driver = device.get_property("DRIVER")
+            if any([d in driver for d in GPU_DRIVER]):
                 if GPU in sort_devices.keys():
                     sort_devices[GPU].extend([device])
                 else:
