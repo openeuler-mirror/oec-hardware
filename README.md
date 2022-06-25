@@ -119,9 +119,9 @@ oec-hardware-1.0.0 版本将不再进行更新维护，请获取最新版本的o
 │   ├── reboot.py         重启类任务专用，便于机器重启后仍能继续执行测试
 │   ├── sysinfo.py        收集系统信息
 │   └── test.py           测试套模板
-│   └── version.py        工具版本声明
-├── scripts   工具脚本
-│   ├── oech                  框架命令行工具
+├── scripts   工具脚本 
+│   ├── oech                  框架客户端命令行工具
+│   ├── oech-server           框架服务端命令行工具
 │   ├── oech-server.service   框架服务端 service 文件，用于启动 web 服务器
 │   ├── oech.service          框架客户端 service 文件，用于接管 reboot 用例
 │   └── kernelrelease.json    工具支持认证的系统和内核版本
@@ -133,6 +133,8 @@ oec-hardware-1.0.0 版本将不再进行更新维护，请获取最新版本的o
 │   ├── templates/            网页模板存放目录
 │   ├── uwsgi.conf            nginx 服务配置
 │   └── uwsgi.ini             uwsgi 服务配置
+├── config   配置文件
+│   └── version.config        工具版本配置文件
 ├── templates                 兼容性清单模板存放目录
 ├── tests   测试套
 └──vendor_tests               厂商测试工具存放目录
