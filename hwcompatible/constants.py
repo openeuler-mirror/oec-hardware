@@ -43,7 +43,7 @@ REBOOT = "reboot"
 SYSTEM = "system"
 
 NODEVICE = ["cpufreq", "memory", "clock", "profiler", "system",
-            "stress", "kdump", "perf", "acpi", "watchdog"]
+            "stress", "kdump", "perf", "acpi", "watchdog", "kabi"]
 CDTYPES = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD"]
 SUBSYSTEM = "SUBSYSTEM"
@@ -60,6 +60,7 @@ IPMI = "ipmi"
 FC = "fibrechannel"
 RAID = "raid"
 GPU = "gpu"
+GPU_DRIVER = ["nouveau", "nvidia", "bi_driver", "amdgpu"]
 KEYCARD = "keycard"
 KEYCARD_VENDORS = ['Xilinx', 'Renesas', 'Texas', 'PLX']
 IB = "infiniband"

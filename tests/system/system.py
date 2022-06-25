@@ -157,10 +157,7 @@ class SystemTest(Test):
                   concrete_error)
             return_code = False
 
-        except_list = ["/modules.dep$", "/modules.symbols$", "/modules.dep.bin$",
-                       "/modules.symbols.bin$"]
-        if os.system("rpm -V --nomtime --nomode --nocontexts %s | grep -Ev '%s'" %
-                     (kernel_rpm, "|".join(except_list))) == 0:
+        if os.system("rpm -V --nomtime --nomode --nocontexts %s" % kernel_rpm) != 0:
             print("Error: files from %s were modified.\n" % kernel_rpm)
             return_code = False
 
