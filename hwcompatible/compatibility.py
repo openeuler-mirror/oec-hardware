@@ -18,6 +18,8 @@ import argparse
 import shutil
 import datetime
 import re
+from collections import namedtuple
+import filecmp
 
 from .document import CertDocument, DeviceDocument, FactoryDocument
 from .env import CertEnv
@@ -49,6 +51,7 @@ class EulerCertification():
         :return:
         """
         print("The openEuler Hardware Compatibility Test Suite")
+        self._copy_pci()
         self.load()
         certdevice = CertDevice()
 
@@ -152,8 +155,8 @@ class EulerCertification():
 
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
-        self.dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")\
-            + "-" + job.job_id
+        self.dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") \
+                        + "-" + job.job_id
         pack_name = self.dir_name + ".tar"
         cmd = Command("tar -cf %s %s" % (pack_name, self.dir_name))
         try:
@@ -276,7 +279,9 @@ class EulerCertification():
                         sort_devices[NVME] = [device]
                 elif "/host" in device.get_property("DEVPATH"):
                     sort_devices[DISK] = [empty_device]
-            if "RAID" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE"):
+            if "RAID" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") or \
+                    ("SCSI" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") and
+                     "HBA" not in device.get_property("ID_MODEL_FROM_DATABASE")):
                 if RAID in sort_devices.keys():
                     sort_devices[RAID].extend([device])
                 else:
@@ -392,35 +397,40 @@ class EulerCertification():
         show test items
         :return:
         """
+        device_info = namedtuple('Device_info', DEVICE_INFO)
         print("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10)
-              + STATUS.ljust(8) + "Class".ljust(14) + "Device\033[0m")
+              + STATUS.ljust(10) + CLASS.ljust(14) + DEVICE.capitalize().ljust(15)
+              + DRIVER.ljust(15) + VERSION.ljust(18) + CHIP.ljust(20)
+              + "%s\033[0m" % BOARD)
         num = 0
-        for test in self.test_factory:
-            name = test[NAME]
-            if name == SYSTEM:
-                test[RUN] = True
-                if test[STATUS] == PASS:
-                    test[STATUS] = FORCE
+        with open(CertEnv.pcifile) as file:
+            for test in self.test_factory:
+                name = test[NAME]
+                if name == SYSTEM:
+                    test[RUN] = True
+                    if test[STATUS] == PASS:
+                        test[STATUS] = FORCE
 
-            status = test[STATUS]
-            device = test[DEVICE].get_name()
-            run = "no"
-            if test[RUN] is True:
-                run = "yes"
-
-            num = num + 1
-            if status == PASS:
-                print("%-6d" % num + run.ljust(8) + "\033[0;32mPASS    \033[0m"
-                      + name.ljust(14) + "%s" % device)
-            elif status == "FAIL":
-                print("%-6d" % num + run.ljust(8) + "\033[0;31mFAIL    \033[0m"
-                      + name.ljust(14) + "%s" % device)
-            elif status == FORCE:
-                print("%-6d" % num + run.ljust(8) + "\033[0;33mForce   \033[0m"
-                      + name.ljust(14) + "%s" % device)
-            else:
-                print("%-6d" % num + run.ljust(8) + "\033[0;34mNotRun  \033[0m"
-                      + name.ljust(14) + "%s" % device)
+                status = test[STATUS]
+                device = test[DEVICE].get_name()
+                board, chip = test[DEVICE].get_model(name, file)
+                driver = test[DEVICE].get_driver()
+                version = test[DEVICE].get_driver_version()
+                run = "no"
+                if test[RUN] is True:
+                    run = "yes"
+                num = num + 1
+                if status == PASS:
+                    color = "2"
+                elif status == FAIL:
+                    color = "1"
+                elif status == FORCE:
+                    color = "3"
+                else:
+                    color = "4"
+                device = device_info(color, status, num, run, name,
+                                          device, driver, version, chip, board)
+                self._print_tests(device)
 
     def choose_tests(self):
         """
@@ -470,19 +480,31 @@ class EulerCertification():
             self.test_factory = test_factory
         else:
             for test in self.test_factory:
-                if not self.search_factory(test, test_factory):
+                if not self._search_factory(test, test_factory):
                     self.test_factory.remove(test)
                     print("delete %s test %s" % (test[NAME],
                                                  test[DEVICE].get_name()))
             for test in test_factory:
-                if not self.search_factory(test, self.test_factory):
+                if not self._search_factory(test, self.test_factory):
                     self.test_factory.append(test)
                     print("add %s test %s" % (test[NAME],
                                               test[DEVICE].get_name()))
         self.test_factory.sort(key=lambda k: k[NAME])
         FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
 
-    def search_factory(self, obj_test, test_factory):
+    @staticmethod
+    def recovery_pci():
+        """
+        recovery the system PCI file
+        """
+        copyfile = CertEnv.pcifile + ".copy"
+        if os.path.exists(CertEnv.pcifile) and \
+                os.path.exists(copyfile):
+            os.remove(CertEnv.pcifile)
+            shutil.move(copyfile, CertEnv.pcifile)
+
+    @staticmethod
+    def _search_factory(obj_test, test_factory):
         """
         Determine whether test exists by searching test_factory
         :param obj_test:
@@ -494,3 +516,24 @@ class EulerCertification():
                     test[DEVICE].path == obj_test[DEVICE].path:
                 return True
         return False
+
+    @staticmethod
+    def _print_tests(device):
+        """
+        print board information
+        """
+        print("%-6d" % device.num + device.run.ljust(8)
+              + "\033[0;3%sm%s  \033[0m" % (device.color, device.status.ljust(8))
+              + device.name.ljust(14) + device.device.ljust(15) + device.driver.ljust(15)
+              + device.version.ljust(18) + device.chip.ljust(20) + device.board)
+
+    @staticmethod
+    def _copy_pci():
+        """
+        copy the PCI file if it exists
+        """
+        if os.path.exists(CertEnv.pcifile) and \
+                not filecmp.cmp(CertEnv.oechpcifile, CertEnv.pcifile):
+            copyfile = CertEnv.pcifile + ".copy"
+            shutil.move(CertEnv.pcifile, copyfile)
+            shutil.copy(CertEnv.oechpcifile, CertEnv.pcifile)

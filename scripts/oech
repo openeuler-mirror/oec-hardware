@@ -26,6 +26,7 @@ os.putenv("PYTHONPATH", "/usr/share/oech/lib/")
 from hwcompatible.compatibility import EulerCertification
 from hwcompatible.env import CertEnv
 
+
 class CertLock:
     """
     certlock
@@ -39,7 +40,7 @@ class CertLock:
         acquire
         """
         try:
-            fcntl.flock(self.fd_obj, fcntl.LOCK_EX|fcntl.LOCK_NB)
+            fcntl.flock(self.fd_obj, fcntl.LOCK_EX | fcntl.LOCK_NB)
             return True
         except IOError:
             return False
@@ -90,8 +91,10 @@ if __name__ == '__main__':
         print("%s %s" % (name, version))
     else:
         if not cert.run():
+            cert.recovery_pci()
             lock.release()
             sys.exit(1)
+        cert.recovery_pci()
 
     lock.release()
     sys.exit(0)
