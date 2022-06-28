@@ -265,10 +265,6 @@ class EulerCertification():
                      "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
                 sort_devices[USB] = [empty_device]
                 continue
-            if device.get_property("PCI_CLASS") == "30000" or \
-                    device.get_property("PCI_CLASS") == "38000":
-                sort_devices[VIDEO] = [device]
-                continue
             if (device.get_property("DEVTYPE") == DISK and
                 not device.get_property("ID_TYPE")) or \
                     device.get_property("ID_TYPE") == DISK:
