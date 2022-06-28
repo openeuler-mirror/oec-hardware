@@ -31,3 +31,5 @@ class CertEnv:
     resultdirectoy = "/usr/share/oech/lib/server/results"
     kernelinfo = "/usr/share/oech/kernelrelease.json"
     versionfile = "/usr/share/oech/lib/config/version.config"
+    pcifile = "/usr/share/hwdata/pci.ids"
+    oechpcifile = "/usr/share/oech/lib/config/pci.ids"

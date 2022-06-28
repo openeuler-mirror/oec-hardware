@@ -18,6 +18,7 @@ all: ;
 install:
 	mkdir -p $(DESTDIR)$(HWCERT_CLASS_LIB)/config
 	cp version.config $(DESTDIR)$(HWCERT_CLASS_LIB)/config/
+	cp pci.ids $(DESTDIR)$(HWCERT_CLASS_LIB)/config/
 
 clean:
 	rm -rf $(DESTDIR)$(HWCERT_CLASS_LIB)/config

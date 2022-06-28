@@ -17,7 +17,6 @@
 import os
 import sys
 import shutil
-import re
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
@@ -33,40 +32,40 @@ class FCTest(Test):
         Test.__init__(self)
         self.disks = list()
         self.filesystems = ["ext4"]
+        self.args = None
         self.com_ui = CommandUI()
         self.logpath = ""
         self.name = ""
+        self.device = ""
+        self.pci_num = ""
 
     def setup(self, args=None):
         """
         The Setup before testing
         :return:
         """
-        try:
-            self.args = args or argparse.Namespace()
-            self.device = getattr(self.args, 'device', None)
-            self.pci_num = self.device.get_property("DEVPATH").split('/')[-1]
-            self.name = re.search(r'.*\((\S+)', self.device.get_property("ID_MODEL_FROM_DATABASE")).group(1)
-            self.logpath = getattr(args, "logdir", None) + "/fibrechannel-" + self.name + ".log"
-            os.system("echo Vendor Info: >> %s" % self.logpath)
-            Command("lspci -s %s -v &>> %s " % (self.pci_num, self.logpath)).echo()
-            os.system("echo Disk Info: >> %s" % self.logpath)
-            Command("fdisk -l &>> %s" % self.logpath).echo(ignore_errors=True)
-            os.system("echo Partition Info: >> %s" % self.logpath)
-            Command("df -h &>> %s" % self.logpath).echo(ignore_errors=True)
-            os.system("echo Mount Info: >> %s" % self.logpath)
-            Command("mount &>> %s" % self.logpath).echo(ignore_errors=True)
-            os.system("echo Swap Info: >> %s" % self.logpath)
-            Command("cat /proc/swaps &>> %s" % self.logpath).echo(ignore_errors=True)
-            os.system("echo LVM Info: >> %s" % self.logpath)
-            Command("pvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
-            Command("vgdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
-            Command("lvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
-            os.system("echo Md Info: >> %s" % self.logpath)
-            Command("cat /proc/mdstat &>> %s" % self.logpath).echo(ignore_errors=True)
-            sys.stdout.flush()
-        except Exception as concrete_error:
-            print("Warning: could not get disk array info.\n", concrete_error)
+        self.args = args or argparse.Namespace()
+        self.device = getattr(self.args, 'device', None)
+        self.pci_num = self.device.get_property("DEVPATH").split('/')[-1]
+        self.name = self.device.get_name()
+        self.logpath = os.path.join(getattr(args, "logdir", None), "fc-" + self.name + ".log")
+        os.system("echo Vendor Info: >> %s" % self.logpath)
+        Command("lspci -s %s -v &>> %s " % (self.pci_num, self.logpath)).echo(ignore_errors=True)
+        os.system("echo Disk Info: >> %s" % self.logpath)
+        Command("fdisk -l &>> %s" % self.logpath).echo(ignore_errors=True)
+        os.system("echo Partition Info: >> %s" % self.logpath)
+        Command("df -h &>> %s" % self.logpath).echo(ignore_errors=True)
+        os.system("echo Mount Info: >> %s" % self.logpath)
+        Command("mount &>> %s" % self.logpath).echo(ignore_errors=True)
+        os.system("echo Swap Info: >> %s" % self.logpath)
+        Command("cat /proc/swaps &>> %s" % self.logpath).echo(ignore_errors=True)
+        os.system("echo LVM Info: >> %s" % self.logpath)
+        Command("pvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
+        Command("vgdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
+        Command("lvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
+        os.system("echo Md Info: >> %s" % self.logpath)
+        Command("cat /proc/mdstat &>> %s" % self.logpath).echo(ignore_errors=True)
+        sys.stdout.flush()
 
     def test(self):
         """
@@ -109,7 +108,7 @@ class FCTest(Test):
         partition = partition_file.read()
         partition_file.close()
 
-        os.system("swapon -a 2>/dev/null")
+        os.system("/usr/sbin/swapon -a 2> /dev/null")
         swap_file = open("/proc/swaps", "r")
         swap = swap_file.read()
         swap_file.close()
@@ -145,12 +144,12 @@ class FCTest(Test):
         """
         print("\n#############")
         print("%s raw IO test" % disk)
-        device = "/dev/" + disk
+        device = os.path.join("/dev", disk)
         if not os.path.exists(device):
             print("Error: device %s not exists." % device)
-        proc_path = "/sys/block/" + disk
+        proc_path = os.path.join("/sys/block/", disk)
         if not os.path.exists(proc_path):
-            proc_path = "/sys/block/*/" + disk
+            proc_path = os.path.join("/sys/block/*/", disk)
         size = Command("cat %s/size" % proc_path).get_str()
         size = int(size) / 2
         if size <= 0:
@@ -183,12 +182,12 @@ class FCTest(Test):
         """
         print("\n#############")
         print("%s vfs test" % disk)
-        device = "/dev/" + disk
+        device = os.path.join("/dev/", disk)
         if not os.path.exists(device):
             print("Error: device %s not exists." % device)
-        proc_path = "/sys/block/" + disk
+        proc_path = os.path.join("/sys/block/", disk)
         if not os.path.exists(proc_path):
-            proc_path = "/sys/block/*/" + disk
+            proc_path = os.path.join("/sys/block/*/", disk)
         size = Command("cat %s/size" % proc_path).get_str()
         size = int(size) / 2 / 2
         if size <= 0:
@@ -204,25 +203,19 @@ class FCTest(Test):
 
         return_code = True
         for file_sys in self.filesystems:
-            try:
-                print("\nFormatting %s to %s ..." % (device, file_sys))
-                Command("umount %s" % device).echo(ignore_errors=True)
-                Command("mkfs -t %s -F %s 2>/dev/null" % (file_sys, device)).echo()
-                Command("mount -t %s %s %s" % (file_sys, device, "vfs_test")).echo()
+            print("\nFormatting %s to %s ..." % (device, file_sys))
+            Command("umount %s" % device).echo(ignore_errors=True)
+            Command("mkfs -t %s -F %s 2>/dev/null" % (file_sys, device)).echo(ignore_errors=True)
+            Command("mount -t %s %s %s" % (file_sys, device, "vfs_test")).echo(ignore_errors=True)
+            print("\nStarting sequential vfs IO test...")
+            opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -name=directoy -runtime=300"
+            if not self.do_fio(path, size, opts):
+                return_code = False
+                break
 
-                print("\nStarting sequential vfs IO test...")
-                opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -name=directoy -runtime=300"
-                if not self.do_fio(path, size, opts):
-                    return_code = False
-                    break
-
-                print("\nStarting rand vfs IO test...")
-                opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -name=directoy -runtime=300"
-                if not self.do_fio(path, size, opts):
-                    return_code = False
-                    break
-            except Exception as concrete_error:
-                print("concrete_error:", concrete_error)
+            print("\nStarting rand vfs IO test...")
+            opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -name=directoy -runtime=300"
+            if not self.do_fio(path, size, opts):
                 return_code = False
                 break
 
