@@ -4,22 +4,12 @@
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
-Version:        1.0.0
-Release:        8
+Version:        1.1.0
+Release:        0
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{version}.tar.gz
-
-#PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware-1.0.0 project
-Patch0001:      oec-hardware-1.0.0-system.patch
-
-#PATCH-FIX-https://gitee.com/src-openEuler/ patch from oec-hardware-1.0.0 project
-Patch0002:      oec-hardware-1.0.0-delete-tape.patch
-
-Patch0003:      oec-hardware-1.0.0-fix-cdrom.patch
-Patch0004:      oec-hardware-1.0.0-fix-cpufreq.patch
-Patch0005:      oec-hardware-1.0.0-optimization.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -42,10 +32,6 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
 
 %build
 
@@ -70,6 +56,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 /usr/share/oech/kernelrelease.json
 /usr/share/oech/lib/hwcompatible
 /usr/share/oech/lib/tests
+/usr/share/oech/lib/config
 /usr/lib/systemd/system/oech.service
 %dir /var/oech
 %dir /usr/share/oech/lib
@@ -77,15 +64,20 @@ DESTDIR=$RPM_BUILD_ROOT make install
 
 %files server
 %defattr(-,root,root)
+/usr/bin/oech-server
 /usr/share/oech/lib/server
-/usr/share/oech/lib/server/uwsgi.ini
-/usr/share/oech/lib/server/uwsgi.conf
+/usr/share/oech/lib/config
 /usr/lib/systemd/system/oech-server.service
 
 %postun
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Mon May 30 2022 meitingli <bubble_mt@outlook.com> - 1.1.0-0
+- 1. Add support os version: openEuler 22.03LTS
+- 2. Add FC/RAID/keycard/GPU/infiniband testcases
+- 3. Bugfix
+
 * Thu Sep 09 2021 Cui XuCui <cuixucui1@huawei.com> - 1.0.0-8
 * Thu Jul 15 2021 zhangzikang <zhangzikang@kylinos.cn> - 1.0.0-7
 - Fix cdrom and cpufreq test failed
