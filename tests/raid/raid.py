@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright (c) 2022 Huawei Technologies Co., Ltd.
@@ -20,7 +20,7 @@ import shutil
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
-from hwcompatible.commandUI import CommandUI
+from hwcompatible.command_ui import CommandUI
 from hwcompatible.device import Device
 
 

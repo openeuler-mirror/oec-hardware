@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright (c) 2020 Huawei Technologies Co., Ltd.
@@ -16,18 +16,15 @@
 
 import os
 import base64
-try:
-    from urllib.parse import urlencode
-    from urllib.request import urlopen, Request
-except ImportError:
-    from urllib import urlencode
-    from urllib2 import urlopen, Request
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
 
 
 class Client:
     """
     upload client
     """
+
     def __init__(self, host, oec_id):
         self.host = host
         self.oec_id = oec_id
@@ -50,7 +47,8 @@ class Client:
             return False
 
         if not self.host or not self.oec_id:
-            print("Missing host({0}) or id({1})".format(self.host, self.oec_id))
+            print("Missing host({0}) or id({1})".format(
+                self.host, self.oec_id))
             return False
         self.form['host'] = self.host
         self.form['id'] = self.oec_id
@@ -80,4 +78,3 @@ if __name__ == '__main__':
     import sys
     file_name = sys.argv[1]
     c.upload(file_name)
-

@@ -110,7 +110,7 @@ oec-hardware-1.0.0 版本将不再进行更新维护，请获取最新版本的o
 │   ├── compatibility.py  框架核心功能
 │   ├── client.py         上传测试结果到服务端
 │   ├── command.py        bash命令执行封装
-│   ├── commandUI.py      命令行交互工具
+│   ├── command_ui.py      命令行交互工具
 │   ├── device.py         扫描设备信息
 │   ├── document.py       收集配置信息
 │   ├── env.py            全局变量，主要是各个配置文件或目录的路径
