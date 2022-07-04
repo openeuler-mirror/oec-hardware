@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright (c) 2020 Huawei Technologies Co., Ltd.
@@ -114,7 +114,7 @@ class Command:
                 sys.stderr.write("\n")
             sys.stderr.flush()
 
-    def pid(self):
+    def get_pid(self):
         """
         Get pipe pid
         :return:
@@ -175,7 +175,7 @@ class Command:
                                "expression %s" % self.regex)
 
     def _get_str_multi_line(self, result, pattern, return_list):
-        if self.output == None:
+        if self.output is None:
             return None
 
         for line in self.output:
@@ -189,7 +189,7 @@ class Command:
             else:
                 # otherwise, return the matching line
                 match = pattern.search(line)
-                if match == None:
+                if match is None:
                     continue
                 if return_list:
                     result.append(match.group())
@@ -234,6 +234,7 @@ class CertCommandError(Exception):
     """
     Cert command error handling
     """
+
     def __init__(self, command, message):
         Exception.__init__(self)
         self.message = message
@@ -248,5 +249,6 @@ class CertCommandError(Exception):
 
     def _set_message(self, value):
         self.__message = value
-    message = property(_get_message, _set_message)
 
+    def print_errors(self):
+        self.command.print_errors()

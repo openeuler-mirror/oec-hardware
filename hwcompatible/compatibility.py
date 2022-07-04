@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright (c) 2020 Huawei Technologies Co., Ltd.
@@ -25,7 +25,7 @@ from .document import CertDocument, DeviceDocument, FactoryDocument
 from .env import CertEnv
 from .device import CertDevice, Device
 from .command import Command, CertCommandError
-from .commandUI import CommandUI
+from .command_ui import CommandUI
 from .job import Job
 from .reboot import Reboot
 from .client import Client

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 # Copyright (c) 2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.gica's
@@ -19,7 +19,7 @@ import subprocess
 
 from hwcompatible.command import Command, CertCommandError
 from hwcompatible.test import Test
-from hwcompatible.commandUI import CommandUI
+from hwcompatible.command_ui import CommandUI
 
 keycard_dir = os.path.dirname(os.path.realpath(__file__))
 

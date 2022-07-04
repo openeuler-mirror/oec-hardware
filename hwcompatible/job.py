@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright (c) 2020 Huawei Technologies Co., Ltd.
@@ -23,7 +23,7 @@ import argparse
 from .test import Test
 from .env import CertEnv
 from .command import Command, CertCommandError
-from .commandUI import CommandUI
+from .command_ui import CommandUI
 from .log import Logger
 from .reboot import Reboot
 from .constants import *

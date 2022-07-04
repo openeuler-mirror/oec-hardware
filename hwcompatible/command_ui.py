@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright (c) 2020 Huawei Technologies Co., Ltd.
@@ -14,7 +14,9 @@
 
 import sys
 import readline
+from builtins import input
 from .constants import SAMEASYES, YES, SAMEASNO, NO
+
 
 class CommandUI:
     """
@@ -24,6 +26,7 @@ class CommandUI:
     def __init__(self, echoResponses=False):
         self.echo = echoResponses
 
+    @staticmethod
     def print_pipe(self, pipe):
         """
         print pipe data
@@ -95,6 +98,7 @@ class CommandUI:
                 return False
             sys.stdout.write("Please reply %s or %s.\n" % (YES, NO))
 
+    @staticmethod
     def prompt_edit(self, label, value, choices=None):
         """
         prompt choice edit
@@ -111,10 +115,6 @@ class CommandUI:
             label += ") "
         while True:
             readline.set_startup_hook(lambda: readline.insert_text(value))
-            try:
-                input = raw_input
-            except NameError:
-                from builtins import input
 
             try:
                 reply = input(label).strip()
@@ -124,4 +124,3 @@ class CommandUI:
                       "following: %s" % " | ".join(choices))
             finally:
                 readline.set_startup_hook()
-
