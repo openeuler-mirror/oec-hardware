@@ -77,19 +77,17 @@ class SystemTest(Test):
         :return:
         """
         print("\nChecking installed cert package...")
-        return_code = True
         for cert_package in ["oec-hardware"]:
             rpm_verify = Command(
-                "rpm -V --nomtime --nomode --nocontexts %s &>> %s" % (cert_package, self.logpath))
-            try:
-                rpm_verify.echo()
-                sys.stdout.flush()
-                if rpm_verify.output and len(rpm_verify.output) > 0:
-                    return_code = False
-            except Exception:
+                    "rpm -V --nomtime --nomode --nocontexts %s" % cert_package)
+            rpm_verify.echo(ignore_errors=True)
+            output = rpm_verify.read().split('\n')
+            if len(output) > 0 and output[0] != "":
+                if len(output) == 1 and "test_config.yaml" in output[0]:
+                    return True
                 print("Error: files in %s have been tampered." % cert_package)
-                return_code = False
-        return return_code
+                return False
+        return True
 
     def check_kernel(self):
         """

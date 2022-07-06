@@ -17,11 +17,10 @@
 import os
 import sys
 import shutil
+import argparse
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
-from hwcompatible.command_ui import CommandUI
-from hwcompatible.device import Device
 
 
 class RaidTest(Test):
@@ -34,11 +33,11 @@ class RaidTest(Test):
         self.disks = list()
         self.filesystems = ["ext4"]
         self.args = None
-        self.com_ui = CommandUI()
         self.logpath = ""
         self.name = ""
         self.device = ""
         self.pci_num = ""
+        self.config_data = dict()
 
     def setup(self, args=None):
         """
@@ -48,8 +47,9 @@ class RaidTest(Test):
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.pci_num = self.device.get_property("DEVPATH").split('/')[-1]
+        self.config_data = getattr(self.args, "config_data", None)
         self.name = self.device.get_name()
-        self.logpath = os.path.join(getattr(args, "logdir", None), "raid-" + self.name + ".log")
+        self.logpath = os.path.join(getattr(self.args, "logdir", None), "raid-" + self.name + ".log")
         os.system("echo Vendor Info: >> %s" % self.logpath)
         Command("lspci -s %s -v &>> %s " % (self.pci_num, self.logpath)).echo(ignore_errors=True)
         os.system("echo Disk Info: >> %s" % self.logpath)
@@ -77,12 +77,17 @@ class RaidTest(Test):
             print("No suite disk found to test.")
             return False
 
-        self.disks.append("all")
-        disk = self.com_ui.prompt_edit("Which disk would you like to test: ",
-                                       self.disks[0], self.disks)
+        if not self.config_data:
+            print("Failed to get disk from configuration file.")
+            return False
+        disk = self.config_data.get('disk', '')
+        result = self.valid_disk(disk, self.disks)
+        if not result:
+            return False
+
         return_code = True
         if disk == "all":
-            for disk in self.disks[:-1]:
+            for disk in self.disks:
                 if not self.raw_test(disk):
                     return_code = False
                 if not self.vfs_test(disk):

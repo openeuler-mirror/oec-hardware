@@ -22,6 +22,7 @@ from hwcompatible.env import CertEnv
 from hwcompatible.document import CertDocument
 from rdma import RDMATest
 
+
 class EthernetTest(RDMATest):
     """
     Ethernet Test
@@ -32,6 +33,8 @@ class EthernetTest(RDMATest):
         self.args = None
         self.cert = None
         self.device = None
+        self.config_data = dict()
+        self.server_ip = ""
         self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
                          self.test_udp_tcp, self.test_http]
         self.target_bandwidth_percent = 0.75
@@ -56,12 +59,14 @@ class EthernetTest(RDMATest):
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
-        self.cert = CertDocument(CertEnv.certificationfile)
-        self.server_ip = self.cert.get_server()
+        self.config_data = getattr(args, "config_data", None)
+        if self.config_data:
+            self.server_ip = self.config_data.get("server_ip")
+            choice = self.config_data.get("if_rdma")
+        else:
+            print("Failed to test item value from configuration file.")
 
         if self.is_RoCE():
-            choice = input("[!] RoCE interface found. "
-                           "Run RDMA tests instead? [y/N] ")
             if choice.lower() != "y":
                 return
 
@@ -75,4 +80,7 @@ class EthernetTest(RDMATest):
         Test case
         :return:
         """
+        if not self.server_ip:
+            print("Failed to get server ip from configuration file.")
+            return False
         return self.tests()

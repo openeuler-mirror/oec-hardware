@@ -17,11 +17,27 @@ class Test:
     """
     Test set template
     """
+
     def __init__(self):
         self.pri = 0
         self.requirements = list()
         self.reboot = False
         self.rebootup = None
+
+    @staticmethod
+    def valid_disk(disk, disks):
+        """
+        Is the disk valid
+        """
+        result = True
+        if disk:
+            if disk != "all" and disk not in disks:
+                print("%s is in use or disk does not exist." % disk)
+                result = False
+        else:
+            print("Failed to get disk information.")
+            result = False
+        return result
 
     def setup(self, args=None):
         """
