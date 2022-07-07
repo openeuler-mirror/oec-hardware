@@ -27,7 +27,7 @@ class CommandUI:
         self.echo = echoResponses
 
     @staticmethod
-    def print_pipe(self, pipe):
+    def print_pipe(pipe):
         """
         print pipe data
         :param pipe:
@@ -99,7 +99,7 @@ class CommandUI:
             sys.stdout.write("Please reply %s or %s.\n" % (YES, NO))
 
     @staticmethod
-    def prompt_edit(self, label, value, choices=None):
+    def prompt_edit(label, value, choices=None):
         """
         prompt choice edit
         :param label:
