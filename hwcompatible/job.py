@@ -19,6 +19,7 @@ import sys
 import string
 import random
 import argparse
+import yaml
 
 from .test import Test
 from .env import CertEnv
@@ -50,6 +51,7 @@ class Job():
         self.subtests_filter = getattr(args, "subtests_filter", None)
         self.logpath = CertEnv.logdirectoy +"/" + self.job_id+"/job.log"
         self.test_parameters = None
+        self.config_info = {}
         if "test_parameters" in self.args:
             self.test_parameters = {}
             for parameter_name, parameter_value in self.args.test_parameters:
@@ -156,54 +158,6 @@ class Job():
 
         return True
 
-    def _run_test(self, testcase, subtests_filter=None):
-        """
-        Start a testing item
-        :param testcase:
-        :param subtests_filter:
-        :return:
-        """
-        name = testcase[NAME]
-        if testcase[DEVICE].get_name():
-            name = testcase[NAME] + "-" + testcase[DEVICE].get_name()
-        logname = name + ".log"
-        reboot = None
-        test = None
-        logger = None
-        global CURRENT_NUM
-        try:
-            test = testcase[TEST]
-            logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
-            logger.start()
-            if subtests_filter:
-                return_code = getattr(test, subtests_filter)()
-            else:
-                CURRENT_NUM += 1
-                print("Start to run %s/%s test suite: %s." %
-                      (CURRENT_NUM, TOTAL_COUNT, name))
-                args = argparse.Namespace(
-                    device=testcase[DEVICE], logdir=logger.log.dir, testname=name)
-                test.setup(args)
-                if test.reboot:
-                    reboot = Reboot(testcase[NAME], self, test.rebootup)
-                    return_code = False
-                    if reboot.setup():
-                        return_code = test.test()
-                else:
-                    return_code = test.test()
-        except Exception as concrete_error:
-            print(concrete_error)
-            return_code = False
-
-        if reboot:
-            reboot.clean()
-        if not subtests_filter:
-            test.teardown()
-        logger.stop()
-        print("End to run %s/%s test suite: %s." %
-                      (CURRENT_NUM, TOTAL_COUNT, name))
-        return return_code
-
     def run_tests(self, subtests_filter=None):
         """
         Start testing
@@ -214,9 +168,11 @@ class Job():
             print("No test to run.")
             return
 
+        self.get_config()
         self.test_suite.sort(key=lambda k: k[TEST].pri)
         for testcase in self.test_suite:
-            if self._run_test(testcase, subtests_filter):
+            config_data = self.get_device(testcase)
+            if self._run_test(testcase, config_data, subtests_filter):
                 testcase[STATUS] = PASS
             else:
                 testcase[STATUS] = FAIL
@@ -264,3 +220,78 @@ class Job():
                 if test[NAME] == testcase[NAME] and test[DEVICE].path == \
                         testcase[DEVICE].path:
                     test[STATUS] = testcase[STATUS]
+
+    def get_config(self):
+        """
+        get configuration file
+        """
+        yaml_file = CertEnv.configfile
+        if os.path.exists(yaml_file):
+            with open(yaml_file, 'r', encoding="utf-8") as file:
+                file_data = file.read()
+                self.config_info = yaml.safe_load(file_data)
+        else:
+            print("Failed to get configuration file information.")
+
+    def get_device(self, testcase):
+        """
+        Get the board configuration information to be tested
+        """
+        types = testcase[NAME]
+        device_name = testcase[DEVICE].get_name()
+        if types == DISK:
+            return self.config_info.get(DISK)
+        if device_name:
+            for device in self.config_info.get(types).values():
+                if device.get(DEVICE) == device_name:
+                    return device
+        return None
+
+    def _run_test(self, testcase, config_data, subtests_filter=None):
+        """
+        Start a testing item
+        :param testcase:
+        :param subtests_filter:
+        :return:
+        """
+        name = testcase[NAME]
+        if testcase[DEVICE].get_name():
+            name = testcase[NAME] + "-" + testcase[DEVICE].get_name()
+        logname = name + ".log"
+        reboot = None
+        test = None
+        logger = None
+        global CURRENT_NUM
+        try:
+            test = testcase[TEST]
+            logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
+            logger.start()
+            if subtests_filter:
+                return_code = getattr(test, subtests_filter)()
+            else:
+                CURRENT_NUM += 1
+                print("Start to run %s/%s test suite: %s." %
+                      (CURRENT_NUM, TOTAL_COUNT, name))
+                args = argparse.Namespace(
+                    device=testcase[DEVICE], logdir=logger.log.dir,
+                    config_data=config_data, testname=name)
+                test.setup(args)
+                if test.reboot:
+                    reboot = Reboot(testcase[NAME], self, test.rebootup)
+                    return_code = False
+                    if reboot.setup():
+                        return_code = test.test()
+                else:
+                    return_code = test.test()
+        except Exception as concrete_error:
+            print(concrete_error)
+            return_code = False
+
+        if reboot:
+            reboot.clean()
+        if not subtests_filter:
+            test.teardown()
+        logger.stop()
+        print("End to run %s/%s test suite: %s." %
+              (CURRENT_NUM, TOTAL_COUNT, name))
+        return return_code

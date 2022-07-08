@@ -13,11 +13,9 @@
 # Create: 2022-05-23
 
 """InfiniBand Test"""
-
-from builtins import input
-from hwcompatible.document import CertDocument
-from hwcompatible.env import CertEnv
+import argparse
 from rdma import RDMATest
+
 
 class InfiniBandTest(RDMATest):
     """
@@ -30,6 +28,8 @@ class InfiniBandTest(RDMATest):
                          self.test_icmp, self.test_rdma]
         self.speed = 56000   # Mb/s
         self.target_bandwidth_percent = 0.5
+        self.config_data = dict()
+        self.server_ip = ""
 
     def test_ib_link(self):
         """
@@ -63,17 +63,20 @@ class InfiniBandTest(RDMATest):
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
-
-        self.cert = CertDocument(CertEnv.certificationfile)
-        self.server_ip = self.cert.get_server()
+        self.config_data = getattr(self.args, "config_data", None)
+        if self.config_data:
+            self.server_ip = self.config_data.get("server_ip", "")
+        else:
+            print("Failed to test item value from configuration file.")
     
     def test(self):
         """
         test case
         :return:
         """
-        message = "Please enter the IP of InfiniBand interface on remote server: (default %s)\n> " % self.server_ip
-        self.server_ip = input(message) or self.server_ip
+        if not self.server_ip:
+            print("Failed to get server ip from configuration file.")
+            return False
 
         for subtest in self.subtests:
             if not subtest():

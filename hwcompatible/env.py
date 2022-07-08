@@ -33,3 +33,4 @@ class CertEnv:
     versionfile = "/usr/share/oech/lib/config/version.config"
     pcifile = "/usr/share/hwdata/pci.ids"
     oechpcifile = "/usr/share/oech/lib/config/pci.ids"
+    configfile = "/usr/share/oech/lib/config/test_config.yaml"

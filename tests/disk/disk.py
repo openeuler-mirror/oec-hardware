@@ -18,11 +18,12 @@
 import os
 import sys
 import shutil
+import argparse
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command, CertCommandError
-from hwcompatible.command_ui import CommandUI
+from hwcompatible.command import Command
 from hwcompatible.device import CertDevice
+
 
 class DiskTest(Test):
     """
@@ -33,8 +34,9 @@ class DiskTest(Test):
         Test.__init__(self)
         self.disks = list()
         self.filesystems = ["ext4"]
-        self.com_ui = CommandUI()
         self.logpath = ""
+        self.config_data = ""
+        self.args = None
 
     def setup(self, args=None):
         """
@@ -43,7 +45,8 @@ class DiskTest(Test):
         """
         try:
             self.args = args or argparse.Namespace()
-            self.logpath = getattr(args, "logdir", None) + "/disk.log"
+            self.config_data = getattr(self.args, "config_data", None)
+            self.logpath = os.path.join(getattr(self.args, "logdir", None) + "disk.log")
             os.system("echo 'Disk Info: ' >> %s" % self.logpath)
             Command("fdisk -l &>> %s" % self.logpath).echo(ignore_errors=True)
             os.system("echo 'Partition Info: ' >> %s" % self.logpath)
@@ -73,12 +76,17 @@ class DiskTest(Test):
             print("No suite disk found to test.")
             return False
 
-        self.disks.append("all")
-        disk = self.com_ui.prompt_edit("Which disk would you like to test: ",
-                                       self.disks[0], self.disks)
+        if not self.config_data:
+            print("Failed to get disk from configuration file.")
+            return False
+        disk = self.config_data
+        result = self.valid_disk(disk, self.disks)
+        if not result:
+            return False
+
         return_code = True
         if disk == "all":
-            for disk in self.disks[:-1]:
+            for disk in self.disks:
                 if not self.raw_test(disk):
                     return_code = False
                 if not self.vfs_test(disk):
