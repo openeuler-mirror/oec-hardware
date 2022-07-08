@@ -5,11 +5,14 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.0
-Release:        0
+Release:        1
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{version}.tar.gz
+
+# patch fix issue
+Patch0001:      oec-hardware-1.1.0-fix-msg.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -32,6 +35,7 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
+%patch1 -p1
 
 %build
 
@@ -73,6 +77,9 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Fri Jul 08 2022 meitingli <bubble_mt@outlook.com> - 1.1.0-1
+- Fix oech.server message display, change python version to python3
+
 * Mon May 30 2022 meitingli <bubble_mt@outlook.com> - 1.1.0-0
 - 1. Add support os version: openEuler 22.03LTS
 - 2. Add FC/RAID/keycard/GPU/infiniband testcases
