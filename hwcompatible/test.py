@@ -13,6 +13,13 @@
 # Create: 2020-04-01
 # Desc: Test template
 
+import os
+import sys
+
+from .device import Device
+from .command import Command
+
+
 class Test:
     """
     Test set template
@@ -44,6 +51,18 @@ class Test:
         setup
         """
         pass
+
+    def show_driver_info(self):
+        """
+        show driver name and driver version
+        """
+        driver_name = self.device.get_driver()
+        driver_version = self.device.get_driver_version()
+        Command("echo Driver Name: %s >> %s" % (driver_name, self.logpath)).echo()
+        if not driver_version:
+            print("The driver version information cannot be obtained. Please view it manually.")
+        else:
+            Command("echo Driver Version: %s >> %s" % (driver_version, self.logpath)).echo()
 
     def teardown(self):
         """

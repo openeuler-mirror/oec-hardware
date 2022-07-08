@@ -39,6 +39,7 @@ class NvmeTest(Test):
         """
         self.args = args or argparse.Namespace()
         self.device = getattr(args, "device", None)
+        self.show_driver_info()
         Command("nvme list").echo(ignore_errors=True)
 
     def test(self):
