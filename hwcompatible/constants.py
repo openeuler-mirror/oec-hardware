@@ -1,27 +1,23 @@
-# -*- encoding=utf-8 -*-
-"""
-# **********************************************************************************
-# Copyright (c) Huawei Technologies Co., Ltd. 2021-2021. All rights reserved.
-# [oecp] is licensed under the Mulan PSL v1.
-# You can use this software according to the terms and conditions of the Mulan PSL v1.
-# You may obtain a copy of Mulan PSL v1 at:
-#     http://license.coscl.org.cn/MulanPSL
+#!/usr/bin/env python3
+# coding: utf-8
+
+# Copyright (c) 2022 Huawei Technologies Co., Ltd.
+# oec-hardware is licensed under the Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+#     http://license.coscl.org.cn/MulanPSL2
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
 # PURPOSE.
-# See the Mulan PSL v1 for more details.
-# Author: meitingli
-# Create: 2021-03-01
-# Description: save constants objects
-# **********************************************************************************
-"""
+# See the Mulan PSL v2 for more details.
+# Author: @meitingli
+# Create: 2022-03-01
 
-TOTAL_COUNT = 0
-CURRENT_NUM = 0
+
 YES = "y"
-SAMEASYES = ["y", "yes"]
+SAMEASYES = ("y", "yes")
 NO = "n"
-SAMEASNO = ["n", "no"]
+SAMEASNO = ("n", "no")
 TEST = "test"
 PASS = "PASS"
 FAIL = "FAIL"
@@ -47,10 +43,10 @@ STATUS = "status"
 REBOOT = "reboot"
 SYSTEM = "system"
 
-NODEVICE = ["cpufreq", "memory", "clock", "profiler", "system",
-            "stress", "kdump", "perf", "acpi", "watchdog", "kabi"]
-CDTYPES = ["DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
-           "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD"]
+NODEVICE = ("cpufreq", "memory", "clock", "profiler", "system",
+            "stress", "kdump", "perf", "acpi", "watchdog", "kabi")
+CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
+           "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD")
 SUBSYSTEM = "SUBSYSTEM"
 PCI_CLASS = "PCI_CLASS"
 USB = "usb"
@@ -66,9 +62,9 @@ FC = "fc"
 RAID = "raid"
 GPU = "gpu"
 NVME = "nvme"
-GPU_DRIVER = ["nouveau", "nvidia", "bi_driver", "amdgpu"]
+GPU_DRIVER = ("nouveau", "nvidia", "bi_driver", "amdgpu")
 KEYCARD = "keycard"
-KEYCARD_VENDORS = ['Xilinx', 'Renesas', 'Texas', 'PLX']
+KEYCARD_VENDORS = ('Xilinx', 'Renesas', 'Texas', 'PLX')
 IB = "infiniband"
 DEVICE_INFO = ('color', 'status', 'num', 'run', 'name',
                'device', 'driver', 'version', 'chip', 'board')

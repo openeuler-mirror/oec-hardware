@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -18,7 +18,7 @@ import datetime
 
 from .document import Document, FactoryDocument
 from .env import CertEnv
-from .command import Command, CertCommandError
+from .command import Command
 from .constants import *
 
 
@@ -90,7 +90,7 @@ class Reboot:
         """
         doc = Document(CertEnv.rebootfile)
         if not doc.load():
-            print("Error: reboot file load fail.")
+            print("Warning: reboot file doesn't exist.")
             return False
 
         try:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -13,13 +13,13 @@
 # Create: 2020-04-01
 
 import os
+import sys
 import time
 import argparse
 import shutil
 import datetime
 import re
 from collections import namedtuple
-import filecmp
 
 from .document import CertDocument, DeviceDocument, FactoryDocument
 from .env import CertEnv
@@ -30,6 +30,7 @@ from .job import Job
 from .reboot import Reboot
 from .client import Client
 from .constants import *
+from .common import create_test_suite, copy_pci, search_factory
 
 
 class EulerCertification():
@@ -37,21 +38,23 @@ class EulerCertification():
     Main program of oec-hardware
     """
 
-    def __init__(self):
+    def __init__(self, logger):
         self.certification = None
         self.test_factory = list()
         self.devices = None
         self.ui = CommandUI()
         self.client = None
         self.dir_name = None
+        self.logger = logger
 
     def run(self):
         """
         Openeuler compatibility verification
         :return:
         """
-        print("The openEuler Hardware Compatibility Test Suite")
-        self._copy_pci()
+        self.logger.info(
+            "The openEuler Hardware Compatibility Test Suite", log_print=False)
+        copy_pci()
         self.load()
         certdevice = CertDevice()
 
@@ -59,7 +62,7 @@ class EulerCertification():
             self.submit()
 
             if self.check_result():
-                print("All cases are passed, test end.")
+                self.logger.info("All cases are passed, test end.")
                 return True
 
             oec_devices = certdevice.get_devices()
@@ -70,7 +73,9 @@ class EulerCertification():
             if not self.choose_tests():
                 return True
 
-            args = argparse.Namespace(test_factory=self.test_factory)
+            test_suite = create_test_suite(self.test_factory, self.logger)
+            args = argparse.Namespace(
+                test_factory=self.test_factory, test_suite=test_suite)
             job = Job(args)
             job.run()
             self.save(job)
@@ -91,7 +96,7 @@ class EulerCertification():
             self.save(job)
             return True
         except Exception as e:
-            print(e)
+            self.logger.error("Run reboot up failed. %s" % e)
             return False
 
     def clean(self):
@@ -101,13 +106,13 @@ class EulerCertification():
         """
         if self.ui.prompt_confirm("Are you sure to clean all "
                                   "compatibility test data?"):
-            try:
-                Command("rm -rf %s" % CertEnv.certificationfile).run_quiet()
-                Command("rm -rf %s" % CertEnv.factoryfile).run_quiet()
-                Command("rm -rf %s" % CertEnv.devicefile).run_quiet()
-            except Exception as e:
-                print("Clean compatibility test data failed. \n", e)
-                return False
+            if os.path.exists(CertEnv.certificationfile):
+                os.remove(CertEnv.certificationfile)
+            if os.path.exists(CertEnv.factoryfile):
+                os.remove(CertEnv.factoryfile)
+            if os.path.exists(CertEnv.devicefile):
+                os.remove(CertEnv.devicefile)
+        self.logger.info("Clean compatibility test data succeed.")
         return True
 
     def load(self):
@@ -130,14 +135,15 @@ class EulerCertification():
         version = self.certification.get_oech_value("VERSION", "version")
         name = self.certification.get_oech_value("NAME", "client_name")
         self.certification.save()
-        print("    %s: ".ljust(20) % name + version)
-        print("    Compatibility Test ID: ".ljust(30) + oec_id)
-        print("    Hardware Info: ".ljust(30) + hardware_info)
-        print("    Product URL: ".ljust(30) + self.certification.get_url())
-        print("    OS Info: ".ljust(30) + self.certification.get_os())
-        print("    Kernel Info: ".ljust(30) + self.certification.get_kernel())
-        print("    Test Server: ".ljust(30) + self.certification.get_server())
-        print("")
+
+        display_message = "    %s: ".ljust(20) % name + version + "\n" \
+            "    Compatibility Test ID: ".ljust(30) + oec_id + "\n" \
+            "    Hardware Info: ".ljust(30) + hardware_info + "\n" \
+            "    Product URL: ".ljust(30) + self.certification.get_url() + "\n" \
+            "    OS Info: ".ljust(30) + self.certification.get_os() + "\n" \
+            "    Kernel Info: ".ljust(30) + self.certification.get_kernel() + "\n" \
+            "    Test Server: ".ljust(30) + self.certification.get_server()
+        self.logger.info(display_message, log_print=False)
 
     def save(self, job):
         """
@@ -163,13 +169,13 @@ class EulerCertification():
             os.rename(job.job_id, self.dir_name)
             cmd.run_quiet()
         except CertCommandError:
-            print("Error: Job log collect failed.")
+            self.logger.error("Error: collect job log failed.")
             return
-        print("Log saved to file: %s succeed." %
-              os.path.join(os.getcwd(), pack_name))
+        self.logger.info("Log saved to file: %s succeed." %
+                         os.path.join(os.getcwd(), pack_name))
         shutil.copy(pack_name, CertEnv.datadirectory)
-        for (rootdir, dirs, filenams) in os.walk("./"):
-            for dirname in dirs:
+        for sublist in os.walk("./"):
+            for dirname in sublist[1]:
                 shutil.rmtree(dirname)
             break
         os.chdir(cwd)
@@ -182,7 +188,8 @@ class EulerCertification():
         packages = list()
         pattern = re.compile("^oech-[0-9]{14}-[0-9a-zA-Z]{10}.tar$")
         files = []
-        for (root, dirs, files) in os.walk(CertEnv.datadirectory):
+        for sublist in os.walk(CertEnv.datadirectory):
+            files = sublist[2]
             break
         packages.extend(filter(pattern.search, files))
         if len(packages) == 0:
@@ -193,9 +200,11 @@ class EulerCertification():
             server = self.certification.get_server()
             path = os.path.join(CertEnv.datadirectory, packages[-1])
             if not self.upload(path, server):
-                print("Upload failed.")
+                self.logger.error(
+                    "Upload result to server %s failed." % server)
             else:
-                print("Successfully uploaded result to server %s." % server)
+                self.logger.info(
+                    "Upload result to server %s succeed." % server)
             time.sleep(2)
 
         for filename in packages:
@@ -208,7 +217,8 @@ class EulerCertification():
         :param server:
         :return:
         """
-        print("Uploading...")
+        self.logger.info(
+            "Start to upload result to server %s, please wait." % server, log_print=False)
         if not self.client:
             oec_id = self.certification.get_certify()
             hardware_info = self.certification.get_hardware()
@@ -225,7 +235,7 @@ class EulerCertification():
         empty_device = Device()
         test_factory = list()
         casenames = []
-        for (dirpath, dirs, filenames) in os.walk(CertEnv.testdirectoy):
+        for (_, dirs, filenames) in os.walk(CertEnv.testdirectoy):
             dirs.sort()
             for filename in filenames:
                 if filename.endswith(".py") and \
@@ -362,8 +372,8 @@ class EulerCertification():
                     if test[STATUS] == PASS:
                         test[STATUS] = FORCE
 
-            os.system("clear")
-            print("Select tests to run:")
+            self.logger.info('\033c', log_print=False)
+            self.logger.info("Select tests to run:", log_print=False)
             self.show_tests()
             reply = self.ui.prompt("Selection (<number>|all|none|quit|run): ")
             reply = reply.lower()
@@ -398,10 +408,12 @@ class EulerCertification():
         :return:
         """
         device_info = namedtuple('Device_info', DEVICE_INFO)
-        print("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10)
-              + STATUS.ljust(10) + CLASS.ljust(14) + DEVICE.capitalize().ljust(15)
-              + DRIVER.ljust(15) + VERSION.ljust(18) + CHIP.ljust(20)
-              + "%s\033[0m" % BOARD)
+        self.logger.info("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10)
+                         + STATUS.ljust(10) + CLASS.ljust(14) +
+                         DEVICE.capitalize().ljust(15)
+                         + DRIVER.ljust(15) + VERSION.ljust(18) +
+                         CHIP.ljust(20)
+                         + "%s\033[0m" % BOARD, log_print=False)
         num = 0
         with open(CertEnv.pcifile) as file:
             for test in self.test_factory:
@@ -429,7 +441,7 @@ class EulerCertification():
                 else:
                     color = "4"
                 device = device_info(color, status, num, run, name,
-                                          device, driver, version, chip, board)
+                                     device, driver, version, chip, board)
                 self._print_tests(device)
 
     def choose_tests(self):
@@ -442,9 +454,9 @@ class EulerCertification():
                 test[RUN] = False
             else:
                 test[RUN] = True
-        os.system("clear")
-        print("These tests are recommended to "
-              "complete the compatibility test:")
+        self.logger.info('\033c', log_print=False)
+        self.logger.info("These tests are recommended to "
+                         "complete the compatibility test: ", log_print=False)
         self.show_tests()
         action = self.ui.prompt("Ready to begin testing?",
                                 ["run", "edit", "quit"])
@@ -455,7 +467,7 @@ class EulerCertification():
             return False
         if action in ["e", "edit"]:
             return self.edit_tests()
-        print("Invalid choice!")
+        self.logger.info("Invalid choice!", log_print=False)
         return self.choose_tests()
 
     def check_result(self):
@@ -480,60 +492,23 @@ class EulerCertification():
             self.test_factory = test_factory
         else:
             for test in self.test_factory:
-                if not self._search_factory(test, test_factory):
+                if not search_factory(test, test_factory):
                     self.test_factory.remove(test)
-                    print("delete %s test %s" % (test[NAME],
-                                                 test[DEVICE].get_name()))
+                    self.logger.info("delete %s test %s" % (test[NAME],
+                                                            test[DEVICE].get_name()))
             for test in test_factory:
-                if not self._search_factory(test, self.test_factory):
+                if not search_factory(test, self.test_factory):
                     self.test_factory.append(test)
-                    print("add %s test %s" % (test[NAME],
-                                              test[DEVICE].get_name()))
+                    self.logger.info("add %s test %s" % (test[NAME],
+                                                         test[DEVICE].get_name()))
         self.test_factory.sort(key=lambda k: k[NAME])
         FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
 
-    @staticmethod
-    def recovery_pci():
-        """
-        recovery the system PCI file
-        """
-        copyfile = CertEnv.pcifile + ".copy"
-        if os.path.exists(CertEnv.pcifile) and \
-                os.path.exists(copyfile):
-            os.remove(CertEnv.pcifile)
-            shutil.move(copyfile, CertEnv.pcifile)
-
-    @staticmethod
-    def _search_factory(obj_test, test_factory):
-        """
-        Determine whether test exists by searching test_factory
-        :param obj_test:
-        :param test_factory:
-        :return:
-        """
-        for test in test_factory:
-            if test[NAME] == obj_test[NAME] and \
-                    test[DEVICE].path == obj_test[DEVICE].path:
-                return True
-        return False
-
-    @staticmethod
-    def _print_tests(device):
+    def _print_tests(self, device):
         """
         print board information
         """
-        print("%-6d" % device.num + device.run.ljust(8)
-              + "\033[0;3%sm%s  \033[0m" % (device.color, device.status.ljust(8))
-              + device.name.ljust(14) + device.device.ljust(15) + device.driver.ljust(15)
-              + device.version.ljust(18) + device.chip.ljust(20) + device.board)
-
-    @staticmethod
-    def _copy_pci():
-        """
-        copy the PCI file if it exists
-        """
-        if os.path.exists(CertEnv.pcifile) and \
-                not filecmp.cmp(CertEnv.oechpcifile, CertEnv.pcifile):
-            copyfile = CertEnv.pcifile + ".copy"
-            shutil.move(CertEnv.pcifile, copyfile)
-            shutil.copy(CertEnv.oechpcifile, CertEnv.pcifile)
+        self.logger.info("%-6d" % device.num + device.run.ljust(8)
+                         + "\033[0;3%sm%s  \033[0m" % (device.color, device.status.ljust(8))
+                         + device.name.ljust(14) + device.device.ljust(15) + device.driver.ljust(15)
+                         + device.version.ljust(18) + device.chip.ljust(20) + device.board, log_print=False)
