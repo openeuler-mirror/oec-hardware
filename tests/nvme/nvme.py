@@ -30,6 +30,8 @@ class NvmeTest(Test):
         self.requirements = ["nvme-cli"]
         self.args = None
         self.device = None
+        self.name = ""
+        self.logpath = ""
 
     def setup(self, args=None):
         """
@@ -39,6 +41,8 @@ class NvmeTest(Test):
         """
         self.args = args or argparse.Namespace()
         self.device = getattr(args, "device", None)
+        self.name = self.device.get_name()
+        self.logpath = os.path.join(getattr(self.args, "logdir", None), "nvme-" + self.name + ".log")
         self.show_driver_info()
         Command("nvme list").echo(ignore_errors=True)
 
