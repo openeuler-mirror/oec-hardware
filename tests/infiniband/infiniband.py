@@ -13,6 +13,8 @@
 # Create: 2022-05-23
 
 """InfiniBand Test"""
+
+import os
 import argparse
 from rdma import RDMATest
 
@@ -30,6 +32,9 @@ class InfiniBandTest(RDMATest):
         self.target_bandwidth_percent = 0.5
         self.config_data = dict()
         self.server_ip = ""
+        self.args = None
+        self.name = ""
+        self.logpath = ""
 
     def test_ib_link(self):
         """
@@ -63,6 +68,9 @@ class InfiniBandTest(RDMATest):
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
+        self.name = self.device.get_name()
+        self.logpath = os.path.join(getattr(self.args, "logdir", None), "infiniband-" + self.name + ".log")
+        self.show_driver_info()
         self.config_data = getattr(self.args, "config_data", None)
         if self.config_data:
             self.server_ip = self.config_data.get("server_ip", "")

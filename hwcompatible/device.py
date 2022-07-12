@@ -379,7 +379,7 @@ class Device:
 
     def get_driver(self):
         """
-        get board model name
+        get the driver name of the board
         :return:
         """
         self.get_pci()
@@ -403,6 +403,9 @@ class Device:
                 self.driver_version = info.split(":", 1)[1].strip()
                 return self.driver_version
         return ""
+
+    def set_driver(self, driver):
+        self.driver = driver
 
     def get_pci(self):
         """

@@ -31,6 +31,8 @@ class EthernetTest(RDMATest):
     def __init__(self):
         RDMATest.__init__(self)
         self.args = None
+        self.name = ""
+        self.logpath = ""
         self.cert = None
         self.device = None
         self.config_data = dict()
@@ -59,6 +61,9 @@ class EthernetTest(RDMATest):
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
+        self.name = self.device.get_name()
+        self.logpath = os.path.join(getattr(self.args, "logdir", None), "ethernet-" + self.name + ".log")
+        self.show_driver_info()
         self.config_data = getattr(args, "config_data", None)
         if self.config_data:
             self.server_ip = self.config_data.get("server_ip")

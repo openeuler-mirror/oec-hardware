@@ -21,6 +21,7 @@ import re
 
 from hwcompatible.command import Command, CertCommandError
 from hwcompatible.test import Test
+from hwcompatible.device import Device
 
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -34,6 +35,10 @@ class GpuTest(Test):
         Test.__init__(self)
         self.args = None
         self.device = None
+        self.logpath = ""
+        self.gpu_burn = ""
+        self.name = ""
+        self.cuda_samples_log = ""
         self.requirements = ["gcc-c++", "make", "tar", "git"]
 
     def setup(self, args=None):
@@ -56,7 +61,14 @@ class GpuTest(Test):
         if driver == "iluvatar-itr":
             self.smi_name = "ixsmi"
             driver = "bi_driver"
+            self.device.set_driver(driver)
         Command('modinfo %s | head -n 13' % driver).echo()
+        Command("echo Driver Name：%s >> %s" % (driver, self.logpath)).echo()
+        driver_version = self.device.get_driver_version()
+        if not driver_version:
+            Command("echo The driver version information cannot be obtained. Please view it manually.").echo()
+        else:
+            Command("echo Driver Version: %s >> %s" % (driver_version, self.logpath)).echo()
         return pci_num
 
     def pressure(self):

@@ -50,6 +50,7 @@ class FCTest(Test):
         self.config_data = getattr(self.args, "config_data", None)
         self.name = self.device.get_name()
         self.logpath = os.path.join(getattr(self.args, "logdir", None), "fc-" + self.name + ".log")
+        self.show_driver_info()
         os.system("echo Vendor Info: >> %s" % self.logpath)
         Command("lspci -s %s -v &>> %s " % (self.pci_num, self.logpath)).echo(ignore_errors=True)
         os.system("echo Disk Info: >> %s" % self.logpath)
