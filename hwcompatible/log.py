@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -17,56 +17,9 @@
 import os
 import sys
 import datetime
-
+import logging
+from logging import handlers
 from .env import CertEnv
-
-
-class Log(object):
-    """
-    Read and write log
-    """
-
-    def __init__(self, logname='oech.log', logdir='__temp__'):
-        if not logdir:
-            curtime = datetime.datetime.now().isoformat()
-            logdir = os.path.join(CertEnv.logdirectoy, curtime)
-        if not logdir.startswith(os.path.sep):
-            logdir = os.path.join(CertEnv.logdirectoy, logdir)
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)
-
-        self.dir = logdir
-        logfile = os.path.join(logdir, logname)
-        sys.stdout.flush()
-        self.terminal = sys.stdout
-        self.log = open(logfile, "a+")
-
-    def write(self, message):
-        """
-        Write messages to terminals and files
-        :param message:
-        :return:
-        """
-        self.terminal.write(message)
-        if self.log:
-            self.log.write(message)
-
-    def flush(self):
-        """
-        Refresh buffer to terminal and file
-        :return:
-        """
-        self.terminal.flush()
-        if self.log:
-            self.log.flush()
-
-    def close(self):
-        """
-        close logfile
-        :return:
-        """
-        self.log.close()
-        self.log = None
 
 
 class Logger():
@@ -75,23 +28,84 @@ class Logger():
     """
 
     def __init__(self, logname, logdir, out, err):
-        self.log = Log(logname, logdir)
+        self.logdir = None
+        self.log = None
         self.stdout = out
         self.stderr = err
+        self._check_logdir(logdir)
+        self.logfile = os.path.join(self.logdir, logname)
 
     def start(self):
         """
         Start outputing to file
         :return:
         """
-        sys.stdout = self.log
-        sys.stderr = sys.stdout
+        self.log = logging.getLogger(name=self.logfile)
+        formatter = logging.Formatter(
+            '[%(asctime)s][%(levelname)s] %(message)s')
+        file_handler = logging.FileHandler(
+            self.logfile, mode='a+', encoding='utf-8')
+        file_handler.setFormatter(formatter)
+        self.log.addHandler(file_handler)
+
+    def info(self, message, log_print=True, terminal_print=True):
+        self._print(logging.INFO, message, log_print, terminal_print)
+
+    def error(self, message, log_print=True, terminal_print=True):
+        self._print(logging.ERROR, message, log_print, terminal_print)
+
+    def warning(self, message, log_print=True, terminal_print=True):
+        self._print(logging.WARNING, message, log_print, terminal_print)
+
+    def flush(self):
+        """
+        Refresh buffer to stdout and file
+        :return:
+        """
+        self.stdout.flush()
+        self.stderr.flush()
+        if self.log:
+            self.log.flush()
 
     def stop(self):
         """
         Stop outputing to file
         :return:
         """
-        sys.stdout.close()
-        sys.stdout = self.stdout
-        sys.stderr = self.stderr
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+
+    def _check_logdir(self, logdir):
+        """
+        Check and create log directory
+        """
+        self.logdir = logdir
+        if not self.logdir:
+            curtime = datetime.datetime.now().isoformat()
+            self.logdir = os.path.join(CertEnv.logdirectoy, curtime)
+        if not logdir.startswith(os.path.sep):
+            self.logdir = os.path.join(CertEnv.logdirectoy, self.logdir)
+        if not os.path.exists(self.logdir):
+            os.makedirs(self.logdir)
+
+    def _print(self, level, message, log_print, terminal_print):
+        """
+        Print messages
+        : param :
+        : level : log level
+        : message: the write message
+        : log_print: set 'True' will write message to log file
+        : terminal_print: set 'True' will write message to terminal
+        """
+        if log_print:
+            self.log.setLevel(level)
+            if level == logging.INFO:
+                self.log.info(message)
+            elif level == logging.ERROR:
+                self.log.error(message)
+            elif level == logging.WARNING:
+                self.log.warning(message)
+
+        if terminal_print:
+            self.stdout.write(message)
+            self.stdout.write("\n")

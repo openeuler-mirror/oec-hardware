@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may ob tain a copy of Mulan PSL v2 at:
@@ -18,14 +18,16 @@ import subprocess
 
 
 class Command:
+    """ 
+    Creates a Command object that wraps the shell command 
+    """
 
     def __init__(self, command):
-        """ Creates a Command object that wraps the shell command """
         self.command = command
         self.origin_output = None
         self.output = None
         self.errors = None
-        self.returncode = 0
+        self.returncode = 1
         self.pipe = None
         self.regex = None
         self.single_line = True
@@ -121,6 +123,9 @@ class Command:
         """
         if self.pipe:
             return self.pipe.pid
+
+    def get_returncode(self):
+        return self.returncode
 
     def readline(self):
         """
@@ -251,4 +256,7 @@ class CertCommandError(Exception):
         self.__message = value
 
     def print_errors(self):
+        """
+        Print error messages on model
+        """
         self.command.print_errors()

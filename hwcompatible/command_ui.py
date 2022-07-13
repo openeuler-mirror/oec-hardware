@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -36,7 +36,7 @@ class CommandUI:
         while 1:
             line = pipe.readline()
             if line:
-                print(line)
+                sys.stdout.write(line)
             else:
                 return pipe.close()
 
@@ -120,7 +120,7 @@ class CommandUI:
                 reply = input(label).strip()
                 if not choices or reply in choices:
                     return reply
-                print("Please enter one of the "
-                      "following: %s" % " | ".join(choices))
+                sys.stdout.write(
+                    "Please enter one of the following: %s" % " | ".join(choices))
             finally:
                 readline.set_startup_hook()

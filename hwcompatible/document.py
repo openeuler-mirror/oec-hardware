@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -14,6 +14,7 @@
 
 """Document processing"""
 
+import os
 import json
 import configparser
 
@@ -42,20 +43,19 @@ class Document():
         try:
             with open(self.filename, "w+") as save_f:
                 json.dump(self.document, save_f, indent=4)
-                save_f.close()
+
         except Exception as concrete_error:
-            print("Error: doc save fail.\n", concrete_error)
+            print("Error: save document failed.")
             return False
         return True
 
     def load(self):
         """load file"""
-        try:
-            with open(self.filename, "r") as load_f:
-                self.document = json.load(load_f)
-                load_f.close()
-        except Exception:
+        if not os.path.exists(self.filename):
             return False
+
+        with open(self.filename, "r") as load_f:
+            self.document = json.load(load_f)
         return True
 
 
