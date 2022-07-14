@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -14,15 +14,13 @@
 # Desc: Test template
 
 import os
-import sys
-
 from .device import Device
 from .command import Command
 
 
 class Test:
     """
-    Test set template
+    Test template
     """
 
     def __init__(self):
@@ -30,6 +28,8 @@ class Test:
         self.requirements = list()
         self.reboot = False
         self.rebootup = None
+        self.args = None
+        self.logger = None
 
     @staticmethod
     def valid_disk(disk, disks):

@@ -11,8 +11,7 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-"""Operation of client """
+# Desc: Operation of client
 
 import os
 import sys
@@ -30,7 +29,7 @@ from hwcompatible.compatibility import EulerCertification
 
 class CertLock:
     """
-    certlock
+    Create certlock
     """
 
     def __init__(self, filename):

@@ -12,8 +12,6 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""Test task management"""
-
 import os
 import sys
 import string
@@ -24,7 +22,6 @@ import yaml
 from .test import Test
 from .env import CertEnv
 from .command import Command, CertCommandError
-from .command_ui import CommandUI
 from .log import Logger
 from .reboot import Reboot
 from .constants import *
@@ -47,7 +44,8 @@ class Job():
         self.test_factory = getattr(self.args, "test_factory", [])
         self.test_suite = getattr(self.args, "test_suite", None)
         self.subtests_filter = getattr(self.args, "subtests_filter", None)
-        self.job_id = ''.join(random.sample(string.ascii_letters + string.digits, 10))
+        self.job_id = ''.join(random.sample(
+            string.ascii_letters + string.digits, 10))
         self.logpath = CertEnv.logdirectoy + "/" + self.job_id+"/job.log"
         self.config_info = {}
         self.logger = Logger("job.log", self.job_id, sys.stdout, sys.stderr)
@@ -203,8 +201,7 @@ class Job():
                 self.logger.info("Start to run %s/%s test suite: %s." %
                                  (self.current_num, self.total_count, name))
                 args = argparse.Namespace(
-                    device=testcase[DEVICE], logdir=logger.logdir,
-                    config_data=config_data, testname=name)
+                    device=testcase[DEVICE], config_data=config_data, test_logger=logger, logdir=logger.logdir, testname=name)
                 test.setup(args)
                 if test.reboot:
                     reboot = Reboot(testcase[NAME], self, test.rebootup)

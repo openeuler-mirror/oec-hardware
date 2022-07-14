@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -11,8 +11,8 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-import re
 
+import re
 from .command import Command
 from .constants import FC, GPU, RAID, NVME
 
@@ -41,7 +41,8 @@ class CertDevice:
     Certified device
     """
 
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger
         self.devices = None
 
     def get_devices(self):
@@ -75,10 +76,10 @@ class CertDevice:
                         elif tp == "P":
                             properties["INFO"] = attribute
         except Exception as e:
-            print("Warning: get devices fail.\n", e)
+            self.logger.warning("Get devices failed.\n")
         self.devices.sort(key=lambda k: k.path)
         return self.devices
-
+        
 
 class Device:
     """

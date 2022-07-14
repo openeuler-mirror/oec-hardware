@@ -12,10 +12,7 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""Special for restart tasks, so that the test can be continued after the machine is restarted"""
-
 import datetime
-
 from .document import Document, FactoryDocument
 from .env import CertEnv
 from .command import Command

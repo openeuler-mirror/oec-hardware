@@ -12,8 +12,6 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""Document processing"""
-
 import os
 import json
 import configparser
@@ -35,22 +33,18 @@ class Document():
         self.document = document
         self.filename = filename
 
-    def new(self):
-        print("doc new")
-
     def save(self):
-        """save file"""
-        try:
-            with open(self.filename, "w+") as save_f:
-                json.dump(self.document, save_f, indent=4)
-
-        except Exception as concrete_error:
-            print("Error: save document failed.")
-            return False
+        """
+        Save file
+        """
+        with open(self.filename, "w+") as save_f:
+            json.dump(self.document, save_f, indent=4)
         return True
 
     def load(self):
-        """load file"""
+        """
+        Load file
+        """
         if not os.path.exists(self.filename):
             return False
 
@@ -61,20 +55,21 @@ class Document():
 
 class CertDocument(Document):
     """
-    get hardware and release information
+    Get hardware and release information
     """
 
-    def __init__(self, filename, document=''):
+    def __init__(self, filename, logger, document=''):
         self.document = dict()
         self.filename = filename
-        if not document:
-            self.load()
-        else:
+        self.logger = logger
+        if document:
             self.documemt = document
+        else:
+            self.load()
 
     def new(self):
         """
-        new document object
+        Create new document object
         """
         try:
             pipe = Command("/usr/sbin/dmidecode -t 1")
@@ -89,20 +84,26 @@ class CertDocument(Document):
                     continue
                 key = property_right[0].strip()
                 value = property_right[1].strip()
-                if key in ["Manufacturer", "Product Name", "Version"]:
+                if key in ("Manufacturer", "Product Name", "Version"):
                     self.document[key] = value
         except Exception as concrete_error:
-            print("Error: get hardware info fail.\n", concrete_error)
+            self.logger.error(
+                "Get hardware information failed. %s" % concrete_error)
+
+        if not os.path.exists(CertEnv.releasefile):
+            self.logger.error("The file %s doesn't exist." %
+                              CertEnv.releasefile)
+            return False
 
         sysinfo = SysInfo(CertEnv.releasefile)
-        self.document[OS] = sysinfo.product + " " + sysinfo.get_version()
-        self.document[KERNEL] = sysinfo.kernel
+        self.document[OS] = sysinfo.get_product() + " " + sysinfo.get_version()
+        self.document[KERNEL] = sysinfo.get_kernel()
         self.document[ID] = CommandUI().prompt(
             "Please provide your Compatibility Test ID:")
         self.document[PRODUCTURL] = CommandUI().prompt(
             "Please provide your Product URL:")
-        self.document[SERVER] = CommandUI().prompt("Please provide the Compatibility Test "
-                                                   "Server (Hostname or Ipaddr):")
+        self.document[SERVER] = CommandUI().prompt(
+            "Please provide the Compatibility Test Server (Hostname or Ipaddr):")
 
     def get_oech_value(self, prop, value):
         """
@@ -155,22 +156,22 @@ class CertDocument(Document):
 
 class DeviceDocument(Document):
     """
-    get device document
+    Get device document
     """
 
     def __init__(self, filename, devices=''):
         self.filename = filename
         self.document = list()
-        if not devices:
-            self.load()
-        else:
+        if devices:
             for device in devices:
                 self.document.append(device.properties)
+        else:
+            self.load()
 
 
 class FactoryDocument(Document):
     """
-    get factory from file or factory parameter
+    Get factory from file or factory parameter
     """
 
     def __init__(self, filename, factory=''):
@@ -219,15 +220,14 @@ class ConfigFile:
         """
         Load config file
         """
-        fp_info = open(self.filename)
-        self.config = fp_info.readlines()
-        for line in self.config:
-            if line.strip() and line.strip()[0] == "#":
-                continue
-            words = line.strip().split(" ")
-            if words[0]:
-                self.parameters[words[0]] = " ".join(words[1:])
-        fp_info.close()
+        with open(self.filename) as fp_info:
+            self.config = fp_info.readlines()
+            for line in self.config:
+                if line.strip() and line.strip()[0] == "#":
+                    continue
+                words = line.strip().split(" ")
+                if words[0]:
+                    self.parameters[words[0]] = " ".join(words[1:])
 
     def get_parameter(self, name):
         """
@@ -243,11 +243,10 @@ class ConfigFile:
             string = line.strip()
             if not string or string[0] == "#":
                 continue
-            print(string)
 
     def add_parameter(self, name, value):
         """
-        add parameter
+        Add parameter
         """
         if self.get_parameter(name):
             return False
@@ -283,7 +282,6 @@ class ConfigFile:
         Save the config property value to a file
         :return:
         """
-        fp_info = open(self.filename, "w")
-        for line in self.config:
-            fp_info.write(line)
-        fp_info.close()
+        with open(self.filename, "w") as fp_info:
+            for line in self.config:
+                fp_info.write(line)
