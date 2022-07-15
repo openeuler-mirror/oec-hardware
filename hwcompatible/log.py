@@ -12,19 +12,16 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""Log management"""
-
 import os
 import sys
 import datetime
 import logging
-from logging import handlers
 from .env import CertEnv
 
 
 class Logger():
     """
-     Output results to file
+    Log management
     """
 
     def __init__(self, logname, logdir, out, err):

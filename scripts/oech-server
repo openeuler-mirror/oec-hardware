@@ -11,8 +11,7 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2022-06-08
-
-"""Operation of server"""
+# Desc: Operation of server
 
 import os
 import sys
@@ -37,5 +36,5 @@ if __name__ == '__main__':
     version = config.get("VERSION", "version")
 
     if args.version:
-        print("%s %s" % (name, version))
+        sys.stdout.write("%s %s" % (name, version))
     sys.exit(0)

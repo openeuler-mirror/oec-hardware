@@ -56,7 +56,7 @@ class EulerCertification():
             "The openEuler Hardware Compatibility Test Suite", log_print=False)
         copy_pci()
         self.load()
-        certdevice = CertDevice()
+        certdevice = CertDevice(self.logger)
 
         while True:
             self.submit()
@@ -79,7 +79,7 @@ class EulerCertification():
             job = Job(args)
             job.run()
             self.save(job)
-
+    
     def run_rebootup(self):
         """
          rebootup
@@ -122,7 +122,7 @@ class EulerCertification():
         """
         os.makedirs(os.path.dirname(CertEnv.datadirectory), exist_ok=True)
         if not self.certification:
-            self.certification = CertDocument(CertEnv.certificationfile)
+            self.certification = CertDocument(CertEnv.certificationfile, self.logger)
             if not self.certification.document:
                 self.certification.new()
         if not self.test_factory:
@@ -131,7 +131,7 @@ class EulerCertification():
 
         oec_id = self.certification.get_certify()
         hardware_info = self.certification.get_hardware()
-        self.client = Client(hardware_info, oec_id)
+        self.client = Client(hardware_info, oec_id, self.logger)
         version = self.certification.get_oech_value("VERSION", "version")
         name = self.certification.get_oech_value("NAME", "client_name")
         self.certification.save()
@@ -222,7 +222,7 @@ class EulerCertification():
         if not self.client:
             oec_id = self.certification.get_certify()
             hardware_info = self.certification.get_hardware()
-            self.client = Client(hardware_info, oec_id)
+            self.client = Client(hardware_info, oec_id, self.logger)
         return self.client.upload(path, server)
 
     def get_tests(self, devices):
