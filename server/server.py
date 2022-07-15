@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,25 +12,22 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""server"""
+""" 
+oech server url
+"""
 
 import os
 import json
 import time
 import subprocess
 import base64
-try:
-    from urllib.parse import urlencode
-    from urllib.request import urlopen, Request
-    from urllib.error import HTTPError
-except ImportError:
-    from urllib import urlencode
-    from urllib2 import urlopen, Request, HTTPError
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
+from urllib.error import HTTPError
 
 from flask import Flask, render_template, redirect, url_for, abort, request, \
-                  make_response, send_from_directory, flash
+    make_response, send_from_directory, flash
 from flask_bootstrap import Bootstrap
-
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -101,20 +98,21 @@ def get_job(host, oec_id, job):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_info = os.path.join(dir_job, 'compatibility.json')
     json_results = os.path.join(dir_job, 'factory.json')
-    try:
-        with open(json_info, 'r') as file_content:
-            info = json.load(file_content)
-        with open(json_results, 'r') as file_content:
-            results = json.load(file_content)
-    except Exception:
+    if not os.path.exists(json_info) or not os.path.exists(json_results):
         abort(404)
+
+    with open(json_info, 'r') as file_content:
+        info = json.load(file_content)
+    with open(json_results, 'r') as file_content:
+        results = json.load(file_content)
+
     return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
 
 @app.route('/results/<host>/<oec_id>/<job>/devices/<interface>')
 def get_device(host, oec_id, job, interface):
     """
-    获取硬件设备信息
+    Get hardware device information
     :param host:
     :param oec_id:
     :param job:
@@ -123,11 +121,12 @@ def get_device(host, oec_id, job, interface):
     """
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_results = os.path.join(dir_job, 'factory.json')
-    try:
-        with open(json_results, 'r') as file_content:
-            results = json.load(file_content)
-    except Exception:
+    if not os.path.exists(json_results):
         abort(404)
+
+    with open(json_results, 'r') as file_content:
+        results = json.load(file_content)
+
     for testcase in results:
         device = testcase.get('device')
         if device and device.get('INTERFACE') == interface:
@@ -139,7 +138,7 @@ def get_device(host, oec_id, job, interface):
 @app.route('/results/<host>/<oec_id>/<job>/devices')
 def get_devices(host, oec_id, job):
     """
-    获取设备信息
+    Get hardware devices information
     :param host:
     :param oec_id:
     :param job:
@@ -147,18 +146,19 @@ def get_devices(host, oec_id, job):
     """
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_devices = os.path.join(dir_job, 'device.json')
-    try:
-        with open(json_devices, 'r') as file_content:
-            devices = json.load(file_content)
-    except Exception:
+    if not os.path.exists(json_devices):
         abort(404)
+
+    with open(json_devices, 'r') as file_content:
+        devices = json.load(file_content)
+
     return render_template('devices.html', devices=devices)
 
 
 @app.route('/results/<host>/<oec_id>/<job>/attachment')
 def get_attachment(host, oec_id, job):
     """
-    发送结果附件
+    Get result attachment
     :param host:
     :param oec_id:
     :param job:
@@ -174,7 +174,7 @@ def get_attachment(host, oec_id, job):
 @app.route('/results/<host>/<oec_id>/<job>/logs/<name>')
 def get_log(host, oec_id, job, name):
     """
-    获取日志
+    Get log
     :param host:
     :param oec_id:
     :param job:
@@ -185,18 +185,17 @@ def get_log(host, oec_id, job, name):
     logpath = os.path.join(dir_job, name + '.log')
     if not os.path.exists(logpath):
         logpath = os.path.join(dir_job, 'job.log')
-    try:
-        with open(logpath, 'r') as file_content:
-            log = file_content.read().split('\n')
-    except Exception:
-        abort(404)
+
+    with open(logpath, 'r') as file_content:
+        log = file_content.read().split('\n')
+
     return render_template('log.html', name=name, log=log)
 
 
 @app.route('/results/<host>/<oec_id>/<job>/submit')
 def submit(host, oec_id, job):
     """
-    提交测试结果
+    Submit test result
     :param host:
     :param oec_id:
     :param job:
@@ -205,14 +204,16 @@ def submit(host, oec_id, job):
     dir_job = os.path.join(dir_results, host, oec_id, job)
     tar_job = dir_job + '.tar.gz'
     json_cert = os.path.join(dir_job, 'compatibility.json')
-    try:
-        with open(json_cert, 'r') as file_content:
-            cert = json.load(file_content)
-        with open(tar_job, 'rb') as file_content:
-            attachment = base64.b64encode(file_content.read())
-    except Exception as concrete_error:
-        print(concrete_error)
+    if not os.path.exists(json_cert) or not os.path.exists(tar_job):
         abort(500)
+
+    cert = ""
+    with open(json_cert, 'r') as file_content:
+        cert = json.load(file_content)
+    
+    attachment = ""
+    with open(tar_job, 'rb') as file_content:
+        attachment = base64.b64encode(file_content.read())
 
     form = {}
     form['certid'] = cert.get('certid')
@@ -233,17 +234,16 @@ def submit(host, oec_id, job):
         res = concrete_error
 
     if res.code == 200:
-        flash('Submit Successful', 'success')
+        flash('Submit test result successfully.', 'success')
     else:
-        flash('Submit Failed - {} {}'.format(res.code, res.msg),
-              'danger')
+        flash('Submit test result failed - {} {}'.format(res.code, res.msg), 'danger')
     return redirect(request.referrer or url_for('get_job', host=host, id=id, job=job))
 
 
 @app.route('/api/job/upload', methods=['GET', 'POST'])
 def upload_job():
     """
-    上传job
+    Upload job
     :return:
     """
     host = request.values.get('host', '').strip().replace(' ', '-')
@@ -258,13 +258,12 @@ def upload_job():
     tar_job = dir_job + '.tar.gz'
     if not os.path.exists(dir_job):
         os.makedirs(dir_job)
-    try:
-        with open(tar_job, 'wb') as file_content:
-            file_content.write(base64.b64decode(filetext))
-        os.system("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
-    except Exception as concrete_error:
-        print(concrete_error)
-        abort(400)
+
+    with open(tar_job, 'wb') as file_content:
+        file_content.write(base64.b64decode(filetext))
+    subprocess.run("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
+
+        
     return render_template('upload.html', host=host, id=oec_id, job=job,
                            filetext=filetext, ret='Successful')
 
@@ -272,7 +271,7 @@ def upload_job():
 @app.route('/files')
 def get_files():
     """
-    get files
+    Get files
     """
     files = os.listdir(dir_files)
     return render_template('files.html', files=files)
@@ -281,7 +280,7 @@ def get_files():
 @app.route('/files/<path:path>')
 def download_file(path):
     """
-    download file
+    Download file
     """
     return send_from_directory('files', path, as_attachment=True)
 
@@ -289,7 +288,7 @@ def download_file(path):
 @app.route('/api/file/upload', methods=['GET', 'POST'])
 def upload_file():
     """
-    upload_file
+    Upload_file
     """
     filename = request.values.get('filename', '')
     filetext = request.values.get('filetext', '')
@@ -300,12 +299,10 @@ def upload_file():
     filepath = os.path.join(dir_files, filename)
     if not os.path.exists(dir_files):
         os.makedirs(dir_files)
-    try:
-        with open(filepath, 'wb') as file_content:
-            file_content.write(base64.b64decode(filetext))
-    except Exception as concrete_error:
-        print(concrete_error)
-        abort(400)
+
+    with open(filepath, 'wb') as file_content:
+        file_content.write(base64.b64decode(filetext))
+
     return render_template('upload.html', filename=filename, filetext=filetext,
                            ret='Successful')
 
@@ -345,37 +342,32 @@ def test_server(act):
     else:
         abort(404)
 
-    print(' '.join(cmd))
-    # pipe = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     pipe = subprocess.Popen(cmd)
     time.sleep(3)
-    if pipe.poll():   ## supposed to be 0(foreground) or None(background)
+    if pipe.poll():  # supposed to be 0(foreground) or None(background)
         abort(400)
-    else:
-        return render_template('index.html')
+
+    return render_template('index.html')
 
 
 def __get_ib_dev_port(ib_server_ip):
     try:
         cmd = "ip -o a | grep -w %s | awk '{print $2}'" % ib_server_ip
-        # print(cmd)
-        netdev = os.popen(cmd).read().strip()
+        netdev = subprocess.getoutput(cmd)
 
         cmd = "udevadm info --export-db | grep DEVPATH | grep -w %s | awk -F= '{print $2}'" % netdev
-        # print(cmd)
-        path_netdev = ''.join(['/sys', os.popen(cmd).read().strip()])
+        path_netdev = ''.join(['/sys', subprocess.getoutput(cmd).strip()])
         path_pci = path_netdev.split('net')[0]
         path_ibdev = 'infiniband_verbs/uverb*/ibdev'
         path_ibdev = ''.join([path_pci, path_ibdev])
 
         cmd = "cat %s" % path_ibdev
-        # print(cmd)
-        ibdev = os.popen(cmd).read().strip()
+        ibdev = subprocess.getoutput(cmd).strip()
 
         path_ibport = '/sys/class/net/%s/dev_id' % netdev
         cmd = "cat %s" % path_ibport
-        # print(cmd)
-        ibport = os.popen(cmd).read().strip()
+        ibport = subprocess.getoutput(cmd).strip()
+
         ibport = int(ibport, 16) + 1
         ibport = str(ibport)
 

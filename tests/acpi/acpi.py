@@ -12,10 +12,9 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""acpi test"""
 import subprocess
+import argparse
 from hwcompatible.test import Test
-from hwcompatible.command import Command
 
 
 class AcpiTest(Test):
@@ -26,7 +25,6 @@ class AcpiTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["acpica-tools"]
-        self.logpath = None
 
     def setup(self, args=None):
         """
@@ -35,21 +33,22 @@ class AcpiTest(Test):
         :return:
         """
         self.args = args or argparse.Namespace()
-        self.logpath = getattr(args, "logdir", None) + "/acpi.log"
+        self.logger = getattr(self.args, "test_logger", None)
 
     def test(self):
         """
-        start test
+        Test case
+        :return:
         """
         try:
-            result = subprocess.getstatusoutput(
-                "acpidump &> %s" % self.logpath)
+            result = subprocess.getstatusoutput("acpidump")
+            self.logger.info(result[1], terminal_print=False)
             if result[0] == 0:
-                print("Test acpi succeed.")
+                self.logger.info("Test acpi succeed.")
                 return True
 
-            print("Test acpi failed.")
+            self.logger.error("Test acpi failed.")
             return False
         except Exception as concrete_error:
-            print("Test acpi failed.\n %s" % concrete_error)
+            self.logger.error("Test acpi failed.\n %s" % concrete_error)
             return False
