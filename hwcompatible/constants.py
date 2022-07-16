@@ -13,6 +13,8 @@
 # Author: @meitingli
 # Create: 2022-03-01
 
+import os
+import stat
 
 YES = "y"
 SAMEASYES = ("y", "yes")
@@ -68,3 +70,7 @@ KEYCARD_VENDORS = ('Xilinx', 'Renesas', 'Texas', 'PLX')
 IB = "infiniband"
 DEVICE_INFO = ('color', 'status', 'num', 'run', 'name',
                'device', 'driver', 'version', 'chip', 'board')
+
+# File access control
+FILE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+FILE_MODES = stat.S_IWUSR | stat.S_IRUSR

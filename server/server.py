@@ -11,13 +11,11 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-""" 
-oech server url
-"""
+# Desc: oech server url
 
 import os
 import json
+import sys
 import time
 import subprocess
 import base64
@@ -101,10 +99,14 @@ def get_job(host, oec_id, job):
     if not os.path.exists(json_info) or not os.path.exists(json_results):
         abort(404)
 
-    with open(json_info, 'r') as file_content:
-        info = json.load(file_content)
-    with open(json_results, 'r') as file_content:
-        results = json.load(file_content)
+    try:
+        with open(json_info, 'r') as file_content:
+            info = json.load(file_content)
+        with open(json_results, 'r') as file_content:
+            results = json.load(file_content)
+    except json.decoder.JSONDecodeError as error:
+        sys.stderr.write("The file %s is not json file.\n")
+        return False
 
     return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
 
@@ -124,8 +126,12 @@ def get_device(host, oec_id, job, interface):
     if not os.path.exists(json_results):
         abort(404)
 
-    with open(json_results, 'r') as file_content:
-        results = json.load(file_content)
+    try:
+        with open(json_results, 'r') as file_content:
+            results = json.load(file_content)
+    except json.decoder.JSONDecodeError as error:
+        sys.stderr.write("The file %s is not json file.\n")
+        return False
 
     for testcase in results:
         device = testcase.get('device')
@@ -149,8 +155,12 @@ def get_devices(host, oec_id, job):
     if not os.path.exists(json_devices):
         abort(404)
 
-    with open(json_devices, 'r') as file_content:
-        devices = json.load(file_content)
+    try:
+        with open(json_devices, 'r') as file_content:
+            devices = json.load(file_content)
+    except json.decoder.JSONDecodeError as error:
+        sys.stderr.write("The file %s is not json file.\n")
+        return False
 
     return render_template('devices.html', devices=devices)
 
@@ -208,9 +218,13 @@ def submit(host, oec_id, job):
         abort(500)
 
     cert = ""
-    with open(json_cert, 'r') as file_content:
-        cert = json.load(file_content)
-    
+    try:
+        with open(json_cert, 'r') as file_content:
+            cert = json.load(file_content)
+    except json.decoder.JSONDecodeError as error:
+        sys.stderr.write("The file %s is not json file.\n")
+        return False
+
     attachment = ""
     with open(tar_job, 'rb') as file_content:
         attachment = base64.b64encode(file_content.read())
@@ -230,7 +244,7 @@ def submit(host, oec_id, job):
         req = Request(url, data=data, headers=headers)
         res = urlopen(req)
     except HTTPError as concrete_error:
-        print(concrete_error)
+        sys.stderr.write("Submit result execute failed.\n")
         res = concrete_error
 
     if res.code == 200:
@@ -263,7 +277,6 @@ def upload_job():
         file_content.write(base64.b64decode(filetext))
     subprocess.run("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
 
-        
     return render_template('upload.html', host=host, id=oec_id, job=job,
                            filetext=filetext, ret='Successful')
 
@@ -317,7 +330,7 @@ def test_server(act):
     cmd = request.values.get('cmd', '')
     cmd = cmd.split()
     if (not cmd) or (cmd[0] not in valid_commands + ['all']):
-        print("Invalid command: {0}".format(cmd))
+        sys.stdout.write("Invalid command: {0}.\n".format(cmd))
         abort(400)
 
     if act == 'start':
@@ -327,11 +340,11 @@ def test_server(act):
         if 'ib_' in cmd[0]:
             ib_server_ip = request.values.get('ib_server_ip', '')
             if not ib_server_ip:
-                print("No ib_server_ip assigned.")
+                sys.stdout.write("No ib_server_ip assigned.\n")
                 abort(400)
             ibdev, ibport = __get_ib_dev_port(ib_server_ip)
             if not all([ibdev, ibport]):
-                print("No ibdev or ibport found.")
+                sys.stderr.write("No ibdev or ibport found.\n")
                 abort(400)
             cmd.extend(['-d', ibdev, '-i', ibport])
     elif act == 'stop':
@@ -373,7 +386,7 @@ def __get_ib_dev_port(ib_server_ip):
 
         return ibdev, ibport
     except Exception as concrete_error:
-        print(concrete_error)
+        sys.stderr.write("Get ibdev, ibport failed.\n")
         return None, None
 
 
