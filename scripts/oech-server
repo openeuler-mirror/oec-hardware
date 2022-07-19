@@ -36,5 +36,5 @@ if __name__ == '__main__':
     version = config.get("VERSION", "version")
 
     if args.version:
-        sys.stdout.write("%s %s" % (name, version))
+        sys.stdout.write("%s %s \n" % (name, version))
     sys.exit(0)
