@@ -156,12 +156,19 @@ class Job():
         get configuration file
         """
         yaml_file = CertEnv.configfile
-        if os.path.exists(yaml_file):
+        if not os.path.exists(yaml_file):
+            self.logger.error("Failed to get configuration file information.")
+            return False
+        try:
             with open(yaml_file, 'r', encoding="utf-8") as file:
                 file_data = file.read()
                 self.config_info = yaml.safe_load(file_data)
-        else:
-            self.logger.error("Failed to get configuration file information.")
+        except yaml.scanner.ScannerError:
+            self.logger.error(
+                "The yaml file %s format is error." % yaml_file)
+            return False
+
+        return True
 
     def get_device(self, testcase):
         """
@@ -200,8 +207,8 @@ class Job():
                 self.current_num += 1
                 self.logger.info("Start to run %s/%s test suite: %s." %
                                  (self.current_num, self.total_count, name))
-                args = argparse.Namespace(
-                    device=testcase[DEVICE], config_data=config_data, test_logger=logger, logdir=logger.logdir, testname=name)
+                args = argparse.Namespace(device=testcase[DEVICE], config_data=config_data, test_logger=logger,
+                                          logdir=logger.logdir, testname=name)
                 test.setup(args)
                 if test.reboot:
                     reboot = Reboot(testcase[NAME], self, test.rebootup)

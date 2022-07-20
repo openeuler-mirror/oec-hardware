@@ -29,15 +29,16 @@ class Document():
     Read and write documents
     """
 
-    def __init__(self, filename, document=''):
-        self.document = document
+    def __init__(self, filename, logger, document=''):
         self.filename = filename
+        self.logger = logger
+        self.document = document
 
     def save(self):
         """
         Save file
         """
-        with open(self.filename, "w+") as save_f:
+        with os.fdopen(os.open(self.filename, FILE_FLAGS, FILE_MODES), "w+") as save_f:
             json.dump(self.document, save_f, indent=4)
         return True
 
@@ -48,8 +49,13 @@ class Document():
         if not os.path.exists(self.filename):
             return False
 
-        with open(self.filename, "r") as load_f:
-            self.document = json.load(load_f)
+        try:
+            with open(self.filename, "r") as load_f:
+                self.document = json.load(load_f)
+        except json.decoder.JSONDecodeError as error:
+            self.logger.error("The file %s is not json file." % self.filename)
+            return False
+
         return True
 
 
@@ -59,6 +65,7 @@ class CertDocument(Document):
     """
 
     def __init__(self, filename, logger, document=''):
+        super().__init__(filename, logger, document)
         self.document = dict()
         self.filename = filename
         self.logger = logger
@@ -282,6 +289,6 @@ class ConfigFile:
         Save the config property value to a file
         :return:
         """
-        with open(self.filename, "w") as fp_info:
+        with os.fdopen(os.open(self.filename, FILE_FLAGS, FILE_MODES), "w") as fp_info:
             for line in self.config:
                 fp_info.write(line)
