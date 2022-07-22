@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,12 +12,11 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2022-04-09
 
-"""FC test"""
-
 import os
 import sys
 import shutil
 import argparse
+from subprocess import getstatusoutput
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
@@ -25,16 +24,13 @@ from hwcompatible.command import Command
 
 class FCTest(Test):
     """
-    fibre channel test
+    Fibre channel test
     """
 
     def __init__(self):
         Test.__init__(self)
         self.disks = list()
         self.filesystems = ["ext4"]
-        self.args = None
-        self.logpath = ""
-        self.name = ""
         self.device = ""
         self.pci_num = ""
         self.config_data = dict()
@@ -48,38 +44,38 @@ class FCTest(Test):
         self.device = getattr(self.args, 'device', None)
         self.pci_num = self.device.get_property("DEVPATH").split('/')[-1]
         self.config_data = getattr(self.args, "config_data", None)
-        self.name = self.device.get_name()
-        self.logpath = os.path.join(getattr(self.args, "logdir", None), "fc-" + self.name + ".log")
+        self.logger = getattr(self.args, "test_logger", None)
+        self.log_path = self.logger.logfile
         self.show_driver_info()
-        os.system("echo Vendor Info: >> %s" % self.logpath)
-        Command("lspci -s %s -v &>> %s " % (self.pci_num, self.logpath)).echo(ignore_errors=True)
-        os.system("echo Disk Info: >> %s" % self.logpath)
-        Command("fdisk -l &>> %s" % self.logpath).echo(ignore_errors=True)
-        os.system("echo Partition Info: >> %s" % self.logpath)
-        Command("df -h &>> %s" % self.logpath).echo(ignore_errors=True)
-        os.system("echo Mount Info: >> %s" % self.logpath)
-        Command("mount &>> %s" % self.logpath).echo(ignore_errors=True)
-        os.system("echo Swap Info: >> %s" % self.logpath)
-        Command("cat /proc/swaps &>> %s" % self.logpath).echo(ignore_errors=True)
-        os.system("echo LVM Info: >> %s" % self.logpath)
-        Command("pvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
-        Command("vgdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
-        Command("lvdisplay &>> %s" % self.logpath).echo(ignore_errors=True)
-        os.system("echo Md Info: >> %s" % self.logpath)
-        Command("cat /proc/mdstat &>> %s" % self.logpath).echo(ignore_errors=True)
+        self.logger.info("Vendor Info:", terminal_print=False)
+        Command("lspci -s %s -v &>> %s " % (self.pci_num, self.log_path)).echo(ignore_errors=True)
+        self.logger.info("Disk Info:", terminal_print=False)
+        Command("fdisk -l &>> %s" % self.log_path).echo(ignore_errors=True)
+        self.logger.info("Partition Info:", terminal_print=False)
+        Command("df -h &>> %s" % self.log_path).echo(ignore_errors=True)
+        self.logger.info("Mount Info:", terminal_print=False)
+        Command("mount &>> %s" % self.log_path).echo(ignore_errors=True)
+        self.logger.info("Swap Info:", terminal_print=False)
+        Command("cat /proc/swaps &>> %s" % self.log_path).echo(ignore_errors=True)
+        self.logger.info("LVM Info:", terminal_print=False)
+        Command("pvdisplay &>> %s" % self.log_path).echo(ignore_errors=True)
+        Command("vgdisplay &>> %s" % self.log_path).echo(ignore_errors=True)
+        Command("lvdisplay &>> %s" % self.log_path).echo(ignore_errors=True)
+        self.logger.info("Md Info:", terminal_print=False)
+        Command("cat /proc/mdstat &>> %s" % self.log_path).echo(ignore_errors=True)
         sys.stdout.flush()
 
     def test(self):
         """
-        start test
+        Start test
         """
         self.get_disk()
         if len(self.disks) == 0:
-            print("No suite disk found to test.")
+            self.logger.error("No suite disk found to test.")
             return False
 
         if not self.config_data:
-            print("Failed to get disk from configuration file.")
+            self.logger.error("Failed to get disk from configuration file.")
             return False
         disk = self.config_data.get('disk', '')
         result = self.valid_disk(disk, self.disks)
@@ -102,7 +98,7 @@ class FCTest(Test):
 
     def get_disk(self):
         """
-        get disk info
+        Get disk info
         """
         self.disks = list()
         disks = list()
@@ -143,62 +139,58 @@ class FCTest(Test):
 
         un_suitable = list(set(disks).difference(set(self.disks)))
         if len(un_suitable) > 0:
-            print("These disks %s are in use now, skip them." % "|".join(un_suitable))
+            self.logger.info("These disks %s are in use now, skip them." %
+                             "|".join(un_suitable))
 
     def raw_test(self, disk):
         """
-        raw test
+        Raw test
         """
-        print("\n#############")
-        print("%s raw IO test" % disk)
+        self.logger.info("%s raw IO test" % disk)
         device = os.path.join("/dev", disk)
         if not os.path.exists(device):
-            print("Error: device %s not exists." % device)
+            self.logger.error("Device %s does not exist." % device)
         proc_path = os.path.join("/sys/block/", disk)
         if not os.path.exists(proc_path):
             proc_path = os.path.join("/sys/block/*/", disk)
         size = Command("cat %s/size" % proc_path).get_str()
         size = int(size) / 2
         if size <= 0:
-            print("Error: device %s size not suitable to do test." % device)
+            self.logger.error("Device %s size is not suitable for testing." % device)
             return False
         elif size > 1048576:
             size = 1048576
 
-        print("\nStarting sequential raw IO test...")
+        self.logger.info("Starting sequential raw IO test...")
         opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -group_reporting -name=file -runtime=300"
         if not self.do_fio(device, size, opts):
-            print("%s sequential raw IO test fail." % device)
-            print("#############")
+            self.logger.error("%s sequential raw IO test failed." % device)
             return False
 
-        print("\nStarting rand raw IO test...")
+        self.logger.info("Starting rand raw IO test...")
         opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 " \
                "-group_reporting -name=file -runtime=300"
         if not self.do_fio(device, size, opts):
-            print("%s rand raw IO test fail." % device)
-            print("#############")
+            self.logger.error("%s rand raw IO test failed." % device)
             return False
 
-        print("#############")
         return True
 
     def vfs_test(self, disk):
         """
-        vfs test
+        Vfs test
         """
-        print("\n#############")
-        print("%s vfs test" % disk)
+        self.logger.info("%s vfs test" % disk)
         device = os.path.join("/dev/", disk)
         if not os.path.exists(device):
-            print("Error: device %s not exists." % device)
+            self.logger.error("Device %s does not exist." % device)
         proc_path = os.path.join("/sys/block/", disk)
         if not os.path.exists(proc_path):
             proc_path = os.path.join("/sys/block/*/", disk)
         size = Command("cat %s/size" % proc_path).get_str()
         size = int(size) / 2 / 2
         if size <= 0:
-            print("Error: device %s size not suitable to do test." % device)
+            self.logger.error("Device %s size is not suitable for testing." % device)
             return False
         elif size > 1048576:
             size = 1048576
@@ -210,17 +202,17 @@ class FCTest(Test):
 
         return_code = True
         for file_sys in self.filesystems:
-            print("\nFormatting %s to %s ..." % (device, file_sys))
+            self.logger.info("Formatting %s to %s ..." % (device, file_sys), terminal_print=False)
             Command("umount %s" % device).echo(ignore_errors=True)
             Command("mkfs -t %s -F %s 2>/dev/null" % (file_sys, device)).echo(ignore_errors=True)
             Command("mount -t %s %s %s" % (file_sys, device, "vfs_test")).echo(ignore_errors=True)
-            print("\nStarting sequential vfs IO test...")
+            self.logger.info("Starting sequential vfs IO test...")
             opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -name=directoy -runtime=300"
             if not self.do_fio(path, size, opts):
                 return_code = False
                 break
 
-            print("\nStarting rand vfs IO test...")
+            self.logger.info("Starting rand vfs IO test...")
             opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -name=directoy -runtime=300"
             if not self.do_fio(path, size, opts):
                 return_code = False
@@ -228,12 +220,11 @@ class FCTest(Test):
 
         Command("umount %s" % device).echo(ignore_errors=True)
         Command("rm -rf vfs_test").echo(ignore_errors=True)
-        print("#############")
         return return_code
 
     def do_fio(self, filepath, size, option):
         """
-        fio test
+        Fio test
         """
         if os.path.isdir(filepath):
             file_opt = "-directory=%s" % filepath
@@ -242,8 +233,9 @@ class FCTest(Test):
         max_bs = 64
         a_bs = 4
         while a_bs <= max_bs:
-            if os.system("fio %s -size=%dK -bs=%dK %s &>> %s" % (file_opt, size, a_bs, option, self.logpath)) != 0:
-                print("Error: %s fio failed." % filepath)
+            if getstatusoutput("fio %s -size=%dK -bs=%dK %s &>> %s" %
+                               (file_opt, size, a_bs, option, self.log_path))[0] != 0:
+                self.logger.error("%s fio failed." % filepath)
                 return False
             sys.stdout.flush()
             a_bs = a_bs * 2

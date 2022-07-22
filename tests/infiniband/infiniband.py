@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,9 +12,6 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2022-05-23
 
-"""InfiniBand Test"""
-
-import os
 import argparse
 from rdma import RDMATest
 
@@ -33,8 +30,6 @@ class InfiniBandTest(RDMATest):
         self.config_data = dict()
         self.server_ip = ""
         self.args = None
-        self.name = ""
-        self.logpath = ""
 
     def test_ib_link(self):
         """
@@ -42,20 +37,20 @@ class InfiniBandTest(RDMATest):
         :return:
         """
         if 'LinkUp' not in self.phys_state:
-            print("[X] Device is not LinkUp.")
+            self.logger.error("[X] Device is not LinkUp.")
 
         if 'ACTIVE' not in self.state:
-            print("[X] Link is not ACTIVE.")
+            self.logger.error("[X] Link is not ACTIVE.")
 
         if self.base_lid == 0x0:
-            print("[X] Fail to get base lid of %s." % self.interface)
+            self.logger.error("[X] Fail to get base lid of %s." % self.interface)
             return False
-        print("[.] The base lid is %s" % self.base_lid)
+        self.logger.info("[.] The base lid is %s" % self.base_lid)
 
         if self.sm_lid == 0x0:
-            print("[X] Fail to get subnet manager lid of %s." % self.interface)
+            self.logger.error("[X] Fail to get subnet manager lid of %s." % self.interface)
             return False
-        print("[.] The subnet manager lid is %s" % self.sm_lid)
+        self.logger.info("[.] The subnet manager lid is %s" % self.sm_lid)
 
         return True
    
@@ -68,22 +63,21 @@ class InfiniBandTest(RDMATest):
         self.args = args or argparse.Namespace()
         self.device = getattr(self.args, 'device', None)
         self.interface = self.device.get_property("INTERFACE")
-        self.name = self.device.get_name()
-        self.logpath = os.path.join(getattr(self.args, "logdir", None), "infiniband-" + self.name + ".log")
+        self.logger = getattr(self.args, "test_logger", None)
         self.show_driver_info()
         self.config_data = getattr(self.args, "config_data", None)
         if self.config_data:
             self.server_ip = self.config_data.get("server_ip", "")
         else:
-            print("Failed to test item value from configuration file.")
+            self.logger.error("Failed to test item value from configuration file.")
     
     def test(self):
         """
-        test case
+        Test case
         :return:
         """
         if not self.server_ip:
-            print("Failed to get server ip from configuration file.")
+            self.logger.error("Failed to get server ip from configuration file.")
             return False
 
         for subtest in self.subtests:
@@ -96,10 +90,10 @@ class InfiniBandTest(RDMATest):
         Environment recovery after test
         :return:
         """
-        print("[.] Stop all test servers...")
+        self.logger.info("[.] Stop all test servers...")
         self.call_remote_server('all', 'stop')
 
-        print("[.] Restore interfaces up...")
+        self.logger.info("[.] Restore interfaces up...")
         self.set_other_interfaces_up()
 
-        print("[.] Test finished.")
+        self.logger.info("[.] Test finished.")

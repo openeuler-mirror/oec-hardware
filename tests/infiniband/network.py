@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -15,16 +15,12 @@
 """Network Test"""
 
 import os
-import time
-
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
-from urllib.error import HTTPError
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
-from hwcompatible.document import CertDocument
-from hwcompatible.env import CertEnv
+
 
 class NetworkTest(Test):
     """
@@ -34,7 +30,7 @@ class NetworkTest(Test):
         Test.__init__(self)
         self.device = None
         self.requirements = ['ethtool', 'iproute', 'psmisc']
-        self.subtests = [self.test_ip_info,self.test_icmp] 
+        self.subtests = [self.test_ip_info, self.test_icmp]
         self.interface = None
         self.other_interfaces = []
         self.server_ip = None
@@ -64,8 +60,8 @@ class NetworkTest(Test):
             ip_addr = com.get_str(pattern, 'ip', False)
             return ip_addr
         except Exception:
-            print("[X] No available ip on the interface.")
-            return None
+            self.logger.error("[X] No available ip on the interface.")
+        return ""
 
     def test_icmp(self):
         """
@@ -78,13 +74,13 @@ class NetworkTest(Test):
 
         for _ in range(self.retries):
             try:
-                print(com.command)
+                self.logger.info(com.command)
                 loss = com.get_str(pattern, 'loss', False)
                 com.print_output()
-                if float(loss) == 0:
-                    return True
             except Exception as concrete_error:
-                print(concrete_error)
+                self.logger.error(concrete_error)
+            if float(loss) == 0:
+                return True
         return False
 
     def call_remote_server(self, cmd, act='start', ib_server_ip=''):
@@ -104,13 +100,13 @@ class NetworkTest(Test):
             'Content-type': 'application/x-www-form-urlencoded',
             'Accept': 'text/plain'
         }
+        request = Request(url, data=data, headers=headers)
         try:
-            request = Request(url, data=data, headers=headers)
             response = urlopen(request)
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error(str(concrete_error))
             return False
-        print("Status: %u %s" % (response.code, response.msg))
+        self.logger.info("Status: %u %s" % (response.code, response.msg))
         return int(response.code) == 200
 
     def create_testfile(self):
@@ -129,19 +125,19 @@ class NetworkTest(Test):
         :return:
         """
         if not self.interface:
-            print("[X] No interface assigned.")
+            self.logger.error("[X] No interface assigned.")
             return False
-        print("[.] The test interface is %s." % self.interface)
+        self.logger.info("[.] The test interface is %s." % self.interface)
 
         if not self.server_ip:
-            print("[X] No server ip assigned.")
+            self.logger.error("[X] No server ip assigned.")
             return False
-        print("[.] The server ip is %s." % self.server_ip)
+        self.logger.info("[.] The server ip is %s." % self.server_ip)
 
         client_ip = self.get_interface_ip()
         if not client_ip:
-            print("[X] No available ip on %s." % self.interface)
+            self.logger.error("[X] No available ip on %s." % self.interface)
             return False
-        print("[.] The client ip is %s on %s." % (client_ip, self.interface))
+        self.logger.info("[.] The client ip is %s on %s." % (client_ip, self.interface))
 
         return True

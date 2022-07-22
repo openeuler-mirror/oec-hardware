@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,18 +12,15 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""call test_case"""
-
 import decimal
 import time
 
 
 def cal():
-    """call test_case"""
+    """Call test_case"""
     decimal.getcontext().prec = 1000
     one = decimal.Decimal(1)
     for i in range(1000):
-        # j = (i * one).sqrt()
         (i * one).sqrt()
 
 

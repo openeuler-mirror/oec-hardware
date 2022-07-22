@@ -64,6 +64,7 @@ FC = "fc"
 RAID = "raid"
 GPU = "gpu"
 NVME = "nvme"
+DPDK = "dpdk"
 GPU_DRIVER = ("nouveau", "nvidia", "bi_driver", "amdgpu")
 KEYCARD = "keycard"
 KEYCARD_VENDORS = ('Xilinx', 'Renesas', 'Texas', 'PLX')

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -40,11 +40,11 @@ class NvmeTest(Test):
         :return:
         """
         self.args = args or argparse.Namespace()
+        self.logger = getattr(args, "test_logger", None)
+        self.log_path = self.logger.logfile
         self.device = getattr(args, "device", None)
-        self.name = self.device.get_name()
-        self.logpath = os.path.join(getattr(self.args, "logdir", None), "nvme-" + self.name + ".log")
         self.show_driver_info()
-        Command("nvme list").echo(ignore_errors=True)
+        Command("nvme list &>> %s" % self.log_path).echo(ignore_errors=True)
 
     def test(self):
         """
@@ -53,45 +53,44 @@ class NvmeTest(Test):
         """
         disk = self.device.get_name()
         if self.in_use(disk):
-            print("%s is in use now, skip this test." % disk)
+            self.logger.error("%s is in use now, skip this test." % disk)
             return False
 
         size = Command("cat /sys/block/%s/size" % disk).get_str()
         size = int(int(size))/2/2
         if size <= 0:
-            print("Error: the size of %s is not suitable for this test." % disk)
+            self.logger.error("The size of %s is not suitable for this test." % disk)
             return False
         elif size > 10*1024*1014*1024:
             size = 10*1024*1014*1024
 
         try:
-            print("\nFormatting...")
-            Command("nvme format -l 0 -i 0 /dev/%s" % disk).echo()
+            self.logger.info("Formatting...")
+            Command("nvme format -l 0 -i 0 /dev/%s &>> %s" % (disk, self.log_path)).echo()
             sys.stdout.flush()
 
-            print("\nWritting...")
-            Command("nvme write -z %d -s 0 -d /dev/urandom /dev/%s 2> /dev/null" \
-                    % (size, disk)).echo()
+            self.logger.info("Writting...")
+            Command("nvme write -z %d -s 0 -d /dev/urandom /dev/%s 2> /dev/null" %
+                    (size, disk)).echo()
             sys.stdout.flush()
 
-            print("\nReading...")
+            self.logger.info("Reading...")
             Command("nvme read -s 0 -z %d /dev/%s &> /dev/null" % (size, disk)).echo()
             sys.stdout.flush()
 
-            print("\nSmart Log:")
+            self.logger.info("\nSmart Log:")
             Command("nvme smart-log /dev/%s 2> /dev/null" % disk).echo()
             sys.stdout.flush()
 
-            print("\nLog:")
+            self.logger.info("\nLog:")
             Command("nvme get-log -i 1 -l 128 /dev/%s 2> /dev/null" % disk).echo()
-            print("")
             sys.stdout.flush()
 
-            Command("nvme list").echo(ignore_errors=True)
+            Command("nvme list &>> %s" % self.log_path).echo(ignore_errors=True)
             return True
         except Exception as concrete_error:
-            print("Error: nvme cmd fail.")
-            print(concrete_error)
+            self.logger.error("Nvme cmd fail.")
+            self.logger.error(concrete_error)
             return False
 
     def in_use(self, disk):
@@ -100,22 +99,18 @@ class NvmeTest(Test):
         :param disk:
         :return:
         """
-        os.system("swapon -a 2>/dev/null")
-        swap_file = open("/proc/swaps", "r")
-        swap = swap_file.read()
-        swap_file.close()
+        Command("swapon -a 2>/dev/null").echo()
+        with open("/proc/swaps", "r") as swap_file:
+            swap = swap_file.read()
 
-        mdstat_file = open("/proc/mdstat", "r")
-        mdstat = mdstat_file.read()
-        mdstat_file.close()
+        with open("/proc/mdstat", "r") as mdstat_file:
+            mdstat = mdstat_file.read()
 
-        mtab_file = open("/etc/mtab", "r")
-        mtab = mtab_file.read()
-        mtab_file.close()
+        with open("/etc/mtab", "r") as mtab_file:
+            mtab = mtab_file.read()
 
-        mount_file = open("/proc/mounts", "r")
-        mounts = mount_file.read()
-        mount_file.close()
+        with open("/proc/mounts", "r") as mount_file:
+            mounts = mount_file.read()
 
         if ("/dev/%s" % disk) in swap or disk in mdstat:
             return True

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-# Copyright (c) 2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -11,68 +11,62 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2022-04-13
 
-"""gpu test"""
 import os
 import subprocess
 import argparse
 import time
-import shutil
 import re
 
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 from hwcompatible.test import Test
-from hwcompatible.device import Device
 
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class GpuTest(Test):
     """
-        gpu test
+    Gpu test
     """
 
     def __init__(self):
         Test.__init__(self)
-        self.args = None
         self.device = None
-        self.logpath = ""
         self.gpu_burn = ""
-        self.name = ""
         self.cuda_samples_log = ""
         self.requirements = ["gcc-c++", "make", "tar", "git"]
 
     def setup(self, args=None):
         self.args = args or argparse.Namespace()
-        self.name = getattr(args, 'testname', None)
+        self.logger = getattr(args, "test_logger", None)
         self.device = getattr(args, 'device', None)
-        self.logpath = getattr(args, "logdir", None) + "/" + self.name + ".log"
+        self.log_path = self.logger.logfile
         self.cuda_samples_log = getattr(
             args, 'logdir', None) + '/cuda_samples.log'
         self.gpu_burn = getattr(args, 'logdir', None) + '/gpu_burn.log'
         self.smi_name = "nvidia-smi"
 
     def current_card(self):
-        print("Vendor Info:")
+        self.logger.info("Vendor Info:")
         pci_num = self.device.get_property("DEVPATH").split('/')[-1].upper()
-        Command('lspci -s %s -v' % pci_num).echo()
+        Command('lspci -s %s -v &>> %s' % (pci_num, self.log_path)).echo()
 
-        print("Driver Info:")
+        self.logger.info("Driver Info:")
         driver = self.device.get_property("DRIVER")
         if driver == "iluvatar-itr":
             self.smi_name = "ixsmi"
             driver = "bi_driver"
             self.device.set_driver(driver)
-        Command('modinfo %s | head -n 13' % driver).echo()
-        Command("echo Driver Name：%s >> %s" % (driver, self.logpath)).echo()
+        Command('modinfo %s | head -n 13 &>> %s' % (driver, self.log_path)).echo()
+        self.logger.info("Driver Name:")
         driver_version = self.device.get_driver_version()
         if not driver_version:
-            Command("echo The driver version information cannot be obtained. Please view it manually.").echo()
+            self.logger.warning("The driver version information cannot be obtained. Please view it manually.")
         else:
-            Command("echo Driver Version: %s >> %s" % (driver_version, self.logpath)).echo()
+            self.logger.info("Driver Version: %s" % driver_version)
         return pci_num
 
     def pressure(self):
-        print("Monitor GPU temperature and utilization rate.")
+        self.logger.info("Monitor GPU temperature and utilization rate.")
         pci = []
         num = []
         pci_key = "GPU 0000" + self.current_card()
@@ -94,31 +88,31 @@ class GpuTest(Test):
                   self.gpu_burn)
         time.sleep(1)
         while not subprocess.call("ps -ef | grep 'gpu_burn' | grep -v grep >/dev/null", shell=True):
-            os.system('%s &>>%s' % (self.smi_name, self.logpath))
+            Command('%s &>> %s' % (self.smi_name, self.log_path)).run()
             time.sleep(1)
 
     def test(self):
         try:
             result = True
-            print("Start to test gpu pressure.")
+            self.logger.info("Start to test gpu pressure.")
             self.pressure()
             if os.path.exists(self.gpu_burn) and os.system("grep 'GPU 0: OK' %s" % self.gpu_burn) == 0:
-                print("Test gpu pressure succeed.")
+                self.logger.info("Test gpu pressure succeed.")
             else:
-                print("Test gpu pressure failed.")
+                self.logger.error("Test gpu pressure failed.")
                 result = False
 
-            print("Start to test cuda samples.")
+            self.logger.info("Start to test cuda samples.")
             sample_case = "simpleOccupancy,bandwidthTest,p2pBandwidthLatencyTest,deviceQuery,clock"
             code = os.system(
                 "bash %s/test_gpu.sh test_cuda_samples '%s %s'" % (gpu_dir, self.cuda_samples_log, sample_case))
             if code == 0:
-                print("Test cuda samples succeed.")
+                self.logger.info("Test cuda samples succeed.")
             else:
                 result = False
-                print("Test cuda samples failded.")
+                self.logger.error("Test cuda samples failded.")
 
             return result
         except Exception as e:
-            print("Failed to run the script because compiling or setting variables", e)
+            self.logger.error("Failed to run the script because compiling or setting variables %s" % e)
             return False

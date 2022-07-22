@@ -87,7 +87,8 @@ class EulerCertification():
         """
         try:
             self.load()
-            args = argparse.Namespace(test_factory=self.test_factory)
+            test_suite = create_test_suite(self.test_factory, self.logger)
+            args = argparse.Namespace(test_factory=self.test_factory, test_suite=test_suite)
             job = Job(args)
             reboot = Reboot(None, job, None)
             if reboot.check():
@@ -125,6 +126,7 @@ class EulerCertification():
             self.certification = CertDocument(CertEnv.certificationfile, self.logger)
             if not self.certification.document:
                 self.certification.new()
+                self.certification.save()
         if not self.test_factory:
             factory_doc = FactoryDocument(CertEnv.factoryfile)
             self.test_factory = factory_doc.get_factory()

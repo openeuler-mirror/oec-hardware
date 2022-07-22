@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -46,6 +46,8 @@ class CDRomTest(Test):
         :return:
         """
         self.args = args or argparse.Namespace()
+        self.logger = getattr(args, "test_logger", None)
+        self.log_path = self.logger.logfile
         self.device = getattr(args, "device", None)
         self.type = self.get_type(self.device)
         self.get_mode(self.type)
@@ -62,18 +64,18 @@ class CDRomTest(Test):
             return False
 
         devname = self.device.get_property("DEVNAME")
-        Command("eject %s" % devname).run(ignore_errors=True)
+        Command("eject %s &>> %s" % (devname, self.log_path)).run(ignore_errors=True)
         while True:
-            print("Please insert %s disc into %s, then close the tray manually."\
-                  % (self.type.lower(), devname))
+            self.logger.info("Please insert %s disc into %s, then close the tray manually."
+                             % (self.type.lower(), devname))
             if self.method == "write_test":
-                print("  tips:disc should be new.")
+                self.logger.info("Tips:disc should be new.")
             elif self.method == "read_test":
-                print("  tips:disc should not be blank.")
+                self.logger.info("Tips:disc should not be blank.")
             if self.com_ui.prompt_confirm("Done well?"):
                 break
-        Command("eject -t %s" % devname).run(ignore_errors=True)
-        print("Waiting media..).")
+        Command("eject -t %s &>> %s" % (devname, self.log_path)).run(ignore_errors=True)
+        self.logger.warning("Waiting media...")
         time.sleep(20)
 
         if not getattr(self, self.method)():
@@ -102,7 +104,7 @@ class CDRomTest(Test):
             if device.get_property("ID_CDROM_" + cd_type) == "1":
                 return cd_type
 
-        print("Can not find proper test-type for %s." % device.get_name())
+        self.logger.error("Can not find proper test-type for %s." % device.get_name())
         return None
 
     def get_mode(self, device_type):
@@ -130,24 +132,24 @@ class CDRomTest(Test):
             devname = self.device.get_property("DEVNAME")
             Command("umount %s" % devname).run(ignore_errors=True)
             if "BD" in self.type:
-                print("Formatting ...")
+                self.logger.info("Formatting ...")
                 sys.stdout.flush()
                 Command("dvd+rw-format -format=full %s 2>/dev/null" % devname).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return self.write_test()
             elif "DVD_PLUS" in self.type:
-                print("Formatting ...")
+                self.logger.info("Formatting ...")
                 sys.stdout.flush()
                 Command("dvd+rw-format -force %s 2>/dev/null" % devname).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return self.write_test()
             else:
-                print("Blanking ...")
+                self.logger.info("Blanking ...")
                 sys.stdout.flush()
                 # blankCommand = Command("cdrecord -v dev=%s blank=fast" % devname).echo()
-                Command("cdrecord -v dev=%s blank=fast" % devname).echo()
+                Command("cdrecord -v dev=%s blank=fast &>> %s" % (devname, self.log_path)).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return self.write_test()
@@ -163,7 +165,7 @@ class CDRomTest(Test):
             devname = self.device.get_property("DEVNAME")
             Command("umount %s" % devname).run(ignore_errors=True)
             if "BD" in self.type or "DVD_PLUS" in self.type:
-                Command("growisofs -Z %s -quiet -R %s" % (devname, self.test_dir)).echo()
+                Command("growisofs -Z %s -quiet -R %s &>> %s" % (devname, self.test_dir, self.log_path)).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return True
@@ -184,13 +186,13 @@ class CDRomTest(Test):
                     if "BURNFREE" in flags:
                         write_opts += " driveropts=burnfree"
                 except CertCommandError as concrete_error:
-                    print(concrete_error)
+                    self.logger.error(concrete_error)
 
                 size = Command("mkisofs -quiet -R -print-size %s " % self.test_dir).get_str()
                 blocks = int(size)
 
-                Command("mkisofs -quiet -R %s | cdrecord -v %s dev=%s fs=32M tsize=%ss -" %
-                        (self.test_dir, write_opts, devname, blocks)).echo()
+                Command("mkisofs -quiet -R %s | cdrecord -v %s dev=%s fs=32M tsize=%ss - &>> %s" %
+                        (self.test_dir, write_opts, devname, blocks, self.log_path)).echo()
                 self.reload_disc(devname)
                 sys.stdout.flush()
                 return True
@@ -208,31 +210,33 @@ class CDRomTest(Test):
                 shutil.rmtree("mnt_cdrom")
             os.mkdir("mnt_cdrom")
 
-            print("Mounting media ...")
+            self.logger.info("Mounting media ...")
             Command("umount %s" % devname).echo(ignore_errors=True)
             Command("mount -o ro %s ./mnt_cdrom" % devname).echo()
 
-            size = Command("df %s | tail -n1 | awk '{print $3}'" % devname).get_str()
+            size = Command("df %s | tail -n1 | awk '{print $3}' &>> %s" %
+                           (devname, self.log_path)).get_str()
             size = int(size)
             if size == 0:
-                print("Error: blank disc.")
-                Command("umount ./mnt_cdrom").run(ignore_errors=True)
-                Command("rm -rf ./mnt_cdrom").run(ignore_errors=True)
+                self.logger.error("Blank disc.")
+                Command("umount ./mnt_cdrom &>> %s" % self.log_path).run(ignore_errors=True)
+                shutil.rmtree("mnt_cdrom")
                 return False
 
             if os.path.exists("device_dir"):
                 shutil.rmtree("device_dir")
             os.mkdir("device_dir")
 
-            print("Copying files ...")
+            self.logger.info("Copying files ...")
             sys.stdout.flush()
-            Command("cp -dpRf ./mnt_cdrom/. ./device_dir/").run()
+            Command("cp -dpRf ./mnt_cdrom/. ./device_dir/ &>> %s", self.log_path).run()
 
-            print("Comparing files ...")
+            self.logger.info("Comparing files ...")
             sys.stdout.flush()
             return_code = self.cmp_tree("mnt_cdrom", "device_dir")
             Command("umount ./mnt_cdrom").run(ignore_errors=True)
-            Command("rm -rf ./mnt_cdrom ./device_dir").run(ignore_errors=True)
+            shutil.rmtree("./mnt_cdrom")
+            shutil.rmtree("./device_dir")
             return return_code
         except CertCommandError as concrete_error:
             print(concrete_error)
@@ -246,13 +250,13 @@ class CDRomTest(Test):
         :return:
         """
         if not (dir1 and dir2):
-            print("Error: invalid input dir.")
+            self.logger.info("Error: invalid input dir.")
             return False
         try:
-            Command("diff -r %s %s" % (dir1, dir2)).run()
+            Command("diff -r %s %s &>> %s" % (dir1, dir2, self.log_path)).run()
             return True
         except CertCommandError:
-            print("Error: file comparison failed.")
+            self.logger.error("File comparison failed.")
             return False
 
     def reload_disc(self, device):
@@ -264,21 +268,21 @@ class CDRomTest(Test):
         if not device:
             return False
 
-        print("Reloading the media ... ")
+        self.logger.info("Reloading the media ... ")
         sys.stdout.flush()
         try:
-            Command("eject %s" % device).run()
-            print("tray ejected.")
+            Command("eject %s &>> %s" % (device, self.log_path)).run()
+            self.logger.info("tray ejected.")
             sys.stdout.flush()
         except Exception:
             pass
 
         try:
-            Command("eject -t %s" % device).run()
-            print("tray auto-closed.\n")
+            Command("eject -t %s &>> %s" % (device, self.log_path)).run()
+            self.logger.info("tray auto-closed.\n")
             sys.stdout.flush()
         except Exception:
-            print("Could not auto-close the tray, please close the tray manually.")
+            self.logger.error("Could not auto-close the tray, please close the tray manually.")
             self.com_ui.prompt_confirm("Done well?")
 
         time.sleep(20)
