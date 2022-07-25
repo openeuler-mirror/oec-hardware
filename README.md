@@ -134,7 +134,8 @@ oec-hardware-1.0.0 版本将不再进行更新维护，请获取最新版本的o
 │   ├── uwsgi.conf            nginx 服务配置
 │   └── uwsgi.ini             uwsgi 服务配置
 ├── config   配置文件
-│   └── version.config        工具版本配置文件
+│   ├── version.config        工具版本配置文件
+│   └── test_config.yaml      工具测试项配置文件
 ├── templates                 兼容性清单模板存放目录
 ├── tests   测试套
 └──vendor_tests               厂商测试工具存放目录
@@ -167,13 +168,13 @@ oec-hardware工具框架有如下特点：
 以下是oech工具客户端的运行环境依赖组件:
 | 组件      | 组件描述  | 可获得性 |
 | --------- | ------ | ----------- |
-| python    | python3 及以上 | 可先通过python --version命令查看，如果没有该版本，需要下载安装，并设置/usr/bin/python的软链接 |
+| python3    | python3 及以上 | 可使用dnf进行安装 |
 
 以下是oech工具服务端的运行环境依赖组件:
 
 | 组件      | 组件描述  | 可获得性 |
 | --------- | ------- | ----------- |
-| python   | python3 及以上 | 可先通过python --version命令查看，如果没有该版本，需要下载安装，并设置/usr/bin/python的软链接 |
+| python3   | python3 及以上 | 可使用dnf进行安装 |
 | Flask    | v2.1.2 及以上版本        | 可使用pip3进行安装   |
 | Flask-bootstrap    | v3.3.7.1 及以上版本        | 可使用pip3进行安装  |
 | uwsgi    | v2.0.20 及以上版本        | 可使用pip3进行安装   |
@@ -190,26 +191,26 @@ oec-hardware工具框架有如下特点：
 
 ## 获取安装包
 
-https://gitee.com/src-openeuler/oec-hardware/releases
+配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything  和 update repo源，使用 `dnf` 获取软件包进行安装。
 
 ## 安装过程
 
 ### 客户端
 
-1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，使用 `dnf` 安装客户端 oec-hardware。
+1. 使用 `dnf` 安装客户端 oec-hardware。
 
    ```
-   dnf install oec-hardware-XXX.rpm
+   dnf install oec-hardware
    ```
 
 2. 输入 `oech` 命令，可正常运行，则表示安装成功。
 
 ### 服务端
 
-1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 源，使用 `dnf` 安装服务端 oec-hardware-server。
+1. 使用 `dnf` 安装服务端 oec-hardware-server。
 
    ```
-   dnf install oec-hardware-server-XXX.rpm
+   dnf install oec-hardware-server
    ```
 
 2. 服务端 web 展示页面需要的部分组件系统本身不提供，需要使用 `pip3` 安装（请自行配置可用 pip 源）。
