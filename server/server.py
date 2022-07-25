@@ -275,7 +275,9 @@ def upload_job():
 
     with open(tar_job, 'wb') as file_content:
         file_content.write(base64.b64decode(filetext))
-    subprocess.run("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
+    exec = subprocess.getstatusoutput("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
+    if exec[0] != 0:
+        sys.stderr.write("Decompress log file failed.")
 
     return render_template('upload.html', host=host, id=oec_id, job=job,
                            filetext=filetext, ret='Successful')
