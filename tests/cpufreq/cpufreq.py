@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -16,6 +16,7 @@
 
 from random import randint
 from time import sleep
+import argparse
 
 from hwcompatible.env import CertEnv
 from hwcompatible.test import Test
@@ -26,7 +27,7 @@ class CPU:
     """
     cpufreq test
     """
-    def __init__(self):
+    def __init__(self, logger):
         self.cpu = None
         self.nums = None
         self.list = None
@@ -35,6 +36,7 @@ class CPU:
         self.original_governor = None
         self.max_freq = None
         self.min_freq = None
+        self.logger = logger
 
     def get_info(self):
         """
@@ -45,7 +47,7 @@ class CPU:
         try:
             nums = cmd.get_str(r'^CPU\S*:\s+(?P<cpus>\d+)$', 'cpus', False)
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error("Get the CPU(s) failed\n", concrete_error)
             return False
         self.nums = int(nums)
         self.list = range(self.nums)
@@ -54,7 +56,7 @@ class CPU:
         try:
             max_freq = cmd.get_str()
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error("Get the scaling_max_freq of cpu failed\n", concrete_error)
             return False
         self.max_freq = int(max_freq)
 
@@ -62,7 +64,7 @@ class CPU:
         try:
             min_freq = cmd.get_str()
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error("Get the scaling_min_freq of cpu failed\n", concrete_error)
             return False
         self.min_freq = int(min_freq)
 
@@ -75,12 +77,13 @@ class CPU:
         :param cpu:
         :return:
         """
-        cmd = Command("cpupower -c %s frequency-set --freq %s" % (cpu, freq))
+        cmd = Command("cpupower -c %s frequency-set --freq %s &>> %s" %
+                      (cpu, freq, self.logger.logfile))
         try:
             cmd.run()
             return cmd.returncode
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error(concrete_error)
             return False
 
     def get_freq(self, cpu):
@@ -93,7 +96,7 @@ class CPU:
         try:
             return int(cmd.get_str(r'.* frequency: (?P<freq>\d+) .*', 'freq', False))
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error(concrete_error)
             return False
 
     def set_governor(self, governor, cpu='all'):
@@ -108,7 +111,7 @@ class CPU:
             cmd.run()
             return cmd.returncode
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error(concrete_error)
             return False
 
     def get_governor(self, cpu):
@@ -119,9 +122,10 @@ class CPU:
         """
         cmd = Command("cpupower -c %s frequency-info -p" % cpu)
         try:
-            return cmd.get_str(r'.* governor "(?P<governor>\w+)".*', 'governor', False)
+            return cmd.get_str(r'.* governor "(?P<governor>\w+)".*',
+                               'governor', False)
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error("Get cpu governor failed\n", concrete_error)
             return False
 
     def find_path(self, parent_dir, target_name):
@@ -136,7 +140,7 @@ class CPU:
             cmd.run()
             return cmd.returncode
         except Exception as concrete_error:
-            print(concrete_error)
+            self.logger.error(concrete_error)
             return False
 
 
@@ -146,7 +150,7 @@ class Load:
     """
     def __init__(self, cpu):
         self.cpu = cpu
-        self.process = Command("taskset -c {} python -u {}/cpufreq/cal.py".\
+        self.process = Command("taskset -c {} python -u {}/cpufreq/cal.py".
                                format(self.cpu, CertEnv.testdirectoy))
         self.returncode = None
 
@@ -181,7 +185,19 @@ class CPUFreqTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.requirements = ['util-linux', 'kernel-tools']
-        self.cpu = CPU()
+        self.cpu = None
+        self.original_governor = None
+
+
+    def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
+        self.args = args or argparse.Namespace()
+        self.logger = getattr(self.args, "test_logger", None)
+        self.cpu = CPU(self.logger)
         self.original_governor = self.cpu.get_governor(0)
 
     def test_userspace(self):
@@ -192,19 +208,19 @@ class CPUFreqTest(Test):
         target_cpu = randint(0, self.cpu.nums-1)
         target_freq = randint(self.cpu.min_freq, self.cpu.max_freq)
         if self.cpu.set_freq(target_freq, cpu=target_cpu) != 0:
-            print("[X] Set CPU%s to freq %d failed." % (target_cpu, target_freq))
+            self.logger.error("Set CPU%s to freq %d failed." % (target_cpu, target_freq))
             return False
-        print("[.] Set CPU%s to freq %d." % (target_cpu, target_freq))
+        self.logger.info("Set CPU%s to freq %d." % (target_cpu, target_freq))
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        print("[.] Current freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
+        self.logger.info("Current freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
 
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'userspace':
-            print("[X] The governor of CPU%s(%s) is not userspace." %
-                  (target_cpu, target_cpu_governor))
+            self.logger.error("The governor of CPU%s(%s) is not userspace." %
+                              (target_cpu, target_cpu_governor))
             return False
-        print("[.] The governor of CPU%s is %s." %
-              (target_cpu, target_cpu_governor))
+        self.logger.info("The governor of CPU%s is %s." %
+                         (target_cpu, target_cpu_governor))
 
         # min_freq -> max_runtime
         self.cpu.set_freq(self.cpu.min_freq)
@@ -219,9 +235,9 @@ class CPUFreqTest(Test):
             runtime_list.append(runtime)
         max_average_runtime = 1.0 * sum(runtime_list) / len(runtime_list)
         if max_average_runtime == 0:
-            print("[X] Max average time is 0.")
+            self.logger.error("Max average time is 0.")
             return False
-        print("[.] Max average time of all CPUs userspace load test: %.2f" %
+        self.logger.info("Max average time of all CPUs userspace load test: %.2f" %
               max_average_runtime)
 
         # max_freq -> min_runtime
@@ -237,9 +253,9 @@ class CPUFreqTest(Test):
             runtime_list.append(runtime)
         min_average_runtime = 1.0 * sum(runtime_list) / len(runtime_list)
         if min_average_runtime == 0:
-            print("[X] Min average time is 0.")
+            self.logger.info("Min average time is 0.")
             return False
-        print("[.] Min average time of all CPUs userspace load test: %.2f" %
+        self.logger.info("Min average time of all CPUs userspace load test: %.2f" %
               min_average_runtime)
 
         measured_speedup = 1.0 * max_average_runtime / min_average_runtime
@@ -248,11 +264,11 @@ class CPUFreqTest(Test):
         min_speedup = expected_speedup - (expected_speedup - 1.0) * tolerance
         max_speedup = expected_speedup + (expected_speedup - 1.0) * tolerance
         if not min_speedup <= measured_speedup <= max_speedup:
-            print("[X] The speedup(%.2f) is not between %.2f and %.2f" %
-                  (measured_speedup, min_speedup, max_speedup))
+            self.logger.error("The speedup(%.2f) is not between %.2f and %.2f" %
+                             (measured_speedup, min_speedup, max_speedup))
             return False
-        print("[.] The speedup(%.2f) is between %.2f and %.2f" %
-              (measured_speedup, min_speedup, max_speedup))
+        self.logger.info("The speedup(%.2f) is between %.2f and %.2f" %
+                         (measured_speedup, min_speedup, max_speedup))
 
         return True
 
@@ -262,45 +278,41 @@ class CPUFreqTest(Test):
         :return:
         """
         if self.cpu.set_governor('powersave') != 0:
-            print("[X] Set governor of all CPUs to powersave failed.")
+            self.logger.error("Set governor of all CPUs to powersave failed.")
             return False
-        print("[.] Set governor of all CPUs to powersave.")
+        self.logger.info("Set governor of all CPUs to powersave.")
 
         if self.cpu.set_governor('ondemand') != 0:
-            print("[X] Set governor of all CPUs to ondemand failed.")
+            self.logger.error("Set governor of all CPUs to ondemand failed.")
             return False
-        print("[.] Set governor of all CPUs to ondemand.")
+        self.logger.info("Set governor of all CPUs to ondemand.")
 
         target_cpu = randint(0, self.cpu.nums)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'ondemand':
-            print("[X] The governor of CPU%s(%s) is not ondemand." %
-                  (target_cpu, target_cpu_governor))
+            self.logger.error("The governor of CPU%s(%s) is not ondemand." % (target_cpu, target_cpu_governor))
             return False
-        print("[.] The governor of CPU%s is %s." %
-              (target_cpu, target_cpu_governor))
+        self.logger.info("The governor of CPU%s is %s." % (target_cpu, target_cpu_governor))
 
         load_test = Load(target_cpu)
         load_test.run()
         sleep(1)
         target_cpu_freq = self.cpu.get_freq(target_cpu)
         if target_cpu_freq != self.cpu.max_freq:
-            print("[X] The freq of CPU%s(%d) is not scaling_max_freq(%d)." %
-                  (target_cpu, target_cpu_freq, self.cpu.max_freq))
+            self.logger.error("The freq of CPU%s(%d) is not scaling_max_freq(%d)." %
+                              (target_cpu, target_cpu_freq, self.cpu.max_freq))
             return False
-        print("[.] The freq of CPU%s is scaling_max_freq(%d)." %
-              (target_cpu, target_cpu_freq))
+        self.logger.info("The freq of CPU%s is scaling_max_freq(%d)." % (target_cpu, target_cpu_freq))
 
         load_test_time = load_test.get_runtime()
-        print("[.] Time of CPU%s ondemand load test: %.2f" %
-              (target_cpu, load_test_time))
+        self.logger.info("Time of CPU%s ondemand load test: %.2f" % (target_cpu, load_test_time))
         target_cpu_freq = self.cpu.get_freq(target_cpu)
         if not target_cpu_freq <= self.cpu.max_freq:
-            print("[X] The freq of CPU%s(%d) is not less equal than %d." %
-                  (target_cpu, target_cpu_freq, self.cpu.max_freq))
+            self.logger.error("The freq of CPU%s(%d) is not less equal than %d." %
+                              (target_cpu, target_cpu_freq, self.cpu.max_freq))
             return False
-        print("[.] The freq of CPU%s(%d) is less equal than %d." %
-              (target_cpu, target_cpu_freq, self.cpu.max_freq))
+        self.logger.info("The freq of CPU%s(%d) is less equal than %d." %
+                         (target_cpu, target_cpu_freq, self.cpu.max_freq))
 
         return True
 
@@ -310,76 +322,75 @@ class CPUFreqTest(Test):
         :return:
         """
         if self.cpu.set_governor('powersave') != 0:
-            print("[X] Set governor of all CPUs to powersave failed.")
+            self.logger.error("Set governor of all CPUs to powersave failed.")
             return False
-        print("[.] Set governor of all CPUs to powersave.")
+        self.logger.info("Set governor of all CPUs to powersave.")
 
         if self.cpu.set_governor('conservative') != 0:
-            print("[X] Set governor of all CPUs to conservative failed.")
+            self.logger.error("Set governor of all CPUs to conservative failed.")
             return False
-        print("[.] Set governor of all CPUs to conservative.")
+        self.logger.info("Set governor of all CPUs to conservative.")
 
         target_cpu = randint(0, self.cpu.nums)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'conservative':
-            print("[X] The governor of CPU%s(%s) is not conservative." %
-                  (target_cpu, target_cpu_governor))
+            self.logger.error("The governor of CPU%s(%s) is not conservative." %
+                              (target_cpu, target_cpu_governor))
             return False
-        print("[.] The governor of CPU%s is %s." %
-              (target_cpu, target_cpu_governor))
+        self.logger.info("The governor of CPU%s is %s." % (target_cpu, target_cpu_governor))
 
         load_test = Load(target_cpu)
         load_test.run()
         sleep(1)
         target_cpu_freq = self.cpu.get_freq(target_cpu)
         if not self.cpu.min_freq <= target_cpu_freq <= self.cpu.max_freq:
-            print("[X] The freq of CPU%s(%d) is not between %d~%d." %
-                  (target_cpu, target_cpu_freq, self.cpu.min_freq, self.cpu.max_freq))
+            self.logger.error("The freq of CPU%s(%d) is not between %d~%d." %
+                              (target_cpu, target_cpu_freq, self.cpu.min_freq, self.cpu.max_freq))
             return False
-        print("[.] The freq of CPU%s(%d) is between %d~%d." %
-              (target_cpu, target_cpu_freq, self.cpu.min_freq, self.cpu.max_freq))
+        self.logger.info("The freq of CPU%s(%d) is between %d~%d." %
+                         (target_cpu, target_cpu_freq, self.cpu.min_freq, self.cpu.max_freq))
 
         load_test_time = load_test.get_runtime()
-        print("[.] Time of CPU%s conservative load test: %.2f" %
-              (target_cpu, load_test_time))
+        self.logger.info("Time of CPU%s conservative load test: %.2f" %
+                         (target_cpu, load_test_time))
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        print("[.] Current freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
+        self.logger.info("Current freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
 
         return True
 
     def test_powersave(self):
         """
-        powersave mode of testing CPU frequency
+        Powersave mode of testing CPU frequency
         :return:
         """
         if self.cpu.set_governor('powersave') != 0:
-            print("[X] Set governor of all CPUs to powersave failed.")
+            self.logger.error("Set governor of all CPUs to powersave failed.")
             return False
-        print("[.] Set governor of all CPUs to powersave.")
+        self.logger.info("Set governor of all CPUs to powersave.")
 
         target_cpu = randint(0, self.cpu.nums)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'powersave':
-            print("[X] The governor of CPU%s(%s) is not powersave." %
-                  (target_cpu, target_cpu_governor))
+            self.logger.error("The governor of CPU%s(%s) is not powersave." %
+                              (target_cpu, target_cpu_governor))
             return False
-        print("[.] The governor of CPU%s is %s." %
-              (target_cpu, target_cpu_governor))
+        self.logger.info("The governor of CPU%s is %s." %
+                         (target_cpu, target_cpu_governor))
 
         target_cpu_freq = self.cpu.get_freq(target_cpu)
         if target_cpu_freq != self.cpu.min_freq:
-            print("[X] The freq of CPU%s(%d) is not scaling_min_freq(%d)." %
-                  (target_cpu, target_cpu_freq, self.cpu.min_freq))
+            self.logger.error("The freq of CPU%s(%d) is not scaling_min_freq(%d)." %
+                              (target_cpu, target_cpu_freq, self.cpu.min_freq))
             return False
-        print("[.] The freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
+        self.logger.info("The freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
 
         load_test = Load(target_cpu)
         load_test.run()
         load_test_time = load_test.get_runtime()
-        print("[.] Time of CPU%s powersave load test: %.2f" %
-              (target_cpu, load_test_time))
+        self.logger.info("Time of CPU%s powersave load test: %.2f" %
+                         (target_cpu, load_test_time))
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        print("[.] Current freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
+        self.logger.info("Current freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
 
         return True
 
@@ -389,33 +400,34 @@ class CPUFreqTest(Test):
         :return:
         """
         if self.cpu.set_governor('performance') != 0:
-            print("[X] Set governor of all CPUs to performance failed.")
+            self.logger.error("Set governor of all CPUs to performance failed.")
             return False
-        print("[.] Set governor of all CPUs to performance.")
+        self.logger.info("Set governor of all CPUs to performance.")
 
         target_cpu = randint(0, self.cpu.nums)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'performance':
-            print("[X] The governor of CPU%s(%s) is not performance." %
-                  (target_cpu, target_cpu_governor))
+            self.logger.error("The governor of CPU%s(%s) is not performance." %
+                              (target_cpu, target_cpu_governor))
             return False
-        print("[.] The governor of CPU%s is %s." %
-              (target_cpu, target_cpu_governor))
+        self.logger.info("The governor of CPU%s is %s." %
+                         (target_cpu, target_cpu_governor))
 
         target_cpu_freq = self.cpu.get_freq(target_cpu)
         if target_cpu_freq != self.cpu.max_freq:
-            print("[X] The freq of CPU%s(%d) is not scaling_max_freq(%d)." %
-                  (target_cpu, target_cpu_freq, self.cpu.max_freq))
+            self.logger.error("The freq of CPU%s(%d) is not scaling_max_freq(%d)." %
+                              (target_cpu, target_cpu_freq, self.cpu.max_freq))
             return False
-        print("[.] The freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
+        self.logger.info("The freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
 
         load_test = Load(target_cpu)
         load_test.run()
         load_test_time = load_test.get_runtime()
-        print("[.] Time of CPU%s performance load test: %.2f" %
-              (target_cpu, load_test_time))
+        self.logger.info("Time of CPU%s performance load test: %.2f" %
+                         (target_cpu, load_test_time))
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        print("[.] Current freq of CPU%s is %d." % (target_cpu, target_cpu_freq))
+        self.logger.info("Current freq of CPU%s is %d." %
+                         (target_cpu, target_cpu_freq))
 
         return True
 
@@ -425,42 +437,32 @@ class CPUFreqTest(Test):
         :return:
         """
         if not self.cpu.get_info():
-            print("[X] Fail to get CPU info."
-                  " Please check if the CPU supports cpufreq.")
+            self.logger.error("Fail to get CPU info."
+                              " Please check if the CPU supports cpufreq.")
             return False
 
         ret = True
-        print("")
-        print("[.] Test userspace")
+        self.logger.info("Test userspace")
         if not self.test_userspace():
-            print("[X] Test userspace FAILED")
+            self.logger.error("Test userspace failed")
             ret = False
-        print("")
-        print("[.] Test ondemand")
+        self.logger.info("Test ondemand")
         if not self.test_ondemand():
-            print("[X] Test ondemand FAILED")
+            self.logger.error("Test ondemand failed")
             ret = False
-        print("")
-        print("[.] Test conservative")
+        self.logger.info("Test conservative")
         if not self.test_conservative():
-            print("[X] Test conservative FAILED")
+            self.logger.error("Test conservative failed")
             ret = False
-        print("")
-        print("[.] Test powersave")
+        self.logger.info("Test powersave")
         if not self.test_powersave():
-            print("[X] Test powersave FAILED")
+            self.logger.error("Test powersave failed")
             ret = False
-        print("")
-        print("[.] Test performance")
+        self.logger.info("Test performance")
         if not self.test_performance():
-            print("[X] Test performance FAILED")
+            self.logger.error("Test performance failed")
             ret = False
 
         self.cpu.set_governor(self.original_governor)
         return ret
 
-
-if __name__ == "__main__":
-    t = CPUFreqTest()
-    t.setup()
-    t.test()

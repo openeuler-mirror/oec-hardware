@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -36,31 +36,31 @@ class PerfTest(Test):
         :return:
         """
         # record
-        print("Collecting the perf record using the command '%s'." % self.perfRecord)
+        self.logger.info("Collecting the perf record using the command '%s'." % self.perfRecord)
         perfRecordEcho = Command(self.perfRecord).read()
         perfRecordMacth = re.search("perf record", perfRecordEcho)
         if not perfRecordMacth:
-            print("Error: failed to record events because of :\n %s." % perfRecordEcho)
+            self.logger.error("Failed to record events because of :\n %s." % perfRecordEcho)
         else:
-            print("Success to record events :\n %s." % perfRecordEcho)
+            self.logger.info("Success to record events :\n %s." % perfRecordEcho)
 
         # evList
         perfEvlistEcho = Command(self.perfEvlist).read()
         perfEvlistdMacth = re.search("cycles", perfEvlistEcho)
         if not perfEvlistdMacth:
-            print("Error: required hardware event not available because of :\n %s." % perfEvlistEcho)
+            self.logger.error("Required hardware event not available because of :\n %s." % perfEvlistEcho)
             return False
         else:
-            print("Hardware event found : \n %s." % perfEvlistEcho)
+            self.logger.info("Hardware event found : \n %s." % perfEvlistEcho)
 
         # report
         perfReportEcho = Command(self.perfReport).read()
         perfReportMacth = re.search(r"\s*\S+\s+(\[\S+.\S+\])\s+\S+", perfReportEcho)
         if not perfReportMacth:
-            print("Error: no samples found. Failed to fetch report because of:\n %s." % perfReportEcho)
+            self.logger.error("No samples found. Failed to fetch report because of:\n %s." % perfReportEcho)
             return False
         else:
-            print("Samples found for the hardware event :\n %s." % perfReportEcho)
+            self.logger.info("Samples found for the hardware event :\n %s." % perfReportEcho)
         return True
 
     def test(self):
@@ -71,8 +71,3 @@ class PerfTest(Test):
         if not self.exec_perf():
             return False
         return True
-
-
-if __name__ == "__main__":
-    main = PerfTest()
-    main.test()

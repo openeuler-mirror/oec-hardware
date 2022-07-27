@@ -23,10 +23,10 @@ class CertEnv:
     environmentfile = "/etc/oech.json"
     releasefile = "/etc/os-release"
     datadirectory = "/var/oech"
-    certificationfile = os.path.join(datadirectory, "/compatibility.json")
-    devicefile = os.path.join(datadirectory, "/device.json")
-    factoryfile = os.path.join(datadirectory, "/factory.json")
-    rebootfile = os.path.join(datadirectory, "/reboot.json")
+    certificationfile = os.path.join(datadirectory, "compatibility.json")
+    devicefile = os.path.join(datadirectory, "device.json")
+    factoryfile = os.path.join(datadirectory, "factory.json")
+    rebootfile = os.path.join(datadirectory, "reboot.json")
     testdirectoy = "/usr/share/oech/lib/tests"
     logdirectoy = "/usr/share/oech/logs"
     resultdirectoy = "/usr/share/oech/lib/server/results"

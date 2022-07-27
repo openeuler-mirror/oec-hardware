@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -38,9 +38,11 @@ class WatchDogTest(Test):
         test case
         :return:
         """
+        self.logger.info("Load softdog driver")
         if not os.path.exists("/dev/watchdog"):
             os.system("modprobe softdog")
 
+        self.logger.info("Set/Get the watchdog timeout time")
         os.chdir(self.test_dir)
         try:
             timeout = Command("./watchdog -g").get_str(
@@ -49,27 +51,26 @@ class WatchDogTest(Test):
             timeout = int(timeout)
             if timeout > self.max_timeout:
                 Command("./watchdog -s %d" % self.max_timeout).echo()
+            self.logger.info("Set/Get watchdog timeout succeed.")
         except CertCommandError as e:
-            print(e)
-            print("Set/get watchdog timeout failed.")
+            self.logger.error(e)
+            self.logger.error("Set/Get watchdog timeout failed.")
             return False
 
         ui = CommandUI()
         if ui.prompt_confirm("System will reboot, are you ready?"):
-            print("")
             sys.stdout.flush()
             os.system("sync")
             os.system("./watchdog -t")
             time.sleep(5)
             return False
         else:
-            print("")
             return False
 
-    def startup(self):
+    def startup(self, logger):
         """
         Initialization before test
         :return:
         """
-        print("Recover from watchdog.")
+        logger.info("Recover from watchdog.")
         return True

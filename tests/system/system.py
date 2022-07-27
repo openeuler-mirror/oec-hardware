@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -35,28 +35,18 @@ class SystemTest(Test):
         Test.__init__(self)
         self.pri = 1
         self.sysinfo = SysInfo(CertEnv.releasefile)
-        self.args = None
-        self.logpath = ""
-
-    def setup(self, args=None):
-        """
-        Initialization before test
-        :param args:
-        :return:
-        """
-        self.args = args or argparse.Namespace()
-        self.logpath = getattr(args, "logdir", None) + "/system.log"
 
     def test(self):
         """
         test case
         :return:
         """
-        os.system("uname -a &>> %s" % self.logpath)
-        print("")
-        os.system("lsmod &>> %s" % self.logpath)
-        print("")
-        os.system("dmidecode &>> %s" % self.logpath)
+        self.logger.info("uname -a", terminal_print=False)
+        Command("uname -a &>> %s" % self.logger.logfile).echo(ignore_errors=True)
+        self.logger.info("lsmod", terminal_print=False)
+        Command("lsmod &>> %s" % self.logger.logfile).echo(ignore_errors=True)
+        self.logger.info("dmidecode", terminal_print=False)
+        Command("dmidecode &>> %s" % self.logger.logfile).echo(ignore_errors=True)
         sys.stdout.flush()
 
         return_code = True
@@ -76,17 +66,20 @@ class SystemTest(Test):
         Check installed cert package
         :return:
         """
-        print("\nChecking installed cert package...")
+        self.logger.info("Checking installed cert package...")
         for cert_package in ["oec-hardware"]:
             rpm_verify = Command(
-                    "rpm -V --nomtime --nomode --nocontexts %s" % cert_package)
+                "rpm -V --nomtime --nomode --nocontexts %s &>> %s" %
+                (cert_package, self.logger.logfile))
             rpm_verify.echo(ignore_errors=True)
             output = rpm_verify.read().split('\n')
-            if len(output) > 0 and output[0] != "":
-                if len(output) == 1 and "test_config.yaml" in output[0]:
-                    return True
-                print("Error: files in %s have been tampered." % cert_package)
-                return False
+            for file in output:
+                if "test_config.yaml" in file:
+                    continue
+                else:
+                    self.logger.error(
+                        "Files in %s have been tampered." % cert_package)
+                    return False
         return True
 
     def check_kernel(self):
@@ -94,76 +87,71 @@ class SystemTest(Test):
         Check kernel
         :return:
         """
-        print("\nChecking kernel...")
+        self.logger.info("Checking kernel...")
         kernel_rpm = self.sysinfo.kernel_rpm
         os_version = self.sysinfo.product + " " + self.sysinfo.get_version()
-        print("Kernel RPM: %s" % kernel_rpm)
-        print("OS Version: %s" % os_version)
-        print("")
+        self.logger.info("Kernel RPM: %s" % kernel_rpm, terminal_print=False)
+        self.logger.info("OS Version: %s" % os_version, terminal_print=False)
         return_code = True
         if self.sysinfo.debug_kernel:
-            print("Error: debug kernel.")
+            self.logger.error("Debug kernel.")
             return_code = False
 
-        kernel_dict = Document(CertEnv.kernelinfo)
+        kernel_dict = Document(CertEnv.kernelinfo, self.logger)
         if not kernel_dict.load():
-            print("Error: get kernel info fail.")
+            self.logger.error("Failed to get kernel info.")
             return False
 
         try:
             if kernel_dict.document[os_version] != self.sysinfo.kernel_version:
-                print("Error: kernel %s check GA status fail." %
-                      self.sysinfo.kernel_version)
+                self.logger.error("Failed to check kernel %s GA status." %
+                                  self.sysinfo.kernel_version)
                 return_code = False
         except Exception:
-            print("Error: %s is not supported." % os_version)
+            self.logger.error("%s is not supported." % os_version)
             return_code = False
 
         try:
             tainted_file = open("/proc/sys/kernel/tainted", "r")
             tainted = int(tainted_file.readline())
             if tainted != 0:
-                print("Warning: kernel is tainted (value = %u)." % tainted)
+                self.logger.warning("kernel is tainted (value = %u)." % tainted)
                 if tainted & 1:
-                    print("Error: module with a non-GPL license has been loaded.")
+                    self.logger.error("Module with a non-GPL license has been loaded.")
                     return_code = False
                     modules = self.get_modules("P")
-                    print("Non-GPL modules:")
+                    self.logger.info("Non-GPL modules:")
                     for module in modules:
-                        print(module)
-                    print("")
+                        self.logger.info(module)
 
                 if tainted & (1 << 12):
                     modules = self.get_modules("O")
-                    print("Out-of-tree modules:")
+                    self.logger.info("Out-of-tree modules:")
                     for module in modules:
-                        print(module)
-                        # self.abi_check(module)
+                        self.logger.info(module)
                         return_code = False
-                    print("")
 
                 if tainted & (1 << 13):
                     modules = self.get_modules("E")
-                    print("Unsigned modules:")
+                    self.logger.info("Unsigned modules:")
                     for module in modules:
-                        print(module)
-                    print("")
+                        self.logger.info(module)
 
             tainted_file.close()
         except Exception as concrete_error:
-            print("Error: could not determine if kernel is tainted. \n",
-                  concrete_error)
+            self.logger.error("Unable to determine whether kernel has been tainted. \n",
+                              concrete_error)
             return_code = False
 
         if os.system("rpm -V --nomtime --nomode --nocontexts %s" % kernel_rpm) != 0:
-            print("Error: files from %s were modified.\n" % kernel_rpm)
+            self.logger.error("Files from %s were modified.\n" % kernel_rpm)
             return_code = False
 
         try:
             params = Command("cat /proc/cmdline").get_str()
-            print("Boot Parameters: %s" % params)
+            self.logger.info("Boot Parameters: %s" % params)
         except Exception as concrete_error:
-            print("Error: could not determine boot parameters. \n", concrete_error)
+            self.logger.error("Unable not determine whether boot parameters have been modified. \n", concrete_error)
             return_code = False
 
         return return_code
@@ -202,9 +190,9 @@ class SystemTest(Test):
                 break
 
         if not os.path.exists(whitelist):
-            print(
-                "Error: could not find whitelist file in any of the following locations:")
-            print("\n".join(whitelist_path))
+            self.logger.error(
+                "Unable not find whitelist file in any of the following locations:")
+            self.logger.error("\n".join(whitelist_path))
             return False
 
         whitelist_symbols = self.read_abi_whitelist(whitelist)
@@ -222,7 +210,7 @@ class SystemTest(Test):
         if extra_symbols:
             greylist = "/usr/share/doc/kmod-%s/greylist.txt" % module
             if os.path.exists(greylist):
-                print("checking greylist for %s" % module)
+                self.logger.info("checking greylist for %s" % module)
                 greylist_symbols = self.read_abi_whitelist(greylist)
                 for symbol in extra_symbols:
                     if symbol not in greylist_symbols:
@@ -231,13 +219,11 @@ class SystemTest(Test):
                 black_symbols = extra_symbols
 
         if black_symbols:
-            print("Error: The following symbols are used by %s are not on the ABI \
+            self.logger.error("The following symbols are used by %s are not on the ABI \
             whitelist." % module)
             for symbol in black_symbols:
-                print(symbol)
+                self.logger.error(symbol)
             return False
-
-        print("")
         return True
 
     def read_abi_whitelist(self, whitelist):
@@ -248,7 +234,7 @@ class SystemTest(Test):
         """
         symbols = list()
         if not os.path.isfile(whitelist):
-            print("Error: Cannot read whitelist file")
+            self.logger.error("Failed to read the whitelist file")
             return None
 
         whitelistfile = open(whitelist, "r")
@@ -260,7 +246,6 @@ class SystemTest(Test):
                 continue
             line.split()
             if line[0] == '[':
-                # group = line[1:-2]
                 continue
             symbol = line.strip()
             symbols.append(symbol)
@@ -277,10 +262,10 @@ class SystemTest(Test):
         module_file = self.get_modulefile(module)
 
         if not module_file:
-            print("Error: Can not find module file for %s" % module)
+            self.logger.error("Cannot find module file for %s" % module)
             return None
         if not os.path.isfile(module_file):
-            print("Error: Cannot read module file %s" % module_file)
+            self.logger.error("Cannot read module file %s" % module_file)
             return None
 
         if module_file[-2:] == "ko":
@@ -309,7 +294,7 @@ class SystemTest(Test):
                 modulefile = os.readlink(modulefile)
             return modulefile
         except Exception:
-            print("Error: could no find module file for %s:" % module)
+            self.logger.error("Cannot find module file for %s:" % module)
             return None
 
     def check_selinux(self):
@@ -317,15 +302,15 @@ class SystemTest(Test):
         check selinux
         :return:
         """
-        print("\nChecking selinux...")
+        self.logger.info("Checking selinux...")
         status = os.system(
             "/usr/sbin/sestatus | grep 'SELinux status' | grep -qw 'enabled'")
         mode = os.system(
             "/usr/sbin/sestatus | grep 'Current mode' | grep -qw 'enforcing'")
         if mode == 0 and status == 0:
-            print("SElinux is enforcing as expect.")
+            self.logger.info("SElinux is enforcing as expect.")
             return True
         else:
-            print("SElinux is not enforcing, expect is enforcing.")
+            self.logger.error("SElinux is not enforcing, expect is enforcing.")
             os.system("/usr/sbin/sestatus")
             return False

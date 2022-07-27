@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,7 +12,7 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""ipmi test"""
+import argparse
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
@@ -32,12 +32,14 @@ class IpmiTest(Test):
         :return:
         """
         try:
-            Command("systemctl start ipmi").run()
-            Command("systemctl status ipmi.service").get_str(regex="Active: active", \
-                                                             single_line=False)
+            self.logger.info("Start ipmp.server.")
+            Command("systemctl start ipmi &>> %s" % self.logger.logfile).run()
+            Command("systemctl status ipmi.service &>> %s" % self.logger.logfile).get_str(
+                regex="Active: active", single_line=False)
         except Exception:
-            print("ipmi service cant't be started")
+            self.logger.error("Ipmi service start failed")
             return False
+        self.logger.info("Ipmi service start successfully")
         return True
 
     def ipmitool(self):
@@ -48,10 +50,11 @@ class IpmiTest(Test):
         cmd_list = ["ipmitool fru", "ipmitool sensor"]
         for cmd in cmd_list:
             try:
-                Command(cmd).echo()
+                Command("%s &>> %s " % (cmd, self.logger.logfile)).echo()
             except Exception:
-                print("%s return error." % cmd)
+                self.logger.error("%s return error." % cmd)
                 return False
+            self.logger.info("%s return success." % cmd)
         return True
 
     def test(self):
@@ -64,8 +67,3 @@ class IpmiTest(Test):
         if not self.ipmitool():
             return False
         return True
-
-
-if __name__ == "__main__":
-    i = IpmiTest()
-    i.test()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -16,7 +16,7 @@
 
 import os
 import subprocess
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import CertCommandError
 from hwcompatible.test import Test
 
 clock_dir = os.path.dirname(os.path.realpath(__file__))
@@ -29,16 +29,6 @@ class ClockTest(Test):
 
     def __init__(self):
         Test.__init__(self)
-        self.logpath = None
-
-    def setup(self, args=None):
-        """
-        Initialization before test
-        :param args:
-        :return:
-        """
-        self.args = args or argparse.Namespace()
-        self.logpath = getattr(args, "logdir", None) + "/clock.log"
 
     def test(self):
         """
@@ -47,19 +37,13 @@ class ClockTest(Test):
         """
         try:
             result = subprocess.getstatusoutput(
-                "cd %s; ./clock &>> %s" % (clock_dir, self.logpath))
+                "cd %s; ./clock &>> %s" % (clock_dir, self.logger.logfile))
             if result[0] == 0:
-                print("Test clock succeed.")
+                self.logger.info("Test clock succeed.")
                 return True
 
-            print("Test clock failed.")
+            self.logger.error("Test clock failed.")
             return False
         except CertCommandError as concrete_error:
-            print("Test clock failed.\n %s" % concrete_error)
+            self.logger.error("Test clock failed.\n %s" % concrete_error)
             return False
-
-
-if __name__ == '__main__':
-    t = ClockTest()
-    t.setup()
-    t.test()

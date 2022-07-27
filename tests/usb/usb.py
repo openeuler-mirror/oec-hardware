@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -11,8 +11,6 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-"""Usb test"""
 
 import sys
 import time
@@ -37,62 +35,58 @@ class UsbTest(Test):
         Test case
         :return:
         """
-        print("USB device:")
+        self.logger.info("USB device:")
         Command("lsusb -t").echo()
-        print("")
         sys.stdout.flush()
         plugged_device = self.get_usb()
 
-        print("USB device plug/unplug test begin...")
+        self.logger.info("USB device plug/unplug test begin...")
         while True:
-            print("#############")
             while True:
-                print("Please plug in a USB device.")
+                self.logger.info("Please plug in a USB device.")
                 if self.com_ui.prompt_confirm("Done well?"):
                     break
             time.sleep(1)
 
             new_plugged = self.get_usb()
             if len(new_plugged) <= len(plugged_device):
-                print("Error: no USB device add.")
+                self.logger.error("No USB device add.")
                 return False
 
             new_device = None
             for device in new_plugged:
                 if device not in plugged_device:
-                    print("Found new USB device.\n")
+                    self.logger.info("Found new USB device.\n")
                     new_device = device
                     break
 
             if not new_device:
-                print("Error: new USB device not found.")
+                self.logger.error("New USB device not found.")
                 return False
 
-            print("USB device:")
+            self.logger.info("USB device:")
             Command("lsusb -t").echo()
-            print("")
             sys.stdout.flush()
             plugged_device = new_plugged
             while True:
-                print("Please unplug the USB device you plugged in just now.")
+                self.logger.info("Please unplug the USB device you plugged in just now.")
                 if self.com_ui.prompt_confirm("Done well?"):
                     break
             time.sleep(1)
 
             new_plugged = self.get_usb()
             if len(new_plugged) >= len(plugged_device):
-                print("Error: no USB device unplug.")
+                self.logger.info("No USB device unplug.")
                 return False
 
             if new_device in new_plugged:
-                print("Error: the USB device can still be found.")
+                self.logger.error("The USB device can still be found.")
                 return False
             else:
-                print("USB device unplugged.\n")
+                self.logger.info("USB device unplugged.\n")
 
-            print("USB device:")
+            self.logger.info("USB device:")
             Command("lsusb -t").echo()
-            print("#############\n")
             sys.stdout.flush()
             plugged_device = new_plugged
 
@@ -104,7 +98,7 @@ class UsbTest(Test):
         Get usb
         :return:
         """
-        devices = CertDevice().get_devices()
+        devices = CertDevice(self.logger).get_devices()
         usb_devices = list()
         for device in devices:
             if (device.get_property("SUBSYSTEM") != "usb" or

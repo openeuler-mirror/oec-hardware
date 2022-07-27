@@ -178,7 +178,7 @@ class Job():
         device_name = testcase[DEVICE].get_name()
         if types == DISK:
             return self.config_info.get(DISK)
-        if device_name:
+        if device_name and types not in (GPU, NVME, DPDK):
             for device in self.config_info.get(types).values():
                 if device.get(DEVICE) == device_name:
                     return device
@@ -201,19 +201,20 @@ class Job():
         logger.start()
         try:
             test = testcase[TEST]
-            if subtests_filter:
-                return_code = getattr(test, subtests_filter)()
+            if subtests_filter and name != "system":
+                return_code = getattr(test, subtests_filter)(logger)
             else:
                 self.current_num += 1
                 self.logger.info("Start to run %s/%s test suite: %s." %
                                  (self.current_num, self.total_count, name))
-                args = argparse.Namespace(device=testcase[DEVICE], config_data=config_data, test_logger=logger,
-                                          logdir=logger.logdir, testname=name)
+                args = argparse.Namespace(
+                    device=testcase[DEVICE], config_data=config_data,
+                    test_logger=logger, logdir=logger.logdir, testname=name)
                 test.setup(args)
                 if test.reboot:
                     reboot = Reboot(testcase[NAME], self, test.rebootup)
                     return_code = False
-                    if reboot.setup():
+                    if reboot.setup(args):
                         return_code = test.test()
                 else:
                     return_code = test.test()

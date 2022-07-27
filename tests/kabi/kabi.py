@@ -15,6 +15,7 @@
 """public kabi test"""
 
 import os
+import argparse
 from hwcompatible.env import CertEnv
 from hwcompatible.command import Command
 from hwcompatible.test import Test
@@ -45,6 +46,7 @@ class KabiTest(Test):
         Initialization before test
         """
         self.args = args or argparse.Namespace()
+        self.logger = getattr(self.args, "test_logger", None)
         self.wl_logpath = os.path.join(
             getattr(args, "logdir", None), "kabi-whitelist.log")
         self.miss_logpath = os.path.join(
@@ -62,7 +64,7 @@ class KabiTest(Test):
         result = True
         os_version = Command(
             "grep openeulerversion /etc/openEuler-latest | awk -F = '{print $2}'").read()
-        print("Start to test, please wait...")
+        self.logger.info("Start to test, please wait...")
         if not os.path.exists(self.symvers):
             symvers_gz = "symvers-" + self.kernel_version + ".gz"
             Command("cp /boot/%s %s" %
@@ -73,7 +75,7 @@ class KabiTest(Test):
         arch = Command("uname -m").read()
         self.white_list = self._get_white_list(os_version, arch)
         if not self.white_list:
-            print("Get kernel white list failed.")
+            self.logger.error("Get kernel white list failed.")
 
         standard_symvers = self._get_kernel_source_rpm(os_version, arch)
 
@@ -104,9 +106,9 @@ class KabiTest(Test):
                     result = False
 
         if result:
-            print("Test kabi succeed.")
+            self.logger.info("Test kabi succeed.")
         else:
-            print("Test kabi failed.")
+            self.logger.error("Test kabi failed.")
 
         return result
 
@@ -132,8 +134,7 @@ class KabiTest(Test):
         if os.path.exists(standard_symvers):
             return standard_symvers
 
-        Command("dnf download --source kernel-%s" %
-                standard_kernel_version).run()
+        Command("dnf download --source kernel-%s" % standard_kernel_version).run()
         rpm = "kernel-" + standard_kernel_version + ".src.rpm"
         Command("rpm -ivh %s" % rpm).run_quiet()
         os.remove(rpm)

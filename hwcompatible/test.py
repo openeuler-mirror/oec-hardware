@@ -13,9 +13,7 @@
 # Create: 2020-04-01
 # Desc: Test template
 
-import os
-from .device import Device
-from .command import Command
+import argparse
 
 
 class Test:
@@ -30,6 +28,7 @@ class Test:
         self.rebootup = None
         self.args = None
         self.logger = None
+        self.log_path = ""
 
     @staticmethod
     def valid_disk(disk, disks):
@@ -50,7 +49,8 @@ class Test:
         """
         setup
         """
-        pass
+        self.args = args or argparse.Namespace()
+        self.logger = getattr(self.args, "test_logger", None)
 
     def show_driver_info(self):
         """
@@ -58,11 +58,11 @@ class Test:
         """
         driver_name = self.device.get_driver()
         driver_version = self.device.get_driver_version()
-        Command("echo Driver Name: %s >> %s" % (driver_name, self.logpath)).echo()
+        self.logger.info("Driver Name: %s" % driver_name)
         if not driver_version:
-            print("The driver version information cannot be obtained. Please view it manually.")
+            self.logger.info("The driver version information cannot be obtained. Please view it manually.")
         else:
-            Command("echo Driver Version: %s >> %s" % (driver_version, self.logpath)).echo()
+            self.logger.info("Driver Version: %s" % driver_version)
 
     def teardown(self):
         """

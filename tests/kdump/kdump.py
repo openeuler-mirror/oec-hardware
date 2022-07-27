@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,12 +12,12 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-"""kdump test"""
-
 import os
 import sys
 import time
 import re
+import argparse
+
 from hwcompatible.test import Test
 from hwcompatible.command_ui import CommandUI
 from hwcompatible.document import ConfigFile
@@ -44,9 +44,10 @@ class KdumpTest(Test):
         :return:
         """
         try:
-            Command("cat /proc/cmdline").get_str(r"crashkernel=[^\ ]*")
+            crash_kernel = Command("cat /proc/cmdline").get_str(r"crashkernel=[^\ ]*")
+            self.logger.info("The value of Crashkernel is %s", crash_kernel)
         except Exception:
-            print("Error: no crashkernel found.")
+            self.logger.error("Crashkernel not found.")
             return False
 
         config = ConfigFile(self.kdump_conf)
@@ -59,32 +60,31 @@ class KdumpTest(Test):
             config.remove_parameter("kdump_obj")
             config.add_parameter("kdump_obj", "all")
 
+        self.logger.info("Start kdump service")
         try:
-            Command("systemctl restart kdump").run()
-            Command("systemctl status kdump").get_str(regex="Active: active",
-                                                      single_line=False)
+            Command("systemctl restart kdump &>> %s" % self.logger.logfile).run()
+            Command("systemctl status kdump &>> %s" % self.logger.logfile).get_str\
+                (regex="Active: active", single_line=False)
         except Exception:
-            print("Error: kdump service not working.")
+            self.logger.error("Kdump service is not activated.")
             return False
+        self.logger.info("Start kdump service succeed")
 
-        print("kdump config:")
-        print("#############")
+        self.logger.info("kdump config")
         config.dump()
-        print("#############")
 
         com_ui = CommandUI()
         if com_ui.prompt_confirm("System will reboot, are you ready?"):
-            print("\ntrigger crash...")
+            self.logger.info("trigger crash...")
             sys.stdout.flush()
             os.system("sync")
             os.system("echo c > /proc/sysrq-trigger")
             time.sleep(30)
             return False
         else:
-            print("")
             return False
 
-    def verify_vmcore(self):
+    def verify_vmcore(self, logger):
         """
         Verify vmcore
         :return:
@@ -107,11 +107,11 @@ class KdumpTest(Test):
 
         try:
             Command(
-                "echo \"sys\nq\" | crash -s %s /usr/lib/debug/lib/modules/`uname -r`/vmlinux" % \
-                vmcore_file).echo()
-            print("kdump image %s verified" % vmcore_file)
+                "echo \"sys\nq\" | crash -s %s /usr/lib/debug/lib/modules/`uname -r`/vmlinux &>> %s"
+                % (vmcore_file, logger.logfile)).echo()
+            logger.info("Kdump image %s verified" % vmcore_file)
             return True
         except CertCommandError as concrete_error:
-            print("Error: could not verify kdump image %s" % vmcore_file)
-            print(concrete_error)
+            logger.error("Could not verify kdump image %s" % vmcore_file)
+            logger.error(concrete_error)
             return False

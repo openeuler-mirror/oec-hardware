@@ -12,11 +12,13 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+import os
 import datetime
-from .document import Document, FactoryDocument
-from .env import CertEnv
-from .command import Command
-from .constants import *
+import argparse
+from hwcompatible.document import Document, FactoryDocument
+from hwcompatible.env import CertEnv
+from hwcompatible.command import Command
+from hwcompatible.constants import *
 
 
 class Reboot:
@@ -29,6 +31,8 @@ class Reboot:
         self.rebootup = rebootup
         self.job = job
         self.reboot = dict()
+        self.args = None
+        self.logger = None
 
     def clean(self):
         """
@@ -45,13 +49,16 @@ class Reboot:
         Command("rm -rf %s" % CertEnv.rebootfile).run(ignore_errors=True)
         Command("systemctl disable oech").run(ignore_errors=True)
 
-    def setup(self):
+    def setup(self, args=None):
         """
         Reboot  setuping
         :return:
         """
+        self.args = args or argparse.Namespace()
+        self.logger = getattr(self.args, "test_logger", None)
+
         if not (self.job and self.testname):
-            print("Error: invalid reboot input.")
+            self.logger.error("Invalid reboot input.")
             return False
 
         self.job.save_result()
@@ -60,22 +67,22 @@ class Reboot:
                 test[REBOOT] = True
                 test[STATUS] = FAIL
         if not FactoryDocument(CertEnv.factoryfile, self.job.test_factory).save():
-            print("Error: save testfactory doc fail before reboot.")
+            self.logger.error("Save testfactory doc failed before reboot.")
             return False
 
         self.reboot["job_id"] = self.job.job_id
         self.reboot["time"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         self.reboot[TEST] = self.testname
         self.reboot["rebootup"] = self.rebootup
-        if not Document(CertEnv.rebootfile, self.reboot).save():
-            print("Error: save reboot doc fail.")
+        if not Document(CertEnv.rebootfile, self.logger, self.reboot).save():
+            self.logger.error("Save reboot doc failed.")
             return False
 
         try:
             Command("systemctl daemon-reload").run_quiet()
             Command("systemctl enable oech").run_quiet()
         except Exception:
-            print("Error: enable oech.service fail.")
+            self.logger.error("Enable oech.service failed.")
             return False
 
         return True
@@ -85,9 +92,12 @@ class Reboot:
         Reboot file check
         :return:
         """
-        doc = Document(CertEnv.rebootfile)
+        doc = Document(CertEnv.rebootfile, self.logger)
+
+        if not os.path.exists(CertEnv.rebootfile):
+            return False
         if not doc.load():
-            print("Warning: reboot file doesn't exist.")
+            self.logger.error("Reboot file load failed.")
             return False
 
         try:
@@ -99,7 +109,7 @@ class Reboot:
             time_reboot = datetime.datetime.strptime(
                 self.reboot["time"], "%Y%m%d%H%M%S")
         except Exception:
-            print("Error: reboot file format not as expect.")
+            self.logger.error("Reboot file format not as expect.")
             return False
 
         time_now = datetime.datetime.now()
@@ -108,7 +118,7 @@ class Reboot:
         reboot_list = cmd.get_str(
             "^reboot .*$", single_line=False, return_list=True)
         if len(reboot_list) != 1:
-            print("Errot:reboot times check fail.")
+            self.logger.error("Reboot times check failed.")
             return False
 
         return True
