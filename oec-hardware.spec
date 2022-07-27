@@ -1,4 +1,4 @@
-%define version    1.1.0
+%define version    1.1.1
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -72,6 +72,14 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Wed Jul 27 2022 cuixucui <cuixucui1@h-partners.com> - 1.1.1-0
+-1. Reconstruct the log module and rectify the log printing
+-2. Add kabi testcase
+-3. Add driver, driver version, chip and module display to the console
+-4. Add configuration file for testsuite to improve automation rate
+-5. Add oech and oech-server version display
+-6. Add driver information display in hardware test logs
+
 * Mon May 30 2022 meitingli <bubble_mt@outlook.com> - 1.1.0-0
 - 1. Add support os version: openEuler 22.03LTS
 - 2. Add FC/RAID/keycard/GPU/infiniband testcases
