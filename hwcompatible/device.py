@@ -14,12 +14,12 @@
 
 import re
 from .command import Command
-from .constants import FC, GPU, RAID, NVME
+from .constants import FC, GPU, VGPU, RAID, NVME
 
 
 def filter_char(string):
     """
-    fileter char
+    Fileter character
     :param string:update_factory
     :return:
     """
@@ -47,7 +47,7 @@ class CertDevice:
 
     def get_devices(self):
         """
-        get devices information
+        Get devices information
         :return:
         """
         self.devices = list()
@@ -79,11 +79,11 @@ class CertDevice:
             self.logger.warning("Get devices failed.\n")
         self.devices.sort(key=lambda k: k.path)
         return self.devices
-        
+
 
 class Device:
     """
-    get device properties
+    Device properties
     """
 
     def __init__(self, properties=None):
@@ -136,7 +136,7 @@ class Device:
         self.get_quadruple()
         if name == FC:
             self.get_fc_card()
-        elif name == GPU:
+        elif name == GPU or name == VGPU:
             self.get_gpu_card()
         elif name == RAID:
             self.get_raid_card()
@@ -233,7 +233,8 @@ class Device:
                     if self.quad[0] == "8086":
                         self.board = re.search(r'\((.*)\)', ln).group(1)
                     else:
-                        self.board = re.search(r'(\b(?:SP|ES|PM|SM)\S*)', ln).group(1)
+                        self.board = re.search(
+                            r'(\b(?:SP|ES|PM|SM)\S*)', ln).group(1)
                     break
 
     def get_nic_intel(self):
@@ -252,7 +253,8 @@ class Device:
                     self.chip = re.search(r'(\S+[0-9]{3,6}\S*)', info).group(1)
             else:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
-                    info = ln.replace(self.quad[2] + " " + self.quad[3], "").strip()
+                    info = ln.replace(
+                        self.quad[2] + " " + self.quad[3], "").strip()
                     tmp = re.search(r'(\S*[0-9]{3,6}\S*)', info)
                     if tmp:
                         self.board = tmp.group(1)
@@ -330,8 +332,10 @@ class Device:
             elif flag == 1:
                 if re.match(self.quad[0], ln):
                     flag += 1
-                    chip_info = ln.replace("{0} {1}  ".format(self.quad[0], self.quad[1]), "")
-                    self.chip = re.match(r'\s*(\w*\d{4}\w*)\s*', chip_info).group(1)
+                    chip_info = ln.replace("{0} {1}  ".format(
+                        self.quad[0], self.quad[1]), "")
+                    self.chip = re.match(
+                        r'\s*(\w*\d{4}\w*)\s*', chip_info).group(1)
             else:
                 if re.match("\t\t" + self.quad[3] + " " + self.quad[2], ln) and ";" in ln:
                     model = ln.split(" ")[2].strip().split(";").strip()
@@ -357,7 +361,8 @@ class Device:
                     self.chip = re.search("\[(.*)\]", ln).group(1)
             else:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
-                    self.board = re.search(r'(\b(?:SP|SM|MCX)\S*)', ln).group(1)
+                    self.board = re.search(
+                        r'(\b(?:SP|SM|MCX)\S*)', ln).group(1)
                     break
 
     def get_gpu_card(self):
@@ -444,4 +449,3 @@ class Device:
             self.chip = "N/A"
         if not self.board:
             self.board = "N/A"
-

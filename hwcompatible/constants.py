@@ -63,6 +63,7 @@ IPMI = "ipmi"
 FC = "fc"
 RAID = "raid"
 GPU = "gpu"
+VGPU = "vgpu"
 NVME = "nvme"
 DPDK = "dpdk"
 GPU_DRIVER = ("nouveau", "nvidia", "bi_driver", "amdgpu")
