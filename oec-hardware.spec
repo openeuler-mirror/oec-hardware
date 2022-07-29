@@ -4,19 +4,16 @@
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
-Version:        1.1.0
-Release:        1
+Version:        1.1.1
+Release:        0
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{version}.tar.gz
 
-# patch fix issue
-Patch0001:      oec-hardware-1.1.0-fix-msg.patch
-
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
-Requires:       kernel-devel, kernel-headers, dmidecode, tar
+Requires:       kernel-devel, kernel-headers, dmidecode, tar, python3-pyyaml
 Requires:       qperf, fio, memtester
 Requires:       kernel >= 4
 Requires:       python3
@@ -35,7 +32,6 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
-%patch1 -p1
 
 %build
 
@@ -77,6 +73,14 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Wed Jul 27 2022 cuixucui <cuixucui1@h-partners.com> - 1.1.1-0
+-1. Reconstruct the log module and rectify the log printing
+-2. Add kabi testcase
+-3. Add driver, driver version, chip and module display to the console
+-4. Add configuration file for testsuite to improve automation rate
+-5. Add oech and oech-server version display
+-6. Add driver information display in hardware test logs
+
 * Fri Jul 08 2022 meitingli <bubble_mt@outlook.com> - 1.1.0-1
 - Fix oech.server message display, change python version to python3
 
