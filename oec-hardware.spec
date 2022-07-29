@@ -5,11 +5,14 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.1
-Release:        0
+Release:        1
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{version}.tar.gz
+
+# patch fix issue
+Patch0001:       oec-hardware-1.1.1-fix-vesion.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -32,6 +35,7 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
+%patch1 -p1
 
 %build
 
@@ -73,6 +77,9 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Sat Jul 30 2022 ylzhangah <1194926515@qq.com> - 1.1.1-1
+- Change the version in version.config to 1.1.1
+
 * Wed Jul 27 2022 cuixucui <cuixucui1@h-partners.com> - 1.1.1-0
 -1. Reconstruct the log module and rectify the log printing
 -2. Add kabi testcase
