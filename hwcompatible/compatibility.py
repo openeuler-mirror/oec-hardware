@@ -311,7 +311,12 @@ class EulerCertification():
                     sort_devices[GPU].extend([device])
                 else:
                     sort_devices[GPU] = [device]
-                continue
+                if driver == "nvidia":
+                    if VGPU in sort_devices.keys():
+                        sort_devices[VGPU].extend([device])
+                    else:
+                        sort_devices[VGPU] = [device]
+                    continue
             if device.get_property("SUBSYSTEM") == "net" and \
                     device.get_property("INTERFACE"):
                 interface = device.get_property("INTERFACE")

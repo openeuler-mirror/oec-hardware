@@ -178,7 +178,7 @@ class Job():
         device_name = testcase[DEVICE].get_name()
         if types == DISK:
             return self.config_info.get(DISK)
-        if device_name and types not in (GPU, NVME, DPDK):
+        if device_name and types not in (GPU, VGPU, NVME, DPDK):
             for device in self.config_info.get(types).values():
                 if device.get(DEVICE) == device_name:
                     return device
