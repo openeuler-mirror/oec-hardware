@@ -20,6 +20,7 @@ from subprocess import getstatusoutput
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
+from hwcompatible.device import CertDevice
 
 
 class RaidTest(Test):
@@ -102,10 +103,14 @@ class RaidTest(Test):
         """
         self.disks = list()
         disks = list()
-        disk_info = Command("cd /sys/block; ls -l").read().split('\n')
-        for disk in disk_info:
-            if self.pci_num in disk:
-                disks.append(disk.split('/')[-1])
+        devices = CertDevice(self.logger).get_devices()
+        for device in devices:
+            if (device.get_property("DEVTYPE") == "disk" and not
+                    device.get_property("ID_TYPE")) or device.\
+                    get_property("ID_TYPE") == "disk":
+                if "/host" in device.get_property("DEVPATH") and \
+                        self.pci_num in device.get_property("DEVPATH"):
+                    disks.append(device.get_name())
 
         partition_file = open("/proc/partitions", "r")
         partition = partition_file.read()
