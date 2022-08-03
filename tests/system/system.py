@@ -69,17 +69,16 @@ class SystemTest(Test):
         self.logger.info("Checking installed cert package...")
         for cert_package in ["oec-hardware"]:
             rpm_verify = Command(
-                "rpm -V --nomtime --nomode --nocontexts %s &>> %s" %
-                (cert_package, self.logger.logfile))
-            rpm_verify.echo(ignore_errors=True)
-            output = rpm_verify.read().split('\n')
-            for file in output:
-                if "test_config.yaml" in file:
-                    continue
-                else:
-                    self.logger.error(
-                        "Files in %s have been tampered." % cert_package)
-                    return False
+                "rpm -V --nomtime --nomode --nocontexts %s" % cert_package)
+            output = rpm_verify.read()
+            if output:
+                for file in output.split('\n'):
+                    if "test_config.yaml" in file:
+                        continue
+                    else:
+                        self.logger.error("Files in %s have beem tampered. \nThe tampered files are as follows:\n %s" %
+                                (cert_package, output))
+                        return False
         return True
 
     def check_kernel(self):
@@ -172,85 +171,6 @@ class SystemTest(Test):
                     modules.append(match.group("mod_name"))
         proc_modules.close()
         return modules
-
-    def abi_check(self, module):
-        """
-        Check abi whitelist
-        :param module:
-        :return:
-        """
-        whitelist_path = [("/lib/modules/kabi-current/kabi_whitelist_" + self.sysinfo.arch),
-                          ("/lib/modules/kabi/kabi_whitelist_" + self.sysinfo.arch),
-                          ("/usr/src/kernels/%s/kabi_whitelist" %
-                           self.sysinfo.kernel)
-                          ]
-        whitelist = ""
-        for whitelist in whitelist_path:
-            if os.path.exists(whitelist):
-                break
-
-        if not os.path.exists(whitelist):
-            self.logger.error(
-                "Unable not find whitelist file in any of the following locations:")
-            self.logger.error("\n".join(whitelist_path))
-            return False
-
-        whitelist_symbols = self.read_abi_whitelist(whitelist)
-        if not whitelist_symbols:
-            return False
-        module_symbols = self.read_module(module)
-        if not module_symbols:
-            return False
-        extra_symbols = list()
-        for symbol in module_symbols:
-            if symbol not in whitelist_symbols:
-                extra_symbols.append(symbol)
-
-        black_symbols = list()
-        if extra_symbols:
-            greylist = "/usr/share/doc/kmod-%s/greylist.txt" % module
-            if os.path.exists(greylist):
-                self.logger.info("checking greylist for %s" % module)
-                greylist_symbols = self.read_abi_whitelist(greylist)
-                for symbol in extra_symbols:
-                    if symbol not in greylist_symbols:
-                        black_symbols.append(symbol)
-            else:
-                black_symbols = extra_symbols
-
-        if black_symbols:
-            self.logger.error("The following symbols are used by %s are not on the ABI \
-            whitelist." % module)
-            for symbol in black_symbols:
-                self.logger.error(symbol)
-            return False
-        return True
-
-    def read_abi_whitelist(self, whitelist):
-        """
-        Read abi whitelist
-        :param whitelist:
-        :return:
-        """
-        symbols = list()
-        if not os.path.isfile(whitelist):
-            self.logger.error("Failed to read the whitelist file")
-            return None
-
-        whitelistfile = open(whitelist, "r")
-        while True:
-            line = whitelistfile.readline()
-            if line == "":
-                break
-            if line == "\n":
-                continue
-            line.split()
-            if line[0] == '[':
-                continue
-            symbol = line.strip()
-            symbols.append(symbol)
-
-        return symbols
 
     def read_module(self, module):
         """
