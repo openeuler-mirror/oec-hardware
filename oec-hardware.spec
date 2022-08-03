@@ -5,7 +5,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.1
-Release:        2
+Release:        3
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -14,6 +14,7 @@ Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{v
 # patch fix issue
 Patch0001:       oec-hardware-1.1.1-fix-vesion.patch
 Patch0002:       oec-hardware-1.1.1-fix-fc-raid.patch
+Patch0003:       oec-hardware-1.1.1-fix-network-infiniband-system.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -38,6 +39,7 @@ openEuler Hardware Compatibility Test Server
 %setup -q -c
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 %build
 
@@ -79,8 +81,12 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Wed Aug 3 2022 cuixucui <cuixucui1@h-partners> - 1.1.1-3
+- Fix the problem that the client fails to send messages after the server port is modified
+- Fix the problem that the system test item failed to check the integrity of the software package
+
 * Mon Aug 1 2022 cuixucui <cuixucui1@h-partners> - 1.1.1-2
-- Fix FC and raid cannot get the new hard disk partition
+- Fix the problem that FC and raid cannot get the new hard disk partition
 
 * Sat Jul 30 2022 ylzhangah <1194926515@qq.com> - 1.1.1-1
 - Change the version in version.config to 1.1.1
