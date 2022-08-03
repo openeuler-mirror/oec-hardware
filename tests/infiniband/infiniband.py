@@ -29,6 +29,7 @@ class InfiniBandTest(RDMATest):
         self.target_bandwidth_percent = 0.5
         self.config_data = dict()
         self.server_ip = ""
+        self.server_port = "80"
         self.args = None
 
     def test_ib_link(self):
@@ -68,6 +69,8 @@ class InfiniBandTest(RDMATest):
         self.config_data = getattr(self.args, "config_data", None)
         if self.config_data:
             self.server_ip = self.config_data.get("server_ip", "")
+            if ":" in self.server_ip:
+                self.server_ip, self.server_port = self.server_ip.split(":")
         else:
             self.logger.error("Failed to test item value from configuration file.")
     
