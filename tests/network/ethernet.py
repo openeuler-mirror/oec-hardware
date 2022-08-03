@@ -33,6 +33,7 @@ class EthernetTest(RDMATest):
         self.device = None
         self.config_data = dict()
         self.server_ip = ""
+        self.server_port = "80"
         self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
                          self.test_udp_tcp, self.test_http]
         self.target_bandwidth_percent = 0.75
@@ -61,7 +62,9 @@ class EthernetTest(RDMATest):
         self.show_driver_info()
         self.config_data = getattr(args, "config_data", None)
         if self.config_data:
-            self.server_ip = self.config_data.get("server_ip")
+            self.server_ip = self.config_data.get("server_ip", "")
+            if ":" in self.server_ip:
+                self.server_ip, self.server_port = self.server_ip.split(":")
             choice = self.config_data.get("if_rdma")
         else:
             self.logger.error("Get test item value from configuration file failed.")

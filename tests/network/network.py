@@ -22,6 +22,7 @@ from urllib.request import urlopen, Request
 
 from hwcompatible.test import Test
 from hwcompatible.command import Command
+from hwcompatible.constants import FILE_FLAGS, FILE_MODES
 
 
 class NetworkTest(Test):
@@ -33,6 +34,7 @@ class NetworkTest(Test):
         self.requirements = ['ethtool', 'iproute', 'psmisc', 'qperf']
         self.retries = 3
         self.testfile = 'testfile'
+        self.speed = 0
 
     def ifdown(self, interface):
         """
@@ -72,7 +74,7 @@ class NetworkTest(Test):
             return int(speed)
         except Exception:
             self.logger.error("[X] No speed found on the interface.")
-            return None
+            return 0
 
     def get_interface_ip(self):
         """
@@ -86,7 +88,7 @@ class NetworkTest(Test):
             return ip_addr
         except Exception:
             self.logger.error("[X] No available ip on the interface.")
-            return None
+            return ""
 
     def test_icmp(self):
         """
@@ -98,14 +100,14 @@ class NetworkTest(Test):
         pattern = r".*, (?P<loss>\d+\.{0,1}\d*)% packet loss.*"
 
         for _ in range(self.retries):
+            self.logger.info(com.command)
             try:
-                self.logger.info(com.command)
                 loss = com.get_str(pattern, 'loss', False)
-                com.print_output()
-                if float(loss) == 0:
-                    return True
             except Exception as concrete_error:
                 self.logger.error(concrete_error)
+            if float(loss) == 0:
+                return True
+            com.print_output()
         return False
 
     def call_remote_server(self, cmd, act='start', ib_server_ip=''):
@@ -119,14 +121,15 @@ class NetworkTest(Test):
         form = dict()
         form['cmd'] = cmd
         form['ib_server_ip'] = ib_server_ip
-        url = 'http://%s/api/%s' % (self.server_ip, act)
+        url = 'http://%s:%s/api/%s' % (self.server_ip, self.server_port, act)
         data = urlencode(form).encode('utf8')
         headers = {
             'Content-type': 'application/x-www-form-urlencoded',
             'Accept': 'text/plain'
         }
+
+        request = Request(url, data=data, headers=headers)
         try:
-            request = Request(url, data=data, headers=headers)
             response = urlopen(request)
         except Exception as concrete_error:
             self.logger.error(str(concrete_error))
@@ -169,19 +172,20 @@ class NetworkTest(Test):
         for _ in range(self.retries):
             try:
                 bandwidth = com.get_str(pattern, 'bandwidth', False)
-                band_width = bandwidth.split()
-                if 'GB' in band_width[1]:
-                    bandwidth = float(band_width[0]) * 8 * 1024
-                else:
-                    bandwidth = float(band_width[0]) * 8
-
-                target_bandwidth = self.target_bandwidth_percent * self.speed
-                self.logger.info("Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
-                                 (bandwidth, target_bandwidth))
-                if bandwidth > target_bandwidth:
-                    return True
             except Exception as concrete_error:
                 self.logger.error(concrete_error)
+            band_width = bandwidth.split()
+            if 'GB' in band_width[1]:
+                bandwidth = float(band_width[0]) * 8 * 1024
+            else:
+                bandwidth = float(band_width[0]) * 8
+
+            target_bandwidth = self.target_bandwidth_percent * self.speed
+            self.logger.info(
+                "Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
+                (bandwidth, target_bandwidth))
+            if bandwidth > target_bandwidth:
+                return True
         return False
 
     def create_testfile(self):
@@ -212,7 +216,7 @@ class NetworkTest(Test):
 
         form['filename'] = filename
         form['filetext'] = filetext
-        url = 'http://%s/api/file/upload' % self.server_ip
+        url = 'http://%s:%s/api/file/upload' % (self.server_ip, self.server_port)
         data = urlencode(form).encode('utf8')
         headers = {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -220,8 +224,8 @@ class NetworkTest(Test):
         }
 
         time_start = time.time()
+        request = Request(url, data=data, headers=headers)
         try:
-            request = Request(url, data=data, headers=headers)
             response = urlopen(request)
         except Exception as concrete_error:
             self.logger.error(concrete_error)
@@ -242,7 +246,7 @@ class NetworkTest(Test):
         :return:
         """
         filename = os.path.basename(self.testfile)
-        url = "http://%s/files/%s" % (self.server_ip, filename)
+        url = "http://%s:%s/files/%s" % (self.server_ip, self.server_port, filename)
 
         time_start = time.time()
         try:
@@ -257,7 +261,8 @@ class NetworkTest(Test):
         self.logger.info(str(response.headers), terminal_print=False)
         filetext = response.read()
         try:
-            with open(self.testfile, 'wb') as file_info:
+            with os.fdopen(os.open(self.testfile, FILE_FLAGS, FILE_MODES),
+                               "wb") as file_info:
                 file_info.write(filetext)
         except Exception as concrete_error:
             self.logger.error(concrete_error)

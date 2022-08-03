@@ -34,6 +34,7 @@ class NetworkTest(Test):
         self.interface = None
         self.other_interfaces = []
         self.server_ip = None
+        self.server_port = "80"
         self.retries = 3
         self.speed = 1000   # Mb/s
         self.target_bandwidth_percent = 0.8
@@ -94,7 +95,7 @@ class NetworkTest(Test):
         form = dict()
         form['cmd'] = cmd
         form['ib_server_ip'] = ib_server_ip
-        url = 'http://%s/api/%s' % (self.server_ip, act)
+        url = 'http://%s:%s/api/%s' % (self.server_ip, self.server_port, act)
         data = urlencode(form).encode('utf8')
         headers = {
             'Content-type': 'application/x-www-form-urlencoded',
