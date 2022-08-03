@@ -79,19 +79,21 @@ class EulerCertification():
             job = Job(args)
             job.run()
             self.save(job)
-    
+
     def run_rebootup(self):
         """
-         rebootup
+        rebootup
         :return:
         """
         try:
             self.load()
             test_suite = create_test_suite(self.test_factory, self.logger)
-            args = argparse.Namespace(test_factory=self.test_factory, test_suite=test_suite)
+            args = argparse.Namespace(
+                test_factory=self.test_factory, test_suite=test_suite)
             job = Job(args)
             reboot = Reboot(None, job, None)
-            if reboot.check():
+            if reboot.check(logger=self.logger):
+                job = reboot.job
                 job.run()
             reboot.clean()
             self.save(job)
@@ -123,7 +125,8 @@ class EulerCertification():
         """
         os.makedirs(os.path.dirname(CertEnv.datadirectory), exist_ok=True)
         if not self.certification:
-            self.certification = CertDocument(CertEnv.certificationfile, self.logger)
+            self.certification = CertDocument(
+                CertEnv.certificationfile, self.logger)
             if not self.certification.document:
                 self.certification.new()
                 self.certification.save()

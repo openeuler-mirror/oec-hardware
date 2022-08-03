@@ -15,10 +15,10 @@
 import os
 import datetime
 import argparse
-from hwcompatible.document import Document, FactoryDocument
-from hwcompatible.env import CertEnv
-from hwcompatible.command import Command
-from hwcompatible.constants import *
+from .document import Document, FactoryDocument
+from .env import CertEnv
+from .command import Command, CertCommandError
+from .constants import *
 
 
 class Reboot:
@@ -46,8 +46,8 @@ class Reboot:
             if test[RUN] and self.testname == test[NAME]:
                 test[REBOOT] = False
 
-        Command("rm -rf %s" % CertEnv.rebootfile).run(ignore_errors=True)
-        Command("systemctl disable oech").run(ignore_errors=True)
+        os.remove(CertEnv.rebootfile)
+        Command("systemctl disable oech").run()
 
     def setup(self, args=None):
         """
@@ -78,26 +78,30 @@ class Reboot:
             self.logger.error("Save reboot doc failed.")
             return False
 
+        Command("systemctl daemon-reload").run()
         try:
-            Command("systemctl daemon-reload").run_quiet()
-            Command("systemctl enable oech").run_quiet()
-        except Exception:
-            self.logger.error("Enable oech.service failed.")
+            Command("systemctl enable oech").run()
+        except CertCommandError as certerror:
+            self.logger.error("Enable oech.service failed.\n %s" %
+                              certerror.print_errors())
             return False
 
         return True
 
-    def check(self):
+    def check(self, logger=None):
         """
         Reboot file check
         :return:
         """
-        doc = Document(CertEnv.rebootfile, self.logger)
+        if not logger:
+            logger = self.logger
+
+        doc = Document(CertEnv.rebootfile, logger)
 
         if not os.path.exists(CertEnv.rebootfile):
             return False
         if not doc.load():
-            self.logger.error("Reboot file load failed.")
+            logger.error("Reboot file load failed.")
             return False
 
         try:
@@ -108,8 +112,15 @@ class Reboot:
             self.job.subtests_filter = self.reboot["rebootup"]
             time_reboot = datetime.datetime.strptime(
                 self.reboot["time"], "%Y%m%d%H%M%S")
+            test_suite = self.job.test_suite
+            reboot_suite = []
+            for testcase in test_suite:
+                if testcase[NAME] == self.reboot["test"]:
+                    reboot_suite.append(testcase)
+                    break
+            self.job.test_suite = reboot_suite
         except Exception:
-            self.logger.error("Reboot file format not as expect.")
+            logger.error("Reboot file format not as expect.")
             return False
 
         time_now = datetime.datetime.now()
@@ -118,7 +129,8 @@ class Reboot:
         reboot_list = cmd.get_str(
             "^reboot .*$", single_line=False, return_list=True)
         if len(reboot_list) != 1:
-            self.logger.error("Reboot times check failed.")
+            logger.error("Reboot times check failed.")
             return False
 
+        logger.info("Reboot time check : %s" % reboot_list)
         return True
