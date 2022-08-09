@@ -49,12 +49,9 @@ def create_test_suite(test_factory, logger, subtests_filter=None):
             test_name.append(test[NAME])
 
     total_count = len(test_suite)
-    if test_suite:
+    if total_count:
         logger.info("There are %s selected test suites: %s." %
                     (total_count, ", ".join(test_name)))
-    else:
-        logger.warning("No test found.")
-
     return test_suite
 
 

@@ -97,9 +97,6 @@ class Reboot:
             logger = self.logger
 
         doc = Document(CertEnv.rebootfile, logger)
-
-        if not os.path.exists(CertEnv.rebootfile):
-            return False
         if not doc.load():
             logger.error("Reboot file load failed.")
             return False
