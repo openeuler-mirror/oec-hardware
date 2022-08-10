@@ -16,7 +16,9 @@ import os
 import sys
 import datetime
 import logging
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 from .env import CertEnv
+from .constants import MAX_BYTES, MAX_COUNT
 
 
 class Logger():
@@ -40,8 +42,12 @@ class Logger():
         self.log = logging.getLogger(name=self.logfile)
         formatter = logging.Formatter(
             '[%(asctime)s][%(levelname)s] %(message)s')
-        file_handler = logging.FileHandler(
-            self.logfile, mode='a+', encoding='utf-8')
+        file_handler = ConcurrentRotatingFileHandler(filename=self.logfile,
+                                                     mode='a+',
+                                                     encoding='utf-8',
+                                                     maxBytes=MAX_BYTES,
+                                                     backupCount=MAX_COUNT,
+                                                     use_gzip=True)
         file_handler.setFormatter(formatter)
         self.log.addHandler(file_handler)
 
@@ -53,16 +59,6 @@ class Logger():
 
     def warning(self, message, log_print=True, terminal_print=True):
         self._print(logging.WARNING, message, log_print, terminal_print)
-
-    def flush(self):
-        """
-        Refresh buffer to stdout and file
-        :return:
-        """
-        self.stdout.flush()
-        self.stderr.flush()
-        if self.log:
-            self.log.flush()
 
     def stop(self):
         """

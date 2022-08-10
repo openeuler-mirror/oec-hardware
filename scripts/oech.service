@@ -5,7 +5,9 @@ DefaultDependencies=no
 
 [Service]
 Type=oneshot
+ExecStartPre=/usr/bin/bash /usr/share/oech/lib/oech_logrotate.sh start_logrotate
 ExecStart=/usr/bin/oech --rebootup
+ExecStop=/usr/bin/bash /usr/share/oech/lib/oech_logrotate.sh stop_logrotate
 RemainAfterExit=yes
 TimeoutSec=0
 
