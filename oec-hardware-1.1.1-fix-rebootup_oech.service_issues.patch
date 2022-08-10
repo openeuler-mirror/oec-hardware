@@ -1,0 +1,172 @@
+diff -Naur rpm/hwcompatible/common.py oech/hwcompatible/common.py
+--- rpm/hwcompatible/common.py	2022-07-27 14:07:40.000000000 +0800
++++ oech/hwcompatible/common.py	2022-08-10 15:43:57.639706540 +0800
+@@ -49,12 +49,9 @@
+             test_name.append(test[NAME])
+ 
+     total_count = len(test_suite)
+-    if test_suite:
++    if total_count:
+         logger.info("There are %s selected test suites: %s." %
+                     (total_count, ", ".join(test_name)))
+-    else:
+-        logger.warning("No test found.")
+-
+     return test_suite
+ 
+ 
+diff -Naur rpm/hwcompatible/compatibility.py oech/hwcompatible/compatibility.py
+--- rpm/hwcompatible/compatibility.py	2022-07-27 14:07:40.000000000 +0800
++++ oech/hwcompatible/compatibility.py	2022-08-10 15:43:54.927706540 +0800
+@@ -79,19 +79,23 @@
+             job = Job(args)
+             job.run()
+             self.save(job)
+-    
++
+     def run_rebootup(self):
+         """
+-         rebootup
++        rebootup
+         :return:
+         """
+         try:
++            if not os.path.exists(CertEnv.rebootfile):
++                return True
+             self.load()
+             test_suite = create_test_suite(self.test_factory, self.logger)
+-            args = argparse.Namespace(test_factory=self.test_factory, test_suite=test_suite)
++            args = argparse.Namespace(
++                test_factory=self.test_factory, test_suite=test_suite)
+             job = Job(args)
+             reboot = Reboot(None, job, None)
+-            if reboot.check():
++            if reboot.check(logger=self.logger):
++                job = reboot.job
+                 job.run()
+             reboot.clean()
+             self.save(job)
+@@ -123,7 +127,8 @@
+         """
+         os.makedirs(os.path.dirname(CertEnv.datadirectory), exist_ok=True)
+         if not self.certification:
+-            self.certification = CertDocument(CertEnv.certificationfile, self.logger)
++            self.certification = CertDocument(
++                CertEnv.certificationfile, self.logger)
+             if not self.certification.document:
+                 self.certification.new()
+                 self.certification.save()
+@@ -311,7 +316,12 @@
+                     sort_devices[GPU].extend([device])
+                 else:
+                     sort_devices[GPU] = [device]
+-                continue
++                if driver == "nvidia":
++                    if VGPU in sort_devices.keys():
++                        sort_devices[VGPU].extend([device])
++                    else:
++                        sort_devices[VGPU] = [device]
++                    continue
+             if device.get_property("SUBSYSTEM") == "net" and \
+                     device.get_property("INTERFACE"):
+                 interface = device.get_property("INTERFACE")
+@@ -513,4 +523,4 @@
+         self.logger.info("%-6d" % device.num + device.run.ljust(8)
+                          + "\033[0;3%sm%s  \033[0m" % (device.color, device.status.ljust(8))
+                          + device.name.ljust(14) + device.device.ljust(15) + device.driver.ljust(15)
+-                         + device.version.ljust(18) + device.chip.ljust(20) + device.board, log_print=False)
+\ No newline at end of file
++                         + device.version.ljust(18) + device.chip.ljust(20) + device.board, log_print=False)
+diff -Naur rpm/hwcompatible/reboot.py oech/hwcompatible/reboot.py
+--- rpm/hwcompatible/reboot.py	2022-07-27 14:07:40.000000000 +0800
++++ oech/hwcompatible/reboot.py	2022-08-10 15:43:56.623706540 +0800
+@@ -15,10 +15,10 @@
+ import os
+ import datetime
+ import argparse
+-from hwcompatible.document import Document, FactoryDocument
+-from hwcompatible.env import CertEnv
+-from hwcompatible.command import Command
+-from hwcompatible.constants import *
++from .document import Document, FactoryDocument
++from .env import CertEnv
++from .command import Command, CertCommandError
++from .constants import *
+ 
+ 
+ class Reboot:
+@@ -46,8 +46,8 @@
+             if test[RUN] and self.testname == test[NAME]:
+                 test[REBOOT] = False
+ 
+-        Command("rm -rf %s" % CertEnv.rebootfile).run(ignore_errors=True)
+-        Command("systemctl disable oech").run(ignore_errors=True)
++        os.remove(CertEnv.rebootfile)
++        Command("systemctl disable oech").run()
+ 
+     def setup(self, args=None):
+         """
+@@ -78,26 +78,27 @@
+             self.logger.error("Save reboot doc failed.")
+             return False
+ 
++        Command("systemctl daemon-reload").run()
+         try:
+-            Command("systemctl daemon-reload").run_quiet()
+-            Command("systemctl enable oech").run_quiet()
+-        except Exception:
+-            self.logger.error("Enable oech.service failed.")
++            Command("systemctl enable oech").run()
++        except CertCommandError as certerror:
++            self.logger.error("Enable oech.service failed.\n %s" %
++                              certerror.print_errors())
+             return False
+ 
+         return True
+ 
+-    def check(self):
++    def check(self, logger=None):
+         """
+         Reboot file check
+         :return:
+         """
+-        doc = Document(CertEnv.rebootfile, self.logger)
++        if not logger:
++            logger = self.logger
+ 
+-        if not os.path.exists(CertEnv.rebootfile):
+-            return False
++        doc = Document(CertEnv.rebootfile, logger)
+         if not doc.load():
+-            self.logger.error("Reboot file load failed.")
++            logger.error("Reboot file load failed.")
+             return False
+ 
+         try:
+@@ -108,8 +109,15 @@
+             self.job.subtests_filter = self.reboot["rebootup"]
+             time_reboot = datetime.datetime.strptime(
+                 self.reboot["time"], "%Y%m%d%H%M%S")
++            test_suite = self.job.test_suite
++            reboot_suite = []
++            for testcase in test_suite:
++                if testcase[NAME] == self.reboot["test"]:
++                    reboot_suite.append(testcase)
++                    break
++            self.job.test_suite = reboot_suite
+         except Exception:
+-            self.logger.error("Reboot file format not as expect.")
++            logger.error("Reboot file format not as expect.")
+             return False
+ 
+         time_now = datetime.datetime.now()
+@@ -118,7 +126,8 @@
+         reboot_list = cmd.get_str(
+             "^reboot .*$", single_line=False, return_list=True)
+         if len(reboot_list) != 1:
+-            self.logger.error("Reboot times check failed.")
++            logger.error("Reboot times check failed.")
+             return False
+ 
++        logger.info("Reboot time check : %s" % reboot_list)
+         return True
