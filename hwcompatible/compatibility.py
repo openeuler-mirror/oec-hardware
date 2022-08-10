@@ -86,6 +86,8 @@ class EulerCertification():
         :return:
         """
         try:
+            if not os.path.exists(CertEnv.rebootfile):
+                return True
             self.load()
             test_suite = create_test_suite(self.test_factory, self.logger)
             args = argparse.Namespace(
