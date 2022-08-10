@@ -76,3 +76,13 @@ DEVICE_INFO = ('color', 'status', 'num', 'run', 'name',
 # File access control
 FILE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
 FILE_MODES = stat.S_IWUSR | stat.S_IRUSR
+
+# Shell command execute env
+SHELL_ENV = {
+    'LANG': 'en_US.UTF-8',
+    'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin'
+}
+
+# Log rotate settings
+MAX_BYTES = 31457280
+MAX_COUNT = 30

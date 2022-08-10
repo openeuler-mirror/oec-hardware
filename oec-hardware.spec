@@ -15,10 +15,10 @@ Source0:        %{name}-%{version}.tar.bz2
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
-Requires:       kernel-devel, kernel-headers, dmidecode, tar, python3-pyyaml
+Requires:       kernel-devel, kernel-headers, dmidecode, tar
 Requires:       qperf, fio, memtester
 Requires:       kernel >= 4
-Requires:       python3
+Requires:       python3, python3-pyyaml, python3-concurrent-log-handler
 
 # server subpackage
 %package server
@@ -57,6 +57,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 /usr/share/oech/lib/config
 /usr/share/oech/lib/tests
 /usr/lib/systemd/system/oech.service
+/usr/share/oech/lib/oech_logrotate.sh
 %dir /var/oech
 %dir /usr/share/oech/lib
 %dir /usr/share/oech
