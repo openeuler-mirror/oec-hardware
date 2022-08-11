@@ -14,6 +14,7 @@
 # Desc: Test template
 
 import argparse
+from hwcompatible.command import Command
 
 
 class Test:
@@ -28,6 +29,7 @@ class Test:
         self.rebootup = None
         self.args = None
         self.logger = None
+        self.command = None
         self.log_path = ""
 
     @staticmethod
@@ -51,6 +53,7 @@ class Test:
         """
         self.args = args or argparse.Namespace()
         self.logger = getattr(self.args, "test_logger", None)
+        self.command = Command(self.logger)
 
     def show_driver_info(self):
         """
@@ -60,7 +63,8 @@ class Test:
         driver_version = self.device.get_driver_version()
         self.logger.info("Driver Name: %s" % driver_name)
         if not driver_version:
-            self.logger.info("The driver version information cannot be obtained. Please view it manually.")
+            self.logger.info(
+                "The driver version information cannot be obtained. Please view it manually.")
         else:
             self.logger.info("Driver Version: %s" % driver_version)
 

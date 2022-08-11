@@ -21,7 +21,7 @@ import yaml
 
 from .test import Test
 from .env import CertEnv
-from .command import Command, CertCommandError
+from .command import Command
 from .log import Logger
 from .reboot import Reboot
 from .constants import *
@@ -49,6 +49,7 @@ class Job():
         self.logpath = CertEnv.logdirectoy + "/" + self.job_id+"/job.log"
         self.config_info = {}
         self.logger = Logger("job.log", self.job_id, sys.stdout, sys.stderr)
+        self.command = Command(self.logger)
         self.total_count = 0
         self.current_num = 0
 
@@ -60,23 +61,21 @@ class Job():
         required_rpms = []
         for tests in self.test_suite:
             for pkg in tests[TEST].requirements:
-                cmd = Command("rpm -q %s " % pkg)
-                cmd.run(ignore_errors=True)
-                return_code = cmd.get_returncode()
+                cmd_result = self.command.run_cmd(
+                    "rpm -q %s " % pkg, ignore_errors=True)
+                return_code = cmd_result[2]
                 if return_code != 0 and pkg not in required_rpms:
                     required_rpms.append(pkg)
 
         if required_rpms:
             self.logger.info("Start to install required packages: %s" %
                              ", ".join(required_rpms))
-            try:
-                cmd = Command("yum install -y %s &>> %s" %
-                              (" ".join(required_rpms), self.logpath))
-                cmd.echo()
-            except CertCommandError as concrete_error:
-                self.logger.error("Fail to install required packages.")
-                concrete_error.print_errors()
-                return False
+            cmd_result = self.command.run_cmd(
+                "yum install -y %s &>> %s" % (" ".join(required_rpms), self.logpath))
+            if len(cmd_result[1]) != 0 and cmd_result[2] != 0:
+                self.logger.error(
+                    "Fail to install required packages.\n %s" % cmd_result[1])
+            return False
 
         return True
 

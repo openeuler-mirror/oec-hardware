@@ -17,25 +17,6 @@ from .command import Command
 from .constants import FC, GPU, VGPU, RAID, NVME
 
 
-def filter_char(string):
-    """
-    Fileter character
-    :param string:update_factory
-    :return:
-    """
-    ascii_blacklist = map(chr, range(9) + range(11, 13) + range(14, 32))
-    filtered = u''
-    start = 0
-    for i in range(len(string)):
-        char_filter = string[i]
-        if char_filter in ascii_blacklist or (type(string) != unicode and ord(char_filter) >= 128):
-            if start < i:
-                filtered += string[start:i]
-            start = i + 1
-    filtered += string[start:]
-    return filtered
-
-
 class CertDevice:
     """
     Certified device
@@ -44,6 +25,7 @@ class CertDevice:
     def __init__(self, logger):
         self.logger = logger
         self.devices = None
+        self.command = Command(self.logger)
 
     def get_devices(self):
         """
@@ -51,16 +33,14 @@ class CertDevice:
         :return:
         """
         self.devices = list()
+        cmd_result = self.command.run_cmd(
+            "udevadm info --export-db", log_print=False)
+        properties = dict()
         try:
-            pipe = Command("udevadm info --export-db")
-            pipe.start()
-            properties = dict()
-            while True:
-                line = pipe.readline()
-                if not line:
-                    break
-                if line == "\n" and len(properties) > 0:
-                    device = Device(properties)
+            all_lines = cmd_result[0].split("\n")
+            for line in all_lines:
+                if "P: /" in line and len(properties) > 0:
+                    device = Device(properties, self.logger)
                     if device.path != "":
                         self.devices.append(device)
                     properties = dict()
@@ -76,7 +56,8 @@ class CertDevice:
                         elif tp == "P":
                             properties["INFO"] = attribute
         except Exception as e:
-            self.logger.warning("Get devices failed.\n")
+            self.logger.error("Get devices failed.")
+
         self.devices.sort(key=lambda k: k.path)
         return self.devices
 
@@ -86,7 +67,9 @@ class Device:
     Device properties
     """
 
-    def __init__(self, properties=None):
+    def __init__(self, properties=None, logger=None):
+        self.logger = logger
+        self.command = Command(self.logger)
         self.path = ""
         self.pci = ""
         self.quad = list()
@@ -389,9 +372,11 @@ class Device:
         :return:
         """
         self.get_pci()
-        com = Command("lspci -xs %s -v" % self.pci)
-        output = com.read()
-        for info in output.split('\n'):
+        if not self.pci:
+            return ""
+        cmd_result = self.command.run_cmd(
+            "lspci -xs %s -v" % self.pci, log_print=False)
+        for info in cmd_result[0].split('\n'):
             if re.search("Kernel driver in use|Kernel modules", info):
                 self.driver = info.split(":")[1].strip()
                 return self.driver
@@ -402,9 +387,11 @@ class Device:
         Get the driver version of the board
         :return:
         """
-        com = Command("modinfo %s" % self.driver)
-        output = com.read()
-        for info in output.split('\n'):
+        if not self.driver:
+            return ""
+        cmd_result = self.command.run_cmd(
+            "modinfo %s" % self.driver, log_print=False)
+        for info in cmd_result[0].split('\n'):
             if re.search(r"\bversion:", info):
                 self.driver_version = info.split(":", 1)[1].strip()
                 return self.driver_version
@@ -430,10 +417,10 @@ class Device:
         get quadruple by pci number
         :return:
         """
-        com = Command("lspci -xs %s" % self.pci)
-        output = com.read()
+        cmd_result = self.command.run_cmd(
+            "lspci -xs %s" % self.pci, log_print=False)
         self.quad = []
-        for ln in output.split('\n'):
+        for ln in cmd_result[0].split('\n'):
             if re.match("00: ", ln):
                 tmp = ln.split(" ")[1:5]
                 self.quad.extend([tmp[1] + tmp[0], tmp[3] + tmp[2]])
