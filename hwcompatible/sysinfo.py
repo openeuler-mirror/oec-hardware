@@ -14,7 +14,7 @@
 
 import os
 import re
-from .command import Command
+from subprocess import getoutput
 
 
 class SysInfo:
@@ -73,9 +73,9 @@ class SysInfo:
             results = pattern.findall(text)
             self.version = results[0].strip() if results else ""
 
-        self.arch = Command('uname -m').read()
+        self.arch = getoutput('uname -m')
         self.debug_kernel = "debug" in self.arch
-        self.kernel = Command('uname -r').read()
+        self.kernel = getoutput('uname -r')
         self.kernel_rpm = "kernel-{}".format(self.kernel)
         self.kerneldevel_rpm = "kernel-devel-{}".format(self.kernel)
         self.kernel_version = self.kernel.split('-')[0]

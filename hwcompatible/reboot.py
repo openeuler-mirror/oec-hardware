@@ -12,12 +12,13 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
+from asyncio import subprocess
 import os
 import datetime
 import argparse
 from .document import Document, FactoryDocument
 from .env import CertEnv
-from .command import Command, CertCommandError
+from .command import Command
 from .constants import *
 
 
@@ -47,7 +48,7 @@ class Reboot:
                 test[REBOOT] = False
 
         os.remove(CertEnv.rebootfile)
-        Command("systemctl disable oech").run()
+        subprocess.getoutput("systemctl disable oech")
 
     def setup(self, args=None):
         """
@@ -66,7 +67,7 @@ class Reboot:
             if test[RUN] and self.testname == test[NAME]:
                 test[REBOOT] = True
                 test[STATUS] = FAIL
-        if not FactoryDocument(CertEnv.factoryfile, self.job.test_factory).save():
+        if not FactoryDocument(CertEnv.factoryfile, self.logger, self.job.test_factory).save():
             self.logger.error("Save testfactory doc failed before reboot.")
             return False
 
@@ -77,13 +78,11 @@ class Reboot:
         if not Document(CertEnv.rebootfile, self.logger, self.reboot).save():
             self.logger.error("Save reboot doc failed.")
             return False
-
-        Command("systemctl daemon-reload").run()
-        try:
-            Command("systemctl enable oech").run()
-        except CertCommandError as certerror:
-            self.logger.error("Enable oech.service failed.\n %s" %
-                              certerror.print_errors())
+        command = Command(self.logger)
+        command.run_cmd("systemctl daemon-reload")
+        cmd_result = command.run_cmd("systemctl enable oech")
+        if len(cmd_result[1]) != 0 and cmd_result[2] != 0:
+            self.logger.error("Enable oech.service failed.\n %s" % cmd_result[1])
             return False
 
         return True
@@ -122,12 +121,11 @@ class Reboot:
 
         time_now = datetime.datetime.now()
         time_delta = (time_now - time_reboot).seconds
-        cmd = Command("last reboot -s '%s seconds ago'" % time_delta)
-        reboot_list = cmd.get_str(
-            "^reboot .*$", single_line=False, return_list=True)
-        if len(reboot_list) != 1:
+        command = Command(self.logger)
+        cmd_result = command.run_cmd("last reboot -s '%s seconds ago' | grep '^reboot .*$'" % time_delta)
+        if cmd_result[2] != 0:
             logger.error("Reboot times check failed.")
             return False
 
-        logger.info("Reboot time check : %s" % reboot_list)
+        logger.info("Reboot time check : %s" % cmd_result[0])
         return True

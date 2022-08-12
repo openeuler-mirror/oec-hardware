@@ -13,7 +13,6 @@
 # Create: 2020-04-01
 
 import os
-import sys
 import time
 import argparse
 import shutil
@@ -24,7 +23,7 @@ from collections import namedtuple
 from .document import CertDocument, DeviceDocument, FactoryDocument
 from .env import CertEnv
 from .device import CertDevice, Device
-from .command import Command, CertCommandError
+from .command import Command
 from .command_ui import CommandUI
 from .job import Job
 from .reboot import Reboot
@@ -46,6 +45,7 @@ class EulerCertification():
         self.client = None
         self.dir_name = None
         self.logger = logger
+        self.command = Command(logger)
 
     def run(self):
         """
@@ -66,7 +66,7 @@ class EulerCertification():
                 return True
 
             oec_devices = certdevice.get_devices()
-            self.devices = DeviceDocument(CertEnv.devicefile, oec_devices)
+            self.devices = DeviceDocument(CertEnv.devicefile, self.logger, oec_devices)
             self.devices.save()
             test_factory = self.get_tests(oec_devices)
             self.update_factory(test_factory)
@@ -133,7 +133,7 @@ class EulerCertification():
                 self.certification.new()
                 self.certification.save()
         if not self.test_factory:
-            factory_doc = FactoryDocument(CertEnv.factoryfile)
+            factory_doc = FactoryDocument(CertEnv.factoryfile, self.logger)
             self.test_factory = factory_doc.get_factory()
 
         oec_id = self.certification.get_certify()
@@ -161,7 +161,7 @@ class EulerCertification():
         doc_dir = os.path.join(CertEnv.logdirectoy, job.job_id)
         if not os.path.exists(doc_dir):
             return
-        FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
+        FactoryDocument(CertEnv.factoryfile, self.logger, self.test_factory).save()
         shutil.copy(CertEnv.certificationfile, doc_dir)
         shutil.copy(CertEnv.devicefile, doc_dir)
         shutil.copy(CertEnv.factoryfile, doc_dir)
@@ -171,13 +171,13 @@ class EulerCertification():
         self.dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") \
                         + "-" + job.job_id
         pack_name = self.dir_name + ".tar"
-        cmd = Command("tar -cf %s %s" % (pack_name, self.dir_name))
-        try:
-            os.rename(job.job_id, self.dir_name)
-            cmd.run_quiet()
-        except CertCommandError:
-            self.logger.error("Error: collect job log failed.")
+        os.rename(job.job_id, self.dir_name)
+        
+        cmd_result = self.command.run_cmd("tar -cf %s %s" % (pack_name, self.dir_name), log_print=False)
+        if cmd_result[2] != 0:
+            self.logger.error("Collect job log failed.")
             return
+        
         self.logger.info("Log saved to file: %s succeed." %
                          os.path.join(os.getcwd(), pack_name))
         shutil.copy(pack_name, CertEnv.datadirectory)
@@ -239,7 +239,7 @@ class EulerCertification():
         :return:
         """
         sort_devices = self.sort_tests(devices)
-        empty_device = Device()
+        empty_device = Device(logger=self.logger)
         test_factory = list()
         casenames = []
         for (_, dirs, filenames) in os.walk(CertEnv.testdirectoy):
@@ -276,7 +276,7 @@ class EulerCertification():
         :return:
         """
         sort_devices = dict()
-        empty_device = Device()
+        empty_device = Device(logger=self.logger)
         for device in devices:
             if device.get_property("SUBSYSTEM") == USB and \
                     device.get_property("ID_VENDOR_FROM_DATABASE") == \
@@ -325,28 +325,23 @@ class EulerCertification():
             if device.get_property("SUBSYSTEM") == "net" and \
                     device.get_property("INTERFACE"):
                 interface = device.get_property("INTERFACE")
-                nmcli = Command("nmcli device")
-                nmcli.start()
-                while True:
-                    line = nmcli.readline()
-                    if line:
-                        if interface in line and IB in line:
-                            if IB in sort_devices.keys():
-                                sort_devices[IB].extend([device])
-                            else:
-                                sort_devices[IB] = [device]
-                        elif interface in line and ETHERNET in line:
-                            if ETHERNET in sort_devices.keys():
-                                sort_devices[ETHERNET].extend([device])
-                            else:
-                                sort_devices[ETHERNET] = [device]
-                        elif interface in line and WIFI in line:
-                            if WLAN in sort_devices.keys():
-                                sort_devices[WLAN].extend([device])
-                            else:
-                                sort_devices[WLAN] = [device]
-                    else:
-                        break
+                cmd_result = self.command.run_cmd("nmcli device")
+                for line in cmd_result[0].split("\n"):
+                    if interface in line and IB in line:
+                        if IB in sort_devices.keys():
+                            sort_devices[IB].extend([device])
+                        else:
+                            sort_devices[IB] = [device]
+                    elif interface in line and ETHERNET in line:
+                        if ETHERNET in sort_devices.keys():
+                            sort_devices[ETHERNET].extend([device])
+                        else:
+                            sort_devices[ETHERNET] = [device]
+                    elif interface in line and WIFI in line:
+                        if WLAN in sort_devices.keys():
+                            sort_devices[WLAN].extend([device])
+                        else:
+                            sort_devices[WLAN] = [device]
                 continue
             if device.get_property("ID_CDROM") == "1":
                 for dev_type in CDTYPES:
@@ -363,12 +358,10 @@ class EulerCertification():
             if any([k in id_vendor for k in KEYCARD_VENDORS]):
                 sort_devices[KEYCARD] = [device]
                 continue
-        try:
-            Command("dmidecode").get_str("IPMI Device Information",
-                                         single_line=False)
+            
+        cmd_result = self.command.run_cmd("dmidecode | grep 'IPMI Device Information'")
+        if cmd_result[2] == 0:
             sort_devices[IPMI] = [empty_device]
-        except:
-            pass
 
         return sort_devices
 
@@ -514,7 +507,7 @@ class EulerCertification():
                     self.logger.info("add %s test %s" % (test[NAME],
                                                          test[DEVICE].get_name()))
         self.test_factory.sort(key=lambda k: k[NAME])
-        FactoryDocument(CertEnv.factoryfile, self.test_factory).save()
+        FactoryDocument(CertEnv.factoryfile, self.logger, self.test_factory).save()
 
     def _print_tests(self, device):
         """

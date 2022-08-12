@@ -15,9 +15,8 @@
 import os
 import json
 import configparser
-
+from subprocess import getoutput
 from .command_ui import CommandUI
-from .command import Command
 from .device import Device
 from .sysinfo import SysInfo
 from .env import CertEnv
@@ -26,10 +25,10 @@ from .constants import *
 
 class Document():
     """
-    Read and write documents
+    Basic document module
     """
 
-    def __init__(self, filename, logger, document=''):
+    def __init__(self, filename, logger, document=None):
         self.filename = filename
         self.logger = logger
         self.document = document
@@ -65,13 +64,8 @@ class CertDocument(Document):
     """
 
     def __init__(self, filename, logger, document=''):
-        super().__init__(filename, logger, document)
-        self.document = dict()
-        self.filename = filename
-        self.logger = logger
-        if document:
-            self.documemt = document
-        else:
+        super().__init__(filename, logger, dict())
+        if not document:
             self.load()
 
     def new(self):
@@ -79,13 +73,8 @@ class CertDocument(Document):
         Create new document object
         """
         try:
-            pipe = Command("/usr/sbin/dmidecode -t 1")
-            pipe.start()
-            self.document = dict()
-            while True:
-                line = pipe.readline()
-                if not line:
-                    break
+            cmd_result = getoutput("/usr/sbin/dmidecode -t 1")
+            for line in cmd_result.split("\n"):
                 property_right = line.split(":", 1)
                 if len(property_right) != 2:
                     continue
@@ -166,14 +155,14 @@ class DeviceDocument(Document):
     Get device document
     """
 
-    def __init__(self, filename, devices=''):
-        self.filename = filename
-        self.document = list()
-        if devices:
-            for device in devices:
-                self.document.append(device.properties)
-        else:
+    def __init__(self, filename, logger, devices=''):
+        super().__init__(filename, logger, list())
+        if not devices:
             self.load()
+            return
+        for device in devices:
+            self.document.append(device.properties)
+           
 
 
 class FactoryDocument(Document):
@@ -181,9 +170,8 @@ class FactoryDocument(Document):
     Get factory from file or factory parameter
     """
 
-    def __init__(self, filename, factory=''):
-        self.document = list()
-        self.filename = filename
+    def __init__(self, filename, logger, factory=''):
+        super().__init__(filename, logger, list())
         if not factory:
             self.load()
             return
@@ -203,7 +191,7 @@ class FactoryDocument(Document):
         factory = list()
         for element in self.document:
             test = dict()
-            device = Device(element[DEVICE])
+            device = Device(element[DEVICE], self.logger)
             test[DEVICE] = device
             test[NAME] = element[NAME]
             test[RUN] = element[RUN]
