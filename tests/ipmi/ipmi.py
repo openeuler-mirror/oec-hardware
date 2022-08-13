@@ -11,17 +11,12 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-import argparse
+# Desc: Intelligent Platform Management Interface test
 
 from hwcompatible.test import Test
-from hwcompatible.command import Command
 
 
 class IpmiTest(Test):
-    """
-    Intelligent Platform Management Interface test
-    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["OpenIPMI", "ipmitool"]
@@ -31,15 +26,12 @@ class IpmiTest(Test):
         Start IPMI test
         :return:
         """
-        try:
-            self.logger.info("Start ipmp.server.")
-            Command("systemctl start ipmi &>> %s" % self.logger.logfile).run()
-            Command("systemctl status ipmi.service &>> %s" % self.logger.logfile).get_str(
-                regex="Active: active", single_line=False)
-        except Exception:
-            self.logger.error("Ipmi service start failed")
+        self.command.run_cmd("systemctl start ipmi")
+        result = self.command.run_cmd("systemctl status ipmi.service | grep 'Active: active'" )
+        if result[2] != 0:
+            self.logger.error("Ipmi service start failed.")
             return False
-        self.logger.info("Ipmi service start successfully")
+        self.logger.info("Ipmi service start succeed.")
         return True
 
     def ipmitool(self):
@@ -49,12 +41,11 @@ class IpmiTest(Test):
         """
         cmd_list = ["ipmitool fru", "ipmitool sensor"]
         for cmd in cmd_list:
-            try:
-                Command("%s &>> %s " % (cmd, self.logger.logfile)).echo()
-            except Exception:
-                self.logger.error("%s return error." % cmd)
+            result = self.command.run_cmd(cmd)
+            if result[2] != 0:
+                self.logger.error("%s execute failed." % cmd)
                 return False
-            self.logger.info("%s return success." % cmd)
+            self.logger.info("%s execute successfully." % cmd)
         return True
 
     def test(self):
