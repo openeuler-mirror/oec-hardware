@@ -26,29 +26,15 @@ class AcpiTest(Test):
         Test.__init__(self)
         self.requirements = ["acpica-tools"]
 
-    def setup(self, args=None):
-        """
-        Initialization before test
-        :param args:
-        :return:
-        """
-        self.args = args or argparse.Namespace()
-        self.logger = getattr(self.args, "test_logger", None)
-
     def test(self):
         """
         Test case
         :return:
         """
-        try:
-            result = subprocess.getstatusoutput("acpidump")
-            self.logger.info(result[1], terminal_print=False)
-            if result[0] == 0:
-                self.logger.info("Test acpi succeed.")
-                return True
+        result = self.command.run_cmd("acpidump")
+        if result[2] == 0:
+            self.logger.info("Test acpi succeed.")
+            return True
 
-            self.logger.error("Test acpi failed.")
-            return False
-        except Exception as concrete_error:
-            self.logger.error("Test acpi failed.\n %s" % concrete_error)
-            return False
+        self.logger.error("Test acpi failed.\n%s" % result[1])
+        return False

@@ -18,8 +18,6 @@ import string
 import random
 import argparse
 import yaml
-
-from .test import Test
 from .env import CertEnv
 from .command import Command
 from .log import Logger
@@ -46,7 +44,6 @@ class Job():
         self.subtests_filter = getattr(self.args, "subtests_filter", None)
         self.job_id = ''.join(random.sample(
             string.ascii_letters + string.digits, 10))
-        self.logpath = CertEnv.logdirectoy + "/" + self.job_id+"/job.log"
         self.config_info = {}
         self.logger = Logger("job.log", self.job_id, sys.stdout, sys.stderr)
         self.command = Command(self.logger)
@@ -62,7 +59,7 @@ class Job():
         for tests in self.test_suite:
             for pkg in tests[TEST].requirements:
                 cmd_result = self.command.run_cmd(
-                    "rpm -q %s " % pkg, ignore_errors=True)
+                    "rpm -q %s" % pkg, ignore_errors=True)
                 return_code = cmd_result[2]
                 if return_code != 0 and pkg not in required_rpms:
                     required_rpms.append(pkg)
@@ -71,11 +68,11 @@ class Job():
             self.logger.info("Start to install required packages: %s" %
                              ", ".join(required_rpms))
             cmd_result = self.command.run_cmd(
-                "yum install -y %s &>> %s" % (" ".join(required_rpms), self.logpath))
+                "yum install -y %s" % (" ".join(required_rpms)))
             if len(cmd_result[1]) != 0 and cmd_result[2] != 0:
                 self.logger.error(
                     "Fail to install required packages.\n %s" % cmd_result[1])
-            return False
+                return False
 
         return True
 
