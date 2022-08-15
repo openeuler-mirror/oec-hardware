@@ -11,63 +11,61 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-"""Perf Test"""
+# Desc: Perf Test
 
 import re
 from hwcompatible.test import Test
-from hwcompatible.command import Command
 
 
 class PerfTest(Test):
-    """
-    Perf Test
-    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["perf"]
-        self.perfRecord = "perf record -a -e cycles -o hwcompatible-perf.data sleep 5"
-        self.perfEvlist = "perf evlist -i hwcompatible-perf.data"
-        self.perfReport = "perf report -i hwcompatible-perf.data --stdio"
+        self.perf_record = "perf record -a -e cycles -o hwcompatible-perf.data sleep 5"
+        self.perf_evlist = "perf evlist -i hwcompatible-perf.data"
+        self.perf_report = "perf report -i hwcompatible-perf.data --stdio"
 
     def exec_perf(self):
         """
         Execute perf command
         :return:
         """
+        returncode = True
         # record
-        self.logger.info("Collecting the perf record using the command '%s'." % self.perfRecord)
-        perfRecordEcho = Command(self.perfRecord).read()
-        perfRecordMacth = re.search("perf record", perfRecordEcho)
-        if not perfRecordMacth:
-            self.logger.error("Failed to record events because of :\n %s." % perfRecordEcho)
+        self.logger.info("Collecting the perf record.")
+        perf_record_echo = self.command.run_cmd(self.perf_record)
+        perf_record_macth = re.search("perf record", perf_record_echo[1])
+        if not perf_record_macth:
+            self.logger.error("Record events failed.")
+            returncode = False 
         else:
-            self.logger.info("Success to record events :\n %s." % perfRecordEcho)
+            self.logger.info("Record events succeed.")
 
         # evList
-        perfEvlistEcho = Command(self.perfEvlist).read()
-        perfEvlistdMacth = re.search("cycles", perfEvlistEcho)
-        if not perfEvlistdMacth:
-            self.logger.error("Required hardware event not available because of :\n %s." % perfEvlistEcho)
-            return False
+        perf_evlist_echo = self.command.run_cmd(self.perf_evlist)
+        perf_evlistd_macth = re.search("cycles", perf_evlist_echo[0])
+        if not perf_evlistd_macth:
+            self.logger.error("Required hardware event available failed because of:\n %s." % perf_evlist_echo[1])
+            returncode = False
         else:
-            self.logger.info("Hardware event found : \n %s." % perfEvlistEcho)
+            self.logger.info("Hardware event found.")
 
         # report
-        perfReportEcho = Command(self.perfReport).read()
-        perfReportMacth = re.search(r"\s*\S+\s+(\[\S+.\S+\])\s+\S+", perfReportEcho)
-        if not perfReportMacth:
-            self.logger.error("No samples found. Failed to fetch report because of:\n %s." % perfReportEcho)
-            return False
+        perf_report_echo = self.command.run_cmd(self.perf_report)
+        perf_report_macth = re.search(r"\s*\S+\s+(\[\S+.\S+\])\s+\S+", perf_report_echo[0])
+        if not perf_report_macth:
+            self.logger.error("No samples found. Failed to fetch report because of:\n %s." % perf_report_echo[1])
+            returncode = False
         else:
-            self.logger.info("Samples found for the hardware event :\n %s." % perfReportEcho)
-        return True
+            self.logger.info("Samples found for the hardware event.")
+            
+        return returncode
 
     def test(self):
         """
         test case
         :return:
         """
-        if not self.exec_perf():
-            return False
-        return True
+        if self.exec_perf():
+            return True
+        return False
