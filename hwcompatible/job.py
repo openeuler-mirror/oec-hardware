@@ -22,7 +22,6 @@ from .env import CertEnv
 from .command import Command
 from .log import Logger
 from .reboot import Reboot
-from .constants import *
 
 
 class Job():
@@ -57,7 +56,7 @@ class Job():
         """
         required_rpms = []
         for tests in self.test_suite:
-            for pkg in tests[TEST].requirements:
+            for pkg in tests["test"].requirements:
                 cmd_result = self.command.run_cmd(
                     "rpm -q %s" % pkg, ignore_errors=True)
                 return_code = cmd_result[2]
@@ -87,17 +86,17 @@ class Job():
             return
 
         self.get_config()
-        self.test_suite.sort(key=lambda k: k[TEST].pri)
+        self.test_suite.sort(key=lambda k: k["test"].pri)
         for testcase in self.test_suite:
             config_data = self.get_device(testcase)
             if self._run_test(testcase, config_data, subtests_filter):
-                testcase[STATUS] = PASS
+                testcase["status"] = "PASS"
                 self.logger.info("Test %s succeed." %
-                                 testcase[NAME], terminal_print=False)
+                                 testcase["name"], terminal_print=False)
             else:
-                testcase[STATUS] = FAIL
+                testcase["status"] = "FAIL"
                 self.logger.error("Test %s failed." %
-                                  testcase[NAME], terminal_print=False)
+                                  testcase["name"], terminal_print=False)
 
     def run(self):
         """
@@ -124,12 +123,12 @@ class Job():
         self.logger.info(
             "-----------------  Summary -----------------", log_print=False)
         for test in self.test_factory:
-            if not test[RUN]:
+            if not test["run"]:
                 continue
-            name = test[NAME]
-            if test[DEVICE].get_name():
-                name = test[NAME] + "-" + test[DEVICE].get_name()
-            if test[STATUS] == PASS:
+            name = test["name"]
+            if test["device"].get_name():
+                name = test["name"] + "-" + test["device"].get_name()
+            if test["status"] == "PASS":
                 self.logger.info(name.ljust(
                     40) + "\033[0;32mPASS\033[0m", log_print=False)
             else:
@@ -143,9 +142,9 @@ class Job():
         """
         for test in self.test_factory:
             for testcase in self.test_suite:
-                if test[NAME] == testcase[NAME] and test[DEVICE].path == \
-                        testcase[DEVICE].path:
-                    test[STATUS] = testcase[STATUS]
+                if test["name"] == testcase["name"] and test["device"].path == \
+                        testcase["device"].path:
+                    test["status"] = testcase["status"]
 
     def get_config(self):
         """
@@ -170,13 +169,13 @@ class Job():
         """
         Get the board configuration information to be tested
         """
-        types = testcase[NAME]
-        device_name = testcase[DEVICE].get_name()
-        if types == DISK:
-            return self.config_info.get(DISK)
-        if device_name and types not in (GPU, VGPU, NVME, DPDK):
+        types = testcase["name"]
+        device_name = testcase["device"].get_name()
+        if types == "disk":
+            return self.config_info.get("disk")
+        if device_name and types not in ("gpu", "vgpu", "nvme", "dpdk"):
             for device in self.config_info.get(types).values():
-                if device.get(DEVICE) == device_name:
+                if device.get("device") == device_name:
                     return device
         return None
 
@@ -187,16 +186,16 @@ class Job():
         :param subtests_filter:
         :return:
         """
-        name = testcase[NAME]
-        if testcase[DEVICE].get_name():
-            name = testcase[NAME] + "-" + testcase[DEVICE].get_name()
+        name = testcase["name"]
+        if testcase["device"].get_name():
+            name = testcase["name"] + "-" + testcase["device"].get_name()
         logname = name + ".log"
         reboot = None
         test = None
         logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
         logger.start()
         try:
-            test = testcase[TEST]
+            test = testcase["test"]
             if subtests_filter and name != "system":
                 return_code = getattr(test, subtests_filter)(logger)
             else:
@@ -204,11 +203,11 @@ class Job():
                 self.logger.info("Start to run %s/%s test suite: %s." %
                                  (self.current_num, self.total_count, name))
                 args = argparse.Namespace(
-                    device=testcase[DEVICE], config_data=config_data,
+                    device=testcase["device"], config_data=config_data,
                     test_logger=logger, logdir=logger.logdir, testname=name)
                 test.setup(args)
                 if test.reboot:
-                    reboot = Reboot(testcase[NAME], self, test.rebootup)
+                    reboot = Reboot(testcase["name"], self, test.rebootup)
                     return_code = False
                     if reboot.setup(args):
                         return_code = test.test()

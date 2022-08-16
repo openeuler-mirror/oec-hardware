@@ -18,10 +18,8 @@ import sys
 import shutil
 import filecmp
 import importlib
-from builtins import input
-from .env import CertEnv
 from .test import Test
-from .constants import NAME, RUN, STATUS, TEST, DEVICE, FAIL
+from .env import CertEnv
 
 
 def create_test_suite(test_factory, logger, subtests_filter=None):
@@ -33,20 +31,20 @@ def create_test_suite(test_factory, logger, subtests_filter=None):
     test_suite = []
     test_name = []
     for test in test_factory:
-        if test[RUN]:
-            testclass = discover(test[NAME], logger, subtests_filter)
+        if test["run"]:
+            testclass = discover(test["name"], logger, subtests_filter)
             if not testclass:
                 if not subtests_filter:
-                    test[STATUS] = FAIL
-                    logger.error("The testcase %s is not found." % test[NAME])
+                    test["status"] = "FAIL"
+                    logger.error("The testcase %s is not found." % test["name"])
                 continue
             testcase = dict()
-            testcase[TEST] = testclass
-            testcase[NAME] = test[NAME]
-            testcase[DEVICE] = test[DEVICE]
-            testcase[STATUS] = FAIL
+            testcase["test"] = testclass
+            testcase["name"] = test["name"]
+            testcase["device"] = test["device"]
+            testcase["status"] = "FAIL"
             test_suite.append(testcase)
-            test_name.append(test[NAME])
+            test_name.append(test["name"])
 
     total_count = len(test_suite)
     if total_count:
@@ -92,7 +90,7 @@ def discover(testname, logger, subtests_filter=None):
     for thing in dir(module):
         test_class = getattr(module, thing)
         if isinstance(test_class, type) and issubclass(test_class, Test):
-            if TEST not in dir(test_class):
+            if "test" not in dir(test_class):
                 continue
             if (subtests_filter and subtests_filter not in dir(test_class)):
                 continue
@@ -123,7 +121,7 @@ def search_factory(obj_test, test_factory):
     :return:
     """
     for test in test_factory:
-        if test[NAME] == obj_test[NAME] and \
-                test[DEVICE].path == obj_test[DEVICE].path:
+        if test["name"] == obj_test["name"] and \
+                test["device"].path == obj_test["device"].path:
             return True
     return False

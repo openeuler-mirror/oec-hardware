@@ -19,7 +19,6 @@ import argparse
 from .document import Document, FactoryDocument
 from .env import CertEnv
 from .command import Command
-from .constants import *
 
 
 class Reboot:
@@ -44,8 +43,8 @@ class Reboot:
             return
 
         for test in self.job.test_factory:
-            if test[RUN] and self.testname == test[NAME]:
-                test[REBOOT] = False
+            if test["run"] and self.testname == test["name"]:
+                test["reboot"] = False
 
         os.remove(CertEnv.rebootfile)
         subprocess.getoutput("systemctl disable oech")
@@ -64,16 +63,16 @@ class Reboot:
 
         self.job.save_result()
         for test in self.job.test_factory:
-            if test[RUN] and self.testname == test[NAME]:
-                test[REBOOT] = True
-                test[STATUS] = FAIL
+            if test["run"] and self.testname == test["name"]:
+                test["reboot"] = True
+                test["status"] = "FAIL"
         if not FactoryDocument(CertEnv.factoryfile, self.logger, self.job.test_factory).save():
             self.logger.error("Save testfactory doc failed before reboot.")
             return False
 
         self.reboot["job_id"] = self.job.job_id
         self.reboot["time"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        self.reboot[TEST] = self.testname
+        self.reboot["test"] = self.testname
         self.reboot["rebootup"] = self.rebootup
         if not Document(CertEnv.rebootfile, self.logger, self.reboot).save():
             self.logger.error("Save reboot doc failed.")
@@ -101,7 +100,7 @@ class Reboot:
             return False
 
         try:
-            self.testname = doc.document[TEST]
+            self.testname = doc.document["test"]
             self.reboot = doc.document
             self.job.job_id = self.reboot["job_id"]
             self.job.logpath = CertEnv.logdirectoy + "/" + self.job.job_id + "/job.log"
@@ -111,7 +110,7 @@ class Reboot:
             test_suite = self.job.test_suite
             reboot_suite = []
             for testcase in test_suite:
-                if testcase[NAME] == self.reboot["test"]:
+                if testcase["name"] == self.reboot["test"]:
                     reboot_suite.append(testcase)
                     break
             self.job.test_suite = reboot_suite

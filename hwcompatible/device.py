@@ -14,7 +14,6 @@
 
 import re
 from .command import Command
-from .constants import FC, GPU, VGPU, RAID, NVME
 
 
 class CertDevice:
@@ -117,13 +116,13 @@ class Device:
             return self.board, self.chip
         # get quadruple
         self.get_quadruple()
-        if name == FC:
+        if name == "fc":
             self.get_fc_card()
-        elif name == GPU or name == VGPU:
+        elif name == "gpu" or name == "vgpu":
             self.get_gpu_card()
-        elif name == RAID:
+        elif name == "raid":
             self.get_raid_card()
-        elif name == NVME:
+        elif name == "nvme":
             self.get_nvme_card()
         else:
             # 8080 indicate intel
