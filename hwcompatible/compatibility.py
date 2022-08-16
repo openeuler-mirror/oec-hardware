@@ -28,8 +28,9 @@ from .command_ui import CommandUI
 from .job import Job
 from .reboot import Reboot
 from .client import Client
-from .constants import *
 from .common import create_test_suite, copy_pci, search_factory
+from .constants import NODEVICE, GPU_DRIVER, IB, CDTYPES, KEYCARD_VENDORS, \
+    BOARD, VERSION, DRIVER, CHIP, DEVICE_INFO
 
 
 class EulerCertification():
@@ -253,19 +254,19 @@ class EulerCertification():
             if sort_devices.get(testname):
                 for device in sort_devices[testname]:
                     test = dict()
-                    test[NAME] = testname
-                    test[DEVICE] = device
-                    test[RUN] = True
-                    test[STATUS] = NOTRUN
-                    test[REBOOT] = False
+                    test["name"] = testname
+                    test["device"] = device
+                    test["run"] = True
+                    test["status"] = "NotRun"
+                    test["reboot"] = False
                     test_factory.append(test)
             elif testname in NODEVICE:
                 test = dict()
-                test[NAME] = testname
-                test[DEVICE] = empty_device
-                test[RUN] = True
-                test[STATUS] = NOTRUN
-                test[REBOOT] = False
+                test["name"] = testname
+                test["device"] = empty_device
+                test["run"] = True
+                test["status"] = "NotRun"
+                test["reboot"] = False
                 test_factory.append(test)
         return test_factory
 
@@ -278,49 +279,49 @@ class EulerCertification():
         sort_devices = dict()
         empty_device = Device(logger=self.logger)
         for device in devices:
-            if device.get_property("SUBSYSTEM") == USB and \
+            if device.get_property("SUBSYSTEM") == "usb" and \
                     device.get_property("ID_VENDOR_FROM_DATABASE") == \
                     "Linux Foundation" and \
                     ("2." in device.get_property("ID_MODEL_FROM_DATABASE") or
                      "3." in device.get_property("ID_MODEL_FROM_DATABASE")):
-                sort_devices[USB] = [empty_device]
+                sort_devices["usb"] = [empty_device]
                 continue
-            if (device.get_property("DEVTYPE") == DISK and
+            if (device.get_property("DEVTYPE") == "disk" and
                 not device.get_property("ID_TYPE")) or \
-                    device.get_property("ID_TYPE") == DISK:
-                if NVME in device.get_property("DEVPATH"):
-                    sort_devices[DISK] = [empty_device]
-                    if NVME in sort_devices.keys():
-                        sort_devices[NVME].extend([device])
+                    device.get_property("ID_TYPE") == "disk":
+                if "nvme" in device.get_property("DEVPATH"):
+                    sort_devices["disk"] = [empty_device]
+                    if "nvme" in sort_devices.keys():
+                        sort_devices["nvme"].extend([device])
                     else:
-                        sort_devices[NVME] = [device]
+                        sort_devices["nvme"] = [device]
                 elif "/host" in device.get_property("DEVPATH"):
-                    sort_devices[DISK] = [empty_device]
+                    sort_devices["disk"] = [empty_device]
             if "RAID" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") or \
                     ("SCSI" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") and
                      "HBA" not in device.get_property("ID_MODEL_FROM_DATABASE")):
-                if RAID in sort_devices.keys():
-                    sort_devices[RAID].extend([device])
+                if "raid" in sort_devices.keys():
+                    sort_devices["raid"].extend([device])
                 else:
-                    sort_devices[RAID] = [device]
+                    sort_devices["raid"] = [device]
                 continue
             if "Fibre Channel" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE"):
-                if FC in sort_devices.keys():
-                    sort_devices[FC].extend([device])
+                if "fc" in sort_devices.keys():
+                    sort_devices["fc"].extend([device])
                 else:
-                    sort_devices[FC] = [device]
+                    sort_devices["fc"] = [device]
                 continue
             driver = device.get_property("DRIVER")
             if any([d in driver for d in GPU_DRIVER]):
-                if GPU in sort_devices.keys():
-                    sort_devices[GPU].extend([device])
+                if "gpu" in sort_devices.keys():
+                    sort_devices["gpu"].extend([device])
                 else:
-                    sort_devices[GPU] = [device]
+                    sort_devices["gpu"] = [device]
                 if driver == "nvidia":
-                    if VGPU in sort_devices.keys():
-                        sort_devices[VGPU].extend([device])
+                    if "vgpu" in sort_devices.keys():
+                        sort_devices["vgpu"].extend([device])
                     else:
-                        sort_devices[VGPU] = [device]
+                        sort_devices["vgpu"] = [device]
                     continue
             if device.get_property("SUBSYSTEM") == "net" and \
                     device.get_property("INTERFACE"):
@@ -332,36 +333,36 @@ class EulerCertification():
                             sort_devices[IB].extend([device])
                         else:
                             sort_devices[IB] = [device]
-                    elif interface in line and ETHERNET in line:
-                        if ETHERNET in sort_devices.keys():
-                            sort_devices[ETHERNET].extend([device])
+                    elif interface in line and "ethernet" in line:
+                        if "ethernet" in sort_devices.keys():
+                            sort_devices["ethernet"].extend([device])
                         else:
-                            sort_devices[ETHERNET] = [device]
-                    elif interface in line and WIFI in line:
-                        if WLAN in sort_devices.keys():
-                            sort_devices[WLAN].extend([device])
+                            sort_devices["ethernet"] = [device]
+                    elif interface in line and "wifi" in line:
+                        if "wlan" in sort_devices.keys():
+                            sort_devices["wlan"].extend([device])
                         else:
-                            sort_devices[WLAN] = [device]
+                            sort_devices["wlan"] = [device]
                 continue
             if device.get_property("ID_CDROM") == "1":
                 for dev_type in CDTYPES:
                     if device.get_property("ID_CDROM_" + dev_type) == "1":
-                        if CDROM in sort_devices.keys():
-                            sort_devices[CDROM].extend([device])
+                        if "cdrom" in sort_devices.keys():
+                            sort_devices["cdrom"].extend([device])
                         else:
-                            sort_devices[CDROM] = [device]
+                            sort_devices["cdrom"] = [device]
                         break
-            if device.get_property("SUBSYSTEM") == IPMI:
-                sort_devices[IPMI] = [empty_device]
+            if device.get_property("SUBSYSTEM") == "ipmi":
+                sort_devices["ipmi"] = [empty_device]
 
             id_vendor = device.get_property("ID_VENDOR_FROM_DATABASE")
             if any([k in id_vendor for k in KEYCARD_VENDORS]):
-                sort_devices[KEYCARD] = [device]
+                sort_devices["keycard"] = [device]
                 continue
             
         cmd_result = self.command.run_cmd("dmidecode | grep 'IPMI Device Information'")
         if cmd_result[2] == 0:
-            sort_devices[IPMI] = [empty_device]
+            sort_devices["ipmi"] = [empty_device]
 
         return sort_devices
 
@@ -372,10 +373,10 @@ class EulerCertification():
         """
         while True:
             for test in self.test_factory:
-                if test[NAME] == SYSTEM:
-                    test[RUN] = True
-                    if test[STATUS] == PASS:
-                        test[STATUS] = FORCE
+                if test["name"] == "system":
+                    test["run"] = True
+                    if test["status"] == "PASS":
+                        test["status"] = "Force"
 
             self.logger.info('\033c', log_print=False)
             self.logger.info("Select tests to run:", log_print=False)
@@ -388,11 +389,11 @@ class EulerCertification():
                 return False
             if reply in ["n", "none"]:
                 for test in self.test_factory:
-                    test[RUN] = False
+                    test["run"] = False
                 continue
             if reply in ["a", "all"]:
                 for test in self.test_factory:
-                    test[RUN] = True
+                    test["run"] = True
                 continue
 
             num_lst = reply.split(" ")
@@ -403,8 +404,8 @@ class EulerCertification():
                     continue
 
                 if 0 < num <= len(self.test_factory):
-                    self.test_factory[num - 1][RUN] = not \
-                        self.test_factory[num - 1][RUN]
+                    self.test_factory[num - 1]["run"] = not \
+                        self.test_factory[num - 1]["run"]
                     continue
 
     def show_tests(self):
@@ -414,34 +415,34 @@ class EulerCertification():
         """
         device_info = namedtuple('Device_info', DEVICE_INFO)
         self.logger.info("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10)
-                         + STATUS.ljust(10) + CLASS.ljust(14) +
-                         DEVICE.capitalize().ljust(15)
+                         + "status".ljust(10) + "Class".ljust(14) +
+                         "device".capitalize().ljust(15)
                          + DRIVER.ljust(15) + VERSION.ljust(18) +
                          CHIP.ljust(20)
                          + "%s\033[0m" % BOARD, log_print=False)
         num = 0
         with open(CertEnv.pcifile) as file:
             for test in self.test_factory:
-                name = test[NAME]
-                if name == SYSTEM:
-                    test[RUN] = True
-                    if test[STATUS] == PASS:
-                        test[STATUS] = FORCE
+                name = test["name"]
+                if name == "system":
+                    test["run"] = True
+                    if test["status"] == "PASS":
+                        test["status"] = "Force"
 
-                status = test[STATUS]
-                device = test[DEVICE].get_name()
-                board, chip = test[DEVICE].get_model(name, file)
-                driver = test[DEVICE].get_driver()
-                version = test[DEVICE].get_driver_version()
+                status = test["status"]
+                device = test["device"].get_name()
+                board, chip = test["device"].get_model(name, file)
+                driver = test["device"].get_driver()
+                version = test["device"].get_driver_version()
                 run = "no"
-                if test[RUN] is True:
+                if test["run"] is True:
                     run = "yes"
                 num = num + 1
-                if status == PASS:
+                if status == "PASS":
                     color = "2"
-                elif status == FAIL:
+                elif status == "FAIL":
                     color = "1"
-                elif status == FORCE:
+                elif status == "Force":
                     color = "3"
                 else:
                     color = "4"
@@ -455,10 +456,10 @@ class EulerCertification():
         :return:
         """
         for test in self.test_factory:
-            if test[STATUS] == PASS:
-                test[RUN] = False
+            if test["status"] == "PASS":
+                test["run"] = False
             else:
-                test[RUN] = True
+                test["run"] = True
         self.logger.info('\033c', log_print=False)
         self.logger.info("These tests are recommended to "
                          "complete the compatibility test: ", log_print=False)
@@ -483,7 +484,7 @@ class EulerCertification():
         if len(self.test_factory) == 0:
             return False
         for test in self.test_factory:
-            if test[STATUS] != PASS:
+            if test["status"] != "PASS":
                 return False
         return True
 
@@ -499,14 +500,14 @@ class EulerCertification():
             for test in self.test_factory:
                 if not search_factory(test, test_factory):
                     self.test_factory.remove(test)
-                    self.logger.info("delete %s test %s" % (test[NAME],
-                                                            test[DEVICE].get_name()))
+                    self.logger.info("delete %s test %s" % (test["name"],
+                                                            test["device"].get_name()))
             for test in test_factory:
                 if not search_factory(test, self.test_factory):
                     self.test_factory.append(test)
-                    self.logger.info("add %s test %s" % (test[NAME],
-                                                         test[DEVICE].get_name()))
-        self.test_factory.sort(key=lambda k: k[NAME])
+                    self.logger.info("add %s test %s" % (test["name"],
+                                                         test["device"].get_name()))
+        self.test_factory.sort(key=lambda k: k["name"])
         FactoryDocument(CertEnv.factoryfile, self.logger, self.test_factory).save()
 
     def _print_tests(self, device):

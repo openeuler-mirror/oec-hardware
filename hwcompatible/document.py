@@ -20,7 +20,7 @@ from .command_ui import CommandUI
 from .device import Device
 from .sysinfo import SysInfo
 from .env import CertEnv
-from .constants import *
+from .constants import FILE_FLAGS, FILE_MODES
 
 
 class Document():
@@ -92,13 +92,13 @@ class CertDocument(Document):
             return False
 
         sysinfo = SysInfo(CertEnv.releasefile)
-        self.document[OS] = sysinfo.get_product() + " " + sysinfo.get_version()
-        self.document[KERNEL] = sysinfo.get_kernel()
-        self.document[ID] = CommandUI().prompt(
+        self.document["OS"] = sysinfo.get_product() + " " + sysinfo.get_version()
+        self.document["kernel"] = sysinfo.get_kernel()
+        self.document["ID"] = CommandUI().prompt(
             "Please provide your Compatibility Test ID:")
-        self.document[PRODUCTURL] = CommandUI().prompt(
+        self.document["Product URL"] = CommandUI().prompt(
             "Please provide your Product URL:")
-        self.document[SERVER] = CommandUI().prompt(
+        self.document["server"] = CommandUI().prompt(
             "Please provide the Compatibility Test Server (Hostname or Ipaddr):")
 
     def get_oech_value(self, prop, value):
@@ -108,8 +108,8 @@ class CertDocument(Document):
         config = configparser.ConfigParser()
         config.read(CertEnv.versionfile)
         if prop == 'VERSION':
-            self.document[OECH_VERSION] = config.get(prop, value)
-        self.document[OECH_NAME] = config.get(prop, value)
+            self.document["oech_version"] = config.get(prop, value)
+        self.document["oech_name"] = config.get(prop, value)
         return config.get(prop, value)
 
     def get_hardware(self):
@@ -123,31 +123,31 @@ class CertDocument(Document):
         """
         Get os information
         """
-        return self.document[OS]
+        return self.document["OS"]
 
     def get_server(self):
         """
         Get server information
         """
-        return self.document[SERVER]
+        return self.document["server"]
 
     def get_url(self):
         """
         Get url
         """
-        return self.document[PRODUCTURL]
+        return self.document["Product URL"]
 
     def get_certify(self):
         """
         Get certify
         """
-        return self.document[ID]
+        return self.document["ID"]
 
     def get_kernel(self):
         """
         Get kernel information
         """
-        return self.document[KERNEL]
+        return self.document["kernel"]
 
 
 class DeviceDocument(Document):
@@ -177,10 +177,10 @@ class FactoryDocument(Document):
             return
         for member in factory:
             element = dict()
-            element[NAME] = member[NAME]
-            element[DEVICE] = member[DEVICE].properties
-            element[RUN] = member[RUN]
-            element[STATUS] = member[STATUS]
+            element["name"] = member["name"]
+            element["device"] = member["device"].properties
+            element["run"] = member["run"]
+            element["status"] = member["status"]
             self.document.append(element)
 
     def get_factory(self):
@@ -191,11 +191,11 @@ class FactoryDocument(Document):
         factory = list()
         for element in self.document:
             test = dict()
-            device = Device(element[DEVICE], self.logger)
-            test[DEVICE] = device
-            test[NAME] = element[NAME]
-            test[RUN] = element[RUN]
-            test[STATUS] = element[STATUS]
+            device = Device(element["device"], self.logger)
+            test["device"] = device
+            test["name"] = element["name"]
+            test["run"] = element["run"]
+            test["status"] = element["status"]
             factory.append(test)
         return factory
 

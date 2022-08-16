@@ -12,8 +12,6 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import subprocess
-import argparse
 from hwcompatible.test import Test
 
 

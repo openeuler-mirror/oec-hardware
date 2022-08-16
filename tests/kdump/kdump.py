@@ -16,7 +16,6 @@ import os
 import sys
 import time
 import re
-import argparse
 
 from hwcompatible.test import Test
 from hwcompatible.command_ui import CommandUI
