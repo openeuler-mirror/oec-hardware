@@ -11,11 +11,11 @@
 # See the Mulan PSL v2 for more details.
 # Author: @meitingli
 # Create: 2022-05-30
-
-"""public kabi test"""
+# Desc: Public kabi test
 
 import os
 import argparse
+from subprocess import getoutput
 from hwcompatible.env import CertEnv
 from hwcompatible.command import Command
 from hwcompatible.test import Test
@@ -24,19 +24,12 @@ kabi_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class KabiTest(Test):
-    """
-    kabi Test
-    """
-
     def __init__(self):
         Test.__init__(self)
-        self.logpath = None
-        self.driver = None
-        self.kernel_version = Command("uname -r").read()
+        self.kernel_version = getoutput("uname -r")
         self.requirements = ["gzip", "rpm-build"]
         self.symvers = None
         self.white_list = None
-        self.args = None
         self.wl_logpath = ""
         self.miss_logpath = ""
         self.changed_logpath = ""
@@ -47,12 +40,13 @@ class KabiTest(Test):
         """
         self.args = args or argparse.Namespace()
         self.logger = getattr(self.args, "test_logger", None)
+        self.command = Command(self.logger)
         self.wl_logpath = os.path.join(
-            getattr(args, "logdir", None), "kabi-whitelist.log")
+            self.logger.logdir, "kabi-whitelist.log")
         self.miss_logpath = os.path.join(
-            getattr(args, "logdir", None), "kabi-missing.log")
+            self.logger.logdir, "kabi-missing.log")
         self.changed_logpath = os.path.join(
-            getattr(args, "logdir", None), "kabi-changed.log")
+            self.logger.logdir, "kabi-changed.log")
         self.symvers = os.path.join(
             CertEnv.datadirectory, "symvers-" + self.kernel_version)
 
@@ -62,22 +56,22 @@ class KabiTest(Test):
         return: result
         """
         result = True
-        os_version = Command(
-            "grep openeulerversion /etc/openEuler-latest | awk -F = '{print $2}'").read()
+        os_version = getoutput(
+            "grep openeulerversion /etc/openEuler-latest | awk -F = '{print $2}'")
         self.logger.info("Start to test, please wait...")
         if not os.path.exists(self.symvers):
             symvers_gz = "symvers-" + self.kernel_version + ".gz"
-            Command("cp /boot/%s %s" %
-                    (symvers_gz, CertEnv.datadirectory)).run()
-            Command("gzip -d %s/%s" %
-                    (CertEnv.datadirectory, symvers_gz)).run()
+            self.command.run_cmd("cp /boot/%s %s" %
+                                 (symvers_gz, CertEnv.datadirectory))
+            self.command.run_cmd("gzip -d %s/%s" %
+                                 (CertEnv.datadirectory, symvers_gz))
 
-        arch = Command("uname -m").read()
+        arch = getoutput("uname -m")
         self.white_list = self._get_white_list(os_version, arch)
         if not self.white_list:
             self.logger.error("Get kernel white list failed.")
 
-        standard_symvers = self._get_kernel_source_rpm(os_version, arch)
+        standard_symvers = self._get_kernel_source_rpm(arch)
 
         with open(standard_symvers, "r") as f:
             for line in f.readlines():
@@ -89,20 +83,22 @@ class KabiTest(Test):
                 if len(hsdp) < 4 or hsdp[1] in self.white_list:
                     continue
 
-                data = Command("grep %s %s" % (hsdp[1], self.symvers)).read()
+                result = self.command.run_cmd("grep %s %s" % (
+                    hsdp[1], self.symvers), log_print=False)
+                data = result[0]
                 if data and hsdp[0] in data:
                     continue
                 elif data and hsdp[0] not in data:
                     if not self.changed_logpath.exists():
-                        Command("echo 'standard_symvers     cur_symvers' >> %s" % (
-                            self.changed_logpath)).run()
+                        self.command.run_cmd("echo 'standard_symvers     cur_symvers' | tee %s" % (
+                            self.changed_logpath), log_print=False)
 
-                    Command("echo '{%s} {%s}' >> %s" %
-                            (line, data, self.changed_logpath)).run()
+                    self.command.run_cmd("echo '{%s} {%s}' | tee %s" % (
+                        line, data, self.changed_logpath), log_print=False)
                     result = False
                 else:
-                    Command("echo '%s' >> %s" %
-                            (line, self.miss_logpath)).run()
+                    self.command.run_cmd("echo '%s' | tee %s" % (
+                        line, self.miss_logpath), log_print=False)
                     result = False
 
         if result:
@@ -118,24 +114,26 @@ class KabiTest(Test):
         white_list = os.path.join(
             CertEnv.datadirectory, "kabi_whitelist_" + arch)
         if not os.path.exists(white_list):
-            Command("wget %s -P %s" % (url, CertEnv.datadirectory)).run_quiet()
-        
+            self.command.run_cmd("wget %s -P %s" %
+                                 (url, CertEnv.datadirectory))
+
         # Check download file
         if not os.path.exists(white_list):
             return False
 
         return white_list
 
-    def _get_kernel_source_rpm(self, os_version, arch):
-        standard_kernel_version = Command(
-            "dnf list --repo=source | grep kernel.src | head -n 1 | awk '{print $2}'").read()
+    def _get_kernel_source_rpm(self, arch):
+        standard_kernel_version = getoutput(
+            "dnf list --repo=source | grep kernel.src | head -n 1 | awk '{print $2}'")
         rpmpath = "/root/rpmbuild/SOURCES"
         standard_symvers = os.path.join(rpmpath, "Module.kabi_" + arch)
         if os.path.exists(standard_symvers):
             return standard_symvers
 
-        Command("dnf download --source kernel-%s" % standard_kernel_version).run()
+        self.command.run_cmd("dnf download --source kernel-%s" %
+                             standard_kernel_version)
         rpm = "kernel-" + standard_kernel_version + ".src.rpm"
-        Command("rpm -ivh %s" % rpm).run_quiet()
+        getoutput("rpm -ivh %s" % rpm)
         os.remove(rpm)
         return standard_symvers

@@ -12,10 +12,10 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-from asyncio import subprocess
 import os
 import datetime
 import argparse
+from subprocess import getoutput
 from .document import Document, FactoryDocument
 from .env import CertEnv
 from .command import Command
@@ -47,7 +47,7 @@ class Reboot:
                 test["reboot"] = False
 
         os.remove(CertEnv.rebootfile)
-        subprocess.getoutput("systemctl disable oech")
+        getoutput("systemctl disable oech")
 
     def setup(self, args=None):
         """
@@ -81,7 +81,8 @@ class Reboot:
         command.run_cmd("systemctl daemon-reload")
         cmd_result = command.run_cmd("systemctl enable oech")
         if len(cmd_result[1]) != 0 and cmd_result[2] != 0:
-            self.logger.error("Enable oech.service failed.\n %s" % cmd_result[1])
+            self.logger.error(
+                "Enable oech.service failed.\n %s" % cmd_result[1])
             return False
 
         return True
@@ -120,8 +121,9 @@ class Reboot:
 
         time_now = datetime.datetime.now()
         time_delta = (time_now - time_reboot).seconds
-        command = Command(self.logger)
-        cmd_result = command.run_cmd("last reboot -s '%s seconds ago' | grep '^reboot .*$'" % time_delta)
+        command = Command(logger)
+        cmd_result = command.run_cmd(
+            "last reboot -s '%s seconds ago' | grep '^reboot .*$'" % time_delta)
         if cmd_result[2] != 0:
             logger.error("Reboot times check failed.")
             return False

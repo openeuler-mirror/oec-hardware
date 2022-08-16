@@ -11,26 +11,16 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
+# Desc: System Test
 
-"""System Test"""
-
-import os
-import sys
 import re
-import argparse
-
 from hwcompatible.test import Test
-from hwcompatible.command import Command
 from hwcompatible.sysinfo import SysInfo
 from hwcompatible.env import CertEnv
 from hwcompatible.document import Document
 
 
 class SystemTest(Test):
-    """
-    System Test
-    """
-
     def __init__(self):
         Test.__init__(self)
         self.pri = 1
@@ -41,13 +31,9 @@ class SystemTest(Test):
         test case
         :return:
         """
-        self.logger.info("uname -a", terminal_print=False)
-        Command("uname -a &>> %s" % self.logger.logfile).echo(ignore_errors=True)
-        self.logger.info("lsmod", terminal_print=False)
-        Command("lsmod &>> %s" % self.logger.logfile).echo(ignore_errors=True)
-        self.logger.info("dmidecode", terminal_print=False)
-        Command("dmidecode &>> %s" % self.logger.logfile).echo(ignore_errors=True)
-        sys.stdout.flush()
+        self.command.run_cmd("uname -a", ignore_errors=True)
+        self.command.run_cmd("lsmod",  ignore_errors=True)
+        self.command.run_cmd("dmidecode", ignore_errors=True)
 
         return_code = True
         if not self.check_certrpm():
@@ -67,19 +53,25 @@ class SystemTest(Test):
         :return:
         """
         self.logger.info("Checking installed cert package...")
+        flag = True
         for cert_package in ["oec-hardware"]:
-            rpm_verify = Command(
+            rpm_verify = self.command.run_cmd(
                 "rpm -V --nomtime --nomode --nocontexts %s" % cert_package)
-            output = rpm_verify.read()
-            if output:
-                for file in output.split('\n'):
-                    if "test_config.yaml" in file:
-                        continue
-                    else:
-                        self.logger.error("Files in %s have beem tampered. \nThe tampered files are as follows:\n %s" %
-                                (cert_package, output))
-                        return False
-        return True
+            if rpm_verify[2] == 0:
+                continue
+
+            output = rpm_verify[0].split('\n')
+            for file in output:
+                if "test_config.yaml" in file:
+                    continue
+                flag = False
+                self.logger.error(
+                    "Files in %s have been tampered." % cert_package)
+                self.logger.error(
+                    "The tampered files are as follows:\n%s" % rpm_verify[0], terminal_print=False)
+                break
+
+        return flag
 
     def check_kernel(self):
         """
@@ -91,9 +83,11 @@ class SystemTest(Test):
         os_version = self.sysinfo.product + " " + self.sysinfo.get_version()
         self.logger.info("Kernel RPM: %s" % kernel_rpm, terminal_print=False)
         self.logger.info("OS Version: %s" % os_version, terminal_print=False)
+        self.command.run_cmd("cat /proc/cmdline")
+
         return_code = True
         if self.sysinfo.debug_kernel:
-            self.logger.error("Debug kernel.")
+            self.logger.error("This is debug kernel.")
             return_code = False
 
         kernel_dict = Document(CertEnv.kernelinfo, self.logger)
@@ -111,47 +105,49 @@ class SystemTest(Test):
             return_code = False
 
         try:
-            tainted_file = open("/proc/sys/kernel/tainted", "r")
-            tainted = int(tainted_file.readline())
-            if tainted != 0:
-                self.logger.warning("kernel is tainted (value = %u)." % tainted)
-                if tainted & 1:
-                    self.logger.error("Module with a non-GPL license has been loaded.")
-                    return_code = False
-                    modules = self.get_modules("P")
-                    self.logger.info("Non-GPL modules:")
-                    for module in modules:
-                        self.logger.info(module)
+            with open("/proc/sys/kernel/tainted", "r") as tainted_file:
+                tainted = int(tainted_file.readline())
+                if tainted != 0:
+                    self.logger.warning(
+                        "kernel is tainted (value = %u)." % tainted)
+                    if tainted & 1:
+                        self.logger.warning(
+                            "Module with a non-GPL license has been loaded.")
+                        return_code = False
+                        modules = self.get_modules("P")
+                        self.logger.warning(
+                            "Non-GPL modules:\n%s" % "\n".join(modules))
 
-                if tainted & (1 << 12):
-                    modules = self.get_modules("O")
-                    self.logger.info("Out-of-tree modules:")
-                    for module in modules:
-                        self.logger.info(module)
+                    if tainted & (1 << 12):
+                        modules = self.get_modules("O")
+                        self.logger.error(
+                            "Out-of-tree modules:\n%s" % "\n".join(modules))
                         return_code = False
 
-                if tainted & (1 << 13):
-                    modules = self.get_modules("E")
-                    self.logger.info("Unsigned modules:")
-                    for module in modules:
-                        self.logger.info(module)
+                    if tainted & (1 << 13):
+                        modules = self.get_modules("E")
+                        self.logger.warning(
+                            "Unsigned modules:\n%s" % "\n".join(modules))
 
-            tainted_file.close()
         except Exception as concrete_error:
             self.logger.error("Unable to determine whether kernel has been tainted. \n",
                               concrete_error)
             return_code = False
 
-        if os.system("rpm -V --nomtime --nomode --nocontexts %s" % kernel_rpm) != 0:
-            self.logger.error("Files from %s were modified.\n" % kernel_rpm)
-            return_code = False
+        kernel_verfiy = self.command.run_cmd(
+            "rpm -V --nomtime --nomode --nocontexts %s" % kernel_rpm)
+        if kernel_verfiy[2] == 0:
+            return return_code
 
-        try:
-            params = Command("cat /proc/cmdline").get_str()
-            self.logger.info("Boot Parameters: %s" % params)
-        except Exception as concrete_error:
-            self.logger.error("Unable not determine whether boot parameters have been modified. \n", concrete_error)
-            return_code = False
+        except_list = ["modules.dep", "modules.symbols", "modules.dep.bin",
+                       "modules.symbols.bin"]
+        for line in kernel_verfiy[0].strip().split("\n"):
+            if line.split("/")[-1] in except_list:
+                continue
+            else:
+                self.logger.error("Files in %s were modified.\n" % kernel_rpm)
+                return_code = False
+                break
 
         return return_code
 
@@ -162,60 +158,15 @@ class SystemTest(Test):
         :return:
         """
         pattern = re.compile(r"^(?P<mod_name>\w+)[\s\S]+\((?P<signs>[A-Z]+)\)")
-        proc_modules = open("/proc/modules")
+
         modules = list()
-        for line in proc_modules.readlines():
-            match = pattern.match(line)
-            if match:
-                if sign in match.group("signs"):
+        with open("/proc/modules") as proc_modules:
+            for line in proc_modules.readlines():
+                match = pattern.match(line)
+                if match and sign in match.group("signs"):
                     modules.append(match.group("mod_name"))
-        proc_modules.close()
+
         return modules
-
-    def read_module(self, module):
-        """
-        Read module
-        :param module:
-        :return:
-        """
-        symbols = list()
-        module_file = self.get_modulefile(module)
-
-        if not module_file:
-            self.logger.error("Cannot find module file for %s" % module)
-            return None
-        if not os.path.isfile(module_file):
-            self.logger.error("Cannot read module file %s" % module_file)
-            return None
-
-        if module_file[-2:] == "ko":
-            n_m = os.popen('modprobe --dump-modversions ' + module_file)
-        else:
-            n_m = open(module_file, "r")
-
-        while True:
-            line = n_m.readline()
-            if line == "":
-                break
-            symbols.append(line)
-
-        n_m.close()
-        return self.readSymbols(symbols)
-
-    def get_modulefile(self, module):
-        """
-        Get module file
-        :param module:
-        :return:
-        """
-        try:
-            modulefile = Command("modinfo -F filename %s" % module).get_str()
-            if os.path.islink(modulefile):
-                modulefile = os.readlink(modulefile)
-            return modulefile
-        except Exception:
-            self.logger.error("Cannot find module file for %s:" % module)
-            return None
 
     def check_selinux(self):
         """
@@ -223,14 +174,14 @@ class SystemTest(Test):
         :return:
         """
         self.logger.info("Checking selinux...")
-        status = os.system(
+        status = self.command.run_cmd(
             "/usr/sbin/sestatus | grep 'SELinux status' | grep -qw 'enabled'")
-        mode = os.system(
+        mode = self.command.run_cmd(
             "/usr/sbin/sestatus | grep 'Current mode' | grep -qw 'enforcing'")
-        if mode == 0 and status == 0:
+        if status[2] == 0 and mode[2] == 0:
             self.logger.info("SElinux is enforcing as expect.")
             return True
-        else:
-            self.logger.error("SElinux is not enforcing, expect is enforcing.")
-            os.system("/usr/sbin/sestatus")
-            return False
+
+        self.logger.error("SElinux is not enforcing, expect is enforcing.")
+        self.command.run_cmd("/usr/sbin/sestatus")
+        return False

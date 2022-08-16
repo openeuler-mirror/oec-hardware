@@ -13,18 +13,16 @@
 # Create: 2020-04-01
 
 import os
-import sys
 import time
-
 from hwcompatible.test import Test
 from hwcompatible.command_ui import CommandUI
-from hwcompatible.command import Command, CertCommandError
 
 
 class WatchDogTest(Test):
     """
     WatchDog Test
     """
+
     def __init__(self):
         Test.__init__(self)
         self.pri = 9
@@ -38,30 +36,27 @@ class WatchDogTest(Test):
         test case
         :return:
         """
-        self.logger.info("Load softdog driver")
+        self.logger.info("Load softdog driver.")
         if not os.path.exists("/dev/watchdog"):
-            os.system("modprobe softdog")
+            self.command.run_cmd("modprobe softdog")
 
-        self.logger.info("Set/Get the watchdog timeout time")
+        self.logger.info("Set/Get the watchdog timeout time.")
         os.chdir(self.test_dir)
-        try:
-            timeout = Command("./watchdog -g").get_str(
-                regex="^Watchdog timeout is (?P<timeout>[0-9]*) seconds.$",
-                regex_group="timeout")
-            timeout = int(timeout)
-            if timeout > self.max_timeout:
-                Command("./watchdog -s %d" % self.max_timeout).echo()
-            self.logger.info("Set/Get watchdog timeout succeed.")
-        except CertCommandError as e:
-            self.logger.error(e)
-            self.logger.error("Set/Get watchdog timeout failed.")
+        result = self.command.run_cmd(
+            "./watchdog -g | grep '^Watchdog timeout is *'")
+        if result[2] != 0:
+            self.logger.error("Execute watchdog -g failed.")
             return False
+        timeout = int(result[0].split(" ")[3])
+        if timeout > self.max_timeout:
+            self.command.run_cmd("./watchdog -s %d" % self.max_timeout)
+        self.logger.info("Set/Get watchdog timeout succeed.")
 
         ui = CommandUI()
         if ui.prompt_confirm("System will reboot, are you ready?"):
-            sys.stdout.flush()
-            os.system("sync")
-            os.system("./watchdog -t")
+            self.logger.info("Please wait seconds.")
+            self.command.run_cmd("sync", log_print=False)
+            self.command.run_cmd("./watchdog -t", log_print=False)
             time.sleep(5)
             return False
         else:
