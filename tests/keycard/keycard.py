@@ -11,13 +11,10 @@
 # See the Mulan PSL v2 for more details.
 # Author: @meitingli
 # Create: 2022-03-28
-
-"""public key card test"""
+# Desc: Public key card test
 
 import os
-import subprocess
-
-from hwcompatible.command import Command, CertCommandError
+from hwcompatible.command import Command
 from hwcompatible.test import Test
 from hwcompatible.command_ui import CommandUI
 
@@ -25,22 +22,9 @@ keycard_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class KeyCardTest(Test):
-    """
-    Key card Test
-    """
-
     def __init__(self):
         Test.__init__(self)
-        self.logpath = None
         self.com_ui = CommandUI()
-
-    def setup(self, args=None):
-        """
-        Initialization before test
-        """
-        self.args = args or argparse.Namespace()
-        self.name = getattr(args, "testname", "keycard")
-        self.logpath = getattr(args, "logdir", None) + "/" + self.name + ".log"
 
     def test(self):
         """
@@ -60,20 +44,16 @@ class KeyCardTest(Test):
         ]
         ui_message = "\n".join(ui_message_list)
         execnum = self.com_ui.prompt(ui_message)
-        print("Start to test, please wait...")
+        self.logger.info("Start to test, please wait.")
         execnum = execnum.split(" ")
         for num in execnum:
-            if os.system("cd %s; echo %s | ./TestSDS &>> %s" % (keycard_dir, num, self.logpath)) != 0:
+            result = self.command.run_cmd(
+                "echo %s | %s/TestSDS" % (num, keycard_dir))
+            if result[2] != 0:
                 result = False
 
         if result:
-            print("Test key card succeed.")
+            self.logger.info("Test key card succeed.")
         else:
-            print("Test key card failed.")
+            self.logger.error("Test key card failed.")
         return result
-
-
-if __name__ == '__main__':
-    t = KeyCardTest()
-    t.setup()
-    t.test()
