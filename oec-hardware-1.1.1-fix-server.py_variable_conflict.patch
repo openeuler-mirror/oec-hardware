@@ -1,0 +1,14 @@
+diff -Naur rpm/server/server.py oech/server/server.py
+--- rpm/server/server.py	2022-07-27 14:07:40.000000000 +0800
++++ oech/server/server.py	2022-08-17 10:12:57.721707038 +0800
+@@ -275,8 +275,8 @@
+ 
+     with open(tar_job, 'wb') as file_content:
+         file_content.write(base64.b64decode(filetext))
+-    exec = subprocess.getstatusoutput("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
+-    if exec[0] != 0:
++    res = subprocess.getstatusoutput("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
++    if res[0] != 0:
+         sys.stderr.write("Decompress log file failed.")
+ 
+     return render_template('upload.html', host=host, id=oec_id, job=job,
