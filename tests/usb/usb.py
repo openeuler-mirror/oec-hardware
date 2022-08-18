@@ -11,20 +11,15 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
+# Desc: Usb test
 
-import sys
 import time
-
 from hwcompatible.test import Test
 from hwcompatible.command_ui import CommandUI
-from hwcompatible.command import Command
 from hwcompatible.device import CertDevice
 
 
 class UsbTest(Test):
-    """
-    Usb test
-    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["usbutils"]
@@ -36,8 +31,7 @@ class UsbTest(Test):
         :return:
         """
         self.logger.info("USB device:")
-        Command("lsusb -t").echo()
-        sys.stdout.flush()
+        self.command.run_cmd("lsusb -t")
         plugged_device = self.get_usb()
 
         self.logger.info("USB device plug/unplug test begin...")
@@ -56,7 +50,7 @@ class UsbTest(Test):
             new_device = None
             for device in new_plugged:
                 if device not in plugged_device:
-                    self.logger.info("Found new USB device.\n")
+                    self.logger.info("Found new USB device.")
                     new_device = device
                     break
 
@@ -65,8 +59,8 @@ class UsbTest(Test):
                 return False
 
             self.logger.info("USB device:")
-            Command("lsusb -t").echo()
-            sys.stdout.flush()
+            self.command.run_cmd("lsusb -t")
+
             plugged_device = new_plugged
             while True:
                 self.logger.info("Please unplug the USB device you plugged in just now.")
@@ -76,18 +70,17 @@ class UsbTest(Test):
 
             new_plugged = self.get_usb()
             if len(new_plugged) >= len(plugged_device):
-                self.logger.info("No USB device unplug.")
+                self.logger.error("No USB device unplug.")
                 return False
 
             if new_device in new_plugged:
                 self.logger.error("The USB device can still be found.")
                 return False
             else:
-                self.logger.info("USB device unplugged.\n")
+                self.logger.info("USB device unplugged.")
 
             self.logger.info("USB device:")
-            Command("lsusb -t").echo()
-            sys.stdout.flush()
+            self.command.run_cmd("lsusb -t")
             plugged_device = new_plugged
 
             if self.com_ui.prompt_confirm("All usb sockets have been tested?"):

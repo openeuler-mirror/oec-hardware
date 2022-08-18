@@ -11,20 +11,15 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
+# Desc: Test Non-Volatile Memory express
 
-"""Test Non-Volatile Memory express"""
-
-import os
-import sys
 import argparse
+from subprocess import getoutput
 from hwcompatible.test import Test
 from hwcompatible.command import Command
 
 
 class NvmeTest(Test):
-    """
-    Test Non-Volatile Memory express
-    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["nvme-cli"]
@@ -41,10 +36,10 @@ class NvmeTest(Test):
         """
         self.args = args or argparse.Namespace()
         self.logger = getattr(args, "test_logger", None)
-        self.log_path = self.logger.logfile
+        self.command = Command(self.logger)
         self.device = getattr(args, "device", None)
         self.show_driver_info()
-        Command("nvme list &>> %s" % self.log_path).echo(ignore_errors=True)
+        self.command.run_cmd("nvme list", ignore_errors=True)
 
     def test(self):
         """
@@ -56,42 +51,36 @@ class NvmeTest(Test):
             self.logger.error("%s is in use now, skip this test." % disk)
             return False
 
-        size = Command("cat /sys/block/%s/size" % disk).get_str()
+        size = getoutput("cat /sys/block/%s/size" % disk)
         size = int(int(size))/2/2
         if size <= 0:
-            self.logger.error("The size of %s is not suitable for this test." % disk)
+            self.logger.error(
+                "The size of %s is not suitable for this test." % disk)
             return False
         elif size > 10*1024*1014*1024:
             size = 10*1024*1014*1024
 
-        try:
-            self.logger.info("Formatting...")
-            Command("nvme format -l 0 -i 0 /dev/%s &>> %s" % (disk, self.log_path)).echo()
-            sys.stdout.flush()
+        self.logger.info("Start to format nvme.")
+        return_code = True
+        cmd_list = [
+            "nvme format -l 0 -i 0 /dev/%s" % disk,
+            "nvme write -z %d -s 0 -d /dev/urandom /dev/%s" % (size, disk),
+            "nvme read -s 0 -z %d /dev/%s" % (size, disk),
+            "nvme smart-log /dev/%s" % disk,
+            "nvme get-log -i 1 -l 128 /dev/%s" % disk
+        ]
+        for cmd in cmd_list:
+            result = self.command.run_cmd(cmd)
+            if result[2] != 0:
+                return_code = False
 
-            self.logger.info("Writting...")
-            Command("nvme write -z %d -s 0 -d /dev/urandom /dev/%s 2> /dev/null" %
-                    (size, disk)).echo()
-            sys.stdout.flush()
-
-            self.logger.info("Reading...")
-            Command("nvme read -s 0 -z %d /dev/%s &> /dev/null" % (size, disk)).echo()
-            sys.stdout.flush()
-
-            self.logger.info("\nSmart Log:")
-            Command("nvme smart-log /dev/%s 2> /dev/null" % disk).echo()
-            sys.stdout.flush()
-
-            self.logger.info("\nLog:")
-            Command("nvme get-log -i 1 -l 128 /dev/%s 2> /dev/null" % disk).echo()
-            sys.stdout.flush()
-
-            Command("nvme list &>> %s" % self.log_path).echo(ignore_errors=True)
-            return True
-        except Exception as concrete_error:
-            self.logger.error("Nvme cmd fail.")
-            self.logger.error(concrete_error)
-            return False
+        self.command.run_cmd("nvme list", ignore_errors=True)
+        if return_code:
+            self.logger.info("Test nvme succeed.")
+        else:
+            self.logger.info("Test nvme failed.")
+        return return_code
+        
 
     def in_use(self, disk):
         """
@@ -99,22 +88,24 @@ class NvmeTest(Test):
         :param disk:
         :return:
         """
-        Command("swapon -a 2>/dev/null").echo()
+        self.command.run_cmd("/usr/sbin/swapon -a")
         with open("/proc/swaps", "r") as swap_file:
             swap = swap_file.read()
 
         with open("/proc/mdstat", "r") as mdstat_file:
             mdstat = mdstat_file.read()
 
-        with open("/etc/mtab", "r") as mtab_file:
-            mtab = mtab_file.read()
-
         with open("/proc/mounts", "r") as mount_file:
             mounts = mount_file.read()
 
         if ("/dev/%s" % disk) in swap or disk in mdstat:
             return True
-        if ("/dev/%s" % disk) in mounts or ("/dev/%s" % disk) in mtab:
+        
+        if ("/dev/%s" % disk) in mounts:
             return True
-        if os.system("pvs 2>/dev/null | grep -q '/dev/%s'" % disk) == 0:
+
+        result = self.command.run_cmd("pvs | grep -q '/dev/%s'" % disk)
+        if result[2] == 0:
             return True
+        
+        return False
