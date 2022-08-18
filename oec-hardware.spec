@@ -5,7 +5,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.1
-Release:        4
+Release:        5
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -16,6 +16,7 @@ Patch0001:       oec-hardware-1.1.1-fix-vesion.patch
 Patch0002:       oec-hardware-1.1.1-fix-fc-raid.patch
 Patch0003:       oec-hardware-1.1.1-fix-network-infiniband-system.patch
 patch0004:       oec-hardware-1.1.1-fix-rebootup_oech.service_issues.patch
+patch0005:       oec-hardware-1.1.1-fix-server.py_variable_conflict.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -42,6 +43,7 @@ openEuler Hardware Compatibility Test Server
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 
 %build
 
@@ -83,6 +85,9 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Wed Aug 17 2022 zhangzikang <zhangzikang@kylinos.cn> - 1.1.1-5
+- Fix server.py variable conflict issues in some system environment
+
 * Wed Aug 10 2022 ylzhangah <1194926515@qq.com> - 1.1.1-4
 - Fix rebootup issues
 - Fix the issue that oech.service cannot be started
