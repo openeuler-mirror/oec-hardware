@@ -25,7 +25,7 @@ from hwcompatible.command import Command
 class MemoryTest(Test):
     def __init__(self):
         Test.__init__(self)
-        self.requirements = ["libhugetlbfs-utils"]
+        self.requirements = ["memtester", "libhugetlbfs-utils"]
         self.free_memory = 0
         self.system_memory = 0
         self.swap_memory = 0
@@ -55,18 +55,18 @@ class MemoryTest(Test):
             self.logger.error("Memtester test failed.")
             return False
         self.logger.info("Memtester test succeed.")
-        
+
         if not self.eat_memory():
             self.logger.error(
                 "Eat memory test failed, please check the space of SWAP.")
             return False
         self.logger.info("Eat memory test succeed.")
-        
+
         if not self.hugetlb_test():
             self.logger.error("Hugepages test failed.")
             return False
         self.logger.error("Hugepages test succeed.")
-        
+
         return True
 
     def get_memory(self):
@@ -94,7 +94,7 @@ class MemoryTest(Test):
 
         self.free_memory = int(self.free_memory / 1024)
         self.logger.info("Get memory information succeed.")
-        
+
     def memory_rw(self):
         """
         Test memory request
@@ -139,7 +139,7 @@ class MemoryTest(Test):
         test_mem = extra_mem + self.free_memory
         result = self.command.run_cmd(
             "%s/eatmem_test -m %sM" % (self.test_dir, test_mem))
-        
+
         return result[2] == 0
 
     def hugetlb_test(self):

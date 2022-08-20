@@ -26,6 +26,7 @@ class DiskTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.disks = list()
+        self.requirements = ["fio"]
         self.filesystems = ["ext4"]
         self.config_data = ""
 
