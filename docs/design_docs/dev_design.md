@@ -10,31 +10,28 @@
 
 | 组件      | 组件描述  | 可获得性 |
 | --------- | ------ | --------- |
-| python3    | python3 及以上版本 | 可使用dnf进行安装 |
-| python3-pyyaml | 读取yaml格式的配置文件 | 可使用dnf进行安装 |
-| python3-concurrent-log-handler | logging日志辅助模块，用于日志转储 | 可使用dnf进行安装 |
+| python3    | python3 及以上版本 | 可使用 `dnf/yum` 进行安装 |
+| python3-pyyaml | 读取yaml格式的配置文件 | 可使用 `dnf/yum` 进行安装 |
+| python3-concurrent-log-handler | logging日志辅助模块，用于日志转储 | 可使用 `dnf/yum` 进行安装 |
 | kernel | kernel代码，需要使用系统默认安装完成后的提供kernel | 系统安装完成后默认提供 |
-| kernel-devel | 需要和系统默认安装使用的kernel版本保持一致 | 可使用dnf进行安装 |
-| kernel-headers | 需要和系统默认安装使用的kernel版本保持一致 | 可使用dnf进行安装 |
-| dmidecode | 获取服务器硬件信息 | 可使用dnf进行安装 |
-| tar | 打包测试日志 | 可使用dnf进行安装 |
-| qperf | 网卡速率测试 | 可使用dnf进行安装 |
-| fio | 硬盘读写测试 | 可使用dnf进行安装 |
-| memtester | 内存读写测试 | 可使用dnf进行安装 |
+| kernel-devel | 需要和系统默认安装使用的kernel版本保持一致 | 可使用 `dnf/yum` 进行安装 |
+| kernel-headers | 需要和系统默认安装使用的kernel版本保持一致 | 可使用 `dnf/yum` 进行安装 |
+| dmidecode | 获取服务器硬件信息 | 可使用 `dnf/yum` 进行安装 |
+| tar | 打包测试日志 | 可使用 `dnf/yum` 进行安装 |
 
 #### 1.2.2 服务端依赖组件 
 
 | 组件      | 组件描述  | 可获得性 |
 | --------- | ------- | -------- |
-| python3 | python3 及以上版本 | 可使用dnf进行安装 |
-| python3-devel | python3开发模块 | 可使用dnf进行安装 |
-| nginx | 提供web服务器 | 可使用dnf进行安装 |
-| tar |  打包、解压测试日志 | 可使用dnf进行安装 |
-| qperf | 用于服务端网络自测 | 可使用dnf进行安装 |
-| psmisc | 提供进程管理服务 | 可使用dnf进行安装 |
-| Flask | 提供web访问的http协议的框架，v2.1.2 及以上版本 | 可使用pip3进行安装   |
-| Flask-bootstrap | 提供Web页面美化，v3.3.4.1 及以上版本 | 可使用pip3进行安装  |
-| uwsgi | 提供wsgi协议的服务器，v2.0.20 及以上版本 | 可使用pip3进行安装   |
+| python3 | python3 及以上版本 | 可使用 `dnf/yum` 进行安装 |
+| python3-devel | python3开发模块 | 可使用 `dnf/yum` 进行安装 |
+| nginx | 提供web服务器 | 可使用 `dnf/yum` 进行安装 |
+| tar |  打包、解压测试日志 | 可使用 `dnf/yum` 进行安装 |
+| qperf | 用于服务端网络自测 | 可使用 `dnf/yum` 进行安装 |
+| psmisc | 提供进程管理服务 | 可使用 `dnf/yum` 进行安装 |
+| Flask | 提供web访问的http协议的框架，v2.1.2 及以上版本 | 可使用 `pip3` 进行安装   |
+| Flask-bootstrap | 提供Web页面美化，v3.3.4.1 及以上版本 | 可使用 `pip3` 进行安装  |
+| uwsgi | 提供wsgi协议的服务器，v2.0.20 及以上版本 | 可使用 `pip3` 进行安装   |
 
 ### 1.3 License
 
@@ -316,7 +313,7 @@ oech 服务提供两种日志，操作日志和业务日志。
 
 #### 3.7.2 客户端
 
-oech-server 服务端的日志由 `nginx` 提供，记录服务端的所有操作信息和访问的用户ip信息。另外 `nginx` 默认提供日志转储功能。
+  oech-server 服务端的日志由 `nginx` 提供，记录服务端的所有操作信息和访问的用户ip信息。另外 `nginx` 默认提供日志转储功能。
 
     路径：/var/log/nginx/access.log 
 
