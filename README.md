@@ -1,40 +1,37 @@
 <!-- TOC -->
 
 - [概述](#概述)
-  - [工具介绍](#工具介绍)
-  - [兼容性结论继承说明](#兼容性结论继承说明)
-    - [整机兼容性结论继承策略](#整机兼容性结论继承策略)
-    - [板卡兼容性结论继承策略](#板卡兼容性结论继承策略)
-  - [版本发布](#版本发布)
-    - [版本维护声明](#版本维护声明)
-  - [工具使用](#工具使用)
-    - [原理简介](#原理简介)
-        - [框架概览](#框架概览)
-        - [框架特点](#框架特点)
-        - [测试流程](#测试流程)
-  - [使用流程](#使用流程)
-    - [用户使用流程](#用户使用流程)
-  - [运行环境](#运行环境)
-    - [运行环境依赖组件](#运行环境依赖组件)
-    - [运行环境组网](#运行环境组网)
+   - [工具介绍](#工具介绍)
+   - [兼容性结论继承说明](#兼容性结论继承说明)
+      - [整机兼容性结论继承策略](#整机兼容性结论继承策略)
+      - [板卡兼容性结论继承策略](#板卡兼容性结论继承策略)
+   - [版本发布](#版本发布)
+      - [版本维护声明](#版本维护声明)
+   - [工具使用](#工具使用)
+      - [测试流程](#测试流程)
+   - [使用流程](#使用流程)
+      - [用户使用流程](#用户使用流程)
+   - [运行环境](#运行环境)
+      - [运行环境依赖组件](#运行环境依赖组件)
+      - [运行环境组网](#运行环境组网)
 - [工具安装](#工具安装)
-  - [前提条件](#前提条件)
-  - [获取安装包](#获取安装包)
-  - [安装过程](#安装过程)
-    - [客户端](#客户端)
-    - [服务端](#服务端)
+   - [前提条件](#前提条件)
+   - [获取安装包](#获取安装包)
+   - [安装过程](#安装过程)
+      - [客户端](#客户端)
+      - [服务端](#服务端)
 - [使用指导](#使用指导)
-  - [前提条件](#前提条件-1)
-  - [使用步骤](#使用步骤)
+   - [前提条件](#前提条件-1)
+   - [使用步骤](#使用步骤)
 - [结果获取](#结果获取)
-  - [查看结果](#查看结果)
-  - [结果说明](#结果说明)
-  - [测试结果审核](#测试结果审核)
+   - [查看结果](#查看结果)
+   - [结果说明](#结果说明)
+   - [测试结果审核](#测试结果审核)
 - [测试项介绍](#测试项介绍)
-  - [已有测试项](#已有测试项)
+   - [已有测试项](#已有测试项)
 - [社区开发者参与介绍](#社区开发者参与介绍)
-  - [环境部署](#环境部署)
-  - [新增测试项](#新增测试项)
+   - [环境部署](#环境部署)
+   - [新增测试项](#新增测试项)
 - [FAQ](#FAQ)
 
 <!-- /TOC -->
@@ -96,64 +93,9 @@ oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具�
 
 ## 版本维护声明
 
-oec-hardware-1.0.0 版本将不再进行更新维护，请获取最新版本的oec-hardware进行安装使用。
+oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的oec-hardware进行安装使用。
 
 # 工具使用
-
-## 原理简介
-
-### 框架概览
-
-```
-.
-├── hwcompatible 框架主功能
-│   ├── compatibility.py  框架核心功能
-│   ├── client.py         上传测试结果到服务端
-│   ├── command.py        bash命令执行封装
-│   ├── command_ui.py      命令行交互工具
-│   ├── device.py         扫描设备信息
-│   ├── document.py       收集配置信息
-│   ├── env.py            全局变量，主要是各个配置文件或目录的路径
-│   ├── job.py            测试任务管理
-│   ├── log.py            日志模块
-│   ├── reboot.py         重启类任务专用，便于机器重启后仍能继续执行测试
-│   ├── sysinfo.py        收集系统信息
-│   └── test.py           测试套模板
-├── scripts   工具脚本 
-│   ├── oech                  框架客户端命令行工具
-│   ├── oech-server           框架服务端命令行工具
-│   ├── oech-server.service   框架服务端 service 文件，用于启动 web 服务器
-│   ├── oech.service          框架客户端 service 文件，用于接管 reboot 用例
-│   └── kernelrelease.json    工具支持认证的系统和内核版本
-├── server   服务端
-│   ├── oech-server-pre.sh    服务预执行脚本
-│   ├── results/              测试结果存放目录
-│   ├── server.py             服务端主程序
-│   ├── static/               图片存放目录
-│   ├── templates/            网页模板存放目录
-│   ├── uwsgi.conf            nginx 服务配置
-│   └── uwsgi.ini             uwsgi 服务配置
-├── config   配置文件
-│   ├── version.config        工具版本配置文件
-│   └── test_config.yaml      工具测试项配置文件
-├── templates                 兼容性清单模板存放目录
-├── tests   测试套
-└──vendor_tests               厂商测试工具存放目录
-```
-
-### 框架特点
-
-oec-hardware工具框架有如下特点：
-
-1. 为满足可信要求，必须使用openEuler操作系统，不能随意重编/插入内核模块。
-
-2. 通过扫描机制自适应发现硬件列表，来确定要运行的测试用例集合。
-
-3. 面向对象抽象各种硬件类型以及测试用例类，用于扩展开发。
-
-### 测试流程
-
-![test-flow](docs/pictures/test-flow.png)
 
 ## 使用流程
 
@@ -163,14 +105,34 @@ oec-hardware工具框架有如下特点：
 
 ## 运行环境
 
-### 运行环境依赖组件
+### 环境要求
 
-以下是oech工具客户端的运行环境依赖组件:
+#### 整机测试环境要求
+
+|   项目    |                       要求                    |
+|-----------|---------------------------------------------|
+|    整机数量   | 需要两台整机，业务网口互通   |
+|    硬件   | 至少有一张RAID卡和一张网卡（包括集成主板硬件)   |
+|    内存   | 建议满配   |
+
+#### 板卡测试环境要求
+
+|   项目    |                       要求                    |
+|-----------|---------------------------------------------|
+|    服务器型号   | Taishan200(Model 2280)、2288H V5或同等类型的服务器，对于x86_64服务器，icelake/cooperlake/cascade可任选一种，优选icelake   |
+|    RAID卡   | 需要组raid，至少组raid0   |
+|    NIC/IB卡   | 服务端和测试端需要分别插入一张同类型板卡，配置同网段IP，保证直连互通  |
+|    FC卡   | 需要连接磁阵，至少组两个lun   |
+
+### 依赖组件
+
+#### 客户端依赖组件
+
 | 组件      | 组件描述  | 可获得性 |
 | --------- | ------ | ----------- |
 | python3    | python3 及以上 | 可使用dnf进行安装 |
 
-以下是oech工具服务端的运行环境依赖组件:
+#### 服务端依赖组件
 
 | 组件      | 组件描述  | 可获得性 |
 | --------- | ------- | ----------- |
@@ -257,21 +219,24 @@ oec-hardware工具框架有如下特点：
 2. 进入测试套选择界面。在用例选择界面，框架将自动扫描硬件并选取当前环境可供测试的测试套，输入 `edit` 可以进入测试套选择界面。
 
    ```
-   These tests are recommended to complete the compatibility test:
-   No. Run-Now?  Status  Class         Device
-   1     yes     NotRun  acpi
-   2     yes     NotRun  clock
-   3     yes     NotRun  cpufreq
-   4     yes     NotRun  disk
-   5     yes     NotRun  ethernet      enp3s0
-   6     yes     NotRun  ethernet      enp4s0
-   7     yes     NotRun  ethernet      enp5s0
-   8     yes     NotRun  kdump
-   9     yes     NotRun  memory
-   10    yes     NotRun  perf
-   11    yes     NotRun  system
-   12    yes     NotRun  usb
-   13    yes     NotRun  watchdog
+   These tests are recommended to complete the compatibility test: 
+   No. Run-Now?  status    Class         Device         driverName     driverVersion     chipModel           boardModel
+   1     yes     NotRun    acpi                                                                              
+   2     yes     NotRun    clock                                                                             
+   3     yes     NotRun    cpufreq                                                                           
+   4     yes     NotRun    disk                                                                              
+   5     yes     NotRun    ethernet      enp3s0         hinic          2.3.2.17          Hi1822              SP580
+   6     yes     NotRun    ethernet      enp4s0         hinic          2.3.2.17          Hi1822              SP580
+   7     yes     NotRun    ethernet      enp125s0f0     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   8     yes     NotRun    ethernet      enp125s0f1     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   9     yes     NotRun    ipmi                                                                              
+   10    yes     NotRun    kabi                                                                              
+   11    yes     NotRun    kdump                                                                             
+   12    yes     NotRun    memory                                                                            
+   13    yes     NotRun    perf                                                                              
+   14    yes     NotRun    system                                                                            
+   15    yes     NotRun    usb                                                                               
+   16    yes     NotRun    watchdog                                                      
    Ready to begin testing? (run|edit|quit)
    ```
 
@@ -279,20 +244,23 @@ oec-hardware工具框架有如下特点：
 
    ```
    Select tests to run:
-   No. Run-Now?  Status  Class         Device
-   1     no      NotRun  acpi
-   2     no      NotRun  clock
-   3     no      NotRun  cpufreq
-   4     no      NotRun  disk
-   5     yes     NotRun  ethernet      enp3s0
-   6     no      NotRun  ethernet      enp4s0
-   7     no      NotRun  ethernet      enp5s0
-   8     no      NotRun  kdump
-   9     no      NotRun  memory
-   10    no      NotRun  perf
-   11    yes     NotRun  system
-   12    no      NotRun  usb
-   13    no      NotRun  watchdog
+   No. Run-Now?  status    Class         Device         driverName     driverVersion     chipModel           boardModel
+   1     no      NotRun    acpi                                                                              
+   2     no      NotRun    clock                                                                             
+   3     no      NotRun    cpufreq                                                                           
+   4     no      NotRun    disk                                                                              
+   5     yes     NotRun    ethernet      enp3s0         hinic          2.3.2.17          Hi1822              SP580
+   6     no      NotRun    ethernet      enp4s0         hinic          2.3.2.17          Hi1822              SP580
+   7     no      NotRun    ethernet      enp125s0f0     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   8     no      NotRun    ethernet      enp125s0f1     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   9     no      NotRun    ipmi                                                                              
+   10    no      NotRun    kabi                                                                              
+   11    no      NotRun    kdump                                                                             
+   12    no      NotRun    memory                                                                            
+   13    no      NotRun    perf                                                                              
+   14    yes     NotRun    system                                                                            
+   15    no      NotRun    usb                                                                               
+   16    no      NotRun    watchdog     
    Selection (<number>|all|none|quit|run):
    ```
 
@@ -447,6 +415,7 @@ oec-hardware工具框架有如下特点：
 # 社区开发者参与介绍
 
 ## 环境部署
+
 1. 将oec-hardware源码仓库fork到个人空间；
 
 2. 克隆仓库源码；
