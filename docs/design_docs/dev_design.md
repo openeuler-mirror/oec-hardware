@@ -33,6 +33,46 @@
 | Flask-bootstrap | 提供Web页面美化，v3.3.4.1 及以上版本 | 可使用 `pip3` 进行安装  |
 | uwsgi | 提供wsgi协议的服务器，v2.0.20 及以上版本 | 可使用 `pip3` 进行安装   |
 
+#### 1.2.3 客户端测试项依赖组件 
+
+| 测试项    | 组件    | 组件描述  |
+| --------- | ------ | --------- | 
+| acpi | acpica-tools | acpi 测试 |
+| cdrom | dvd+rw-tools | cd/dvd 测试 |
+| | genisoimage | |
+| | wodim | |
+| | util-linux | |
+| disk/fc/raid | fio | 硬盘读写测试 |
+| gpu | git | gpu 测试，获取开源项目 gpu_burn/cuda_samples |
+| | gcc-c++ |  |
+| | make | |
+| ethernet/infiniband | ethtool | 网卡/IB卡测试 |
+| | iproute | |
+| | psmisc | |
+| | qperf |  |
+| | perftest | |
+| | opensm | |
+| | infiniband-diags | |
+| | librdmacm-utils | |
+| | libibverbs-utils | |
+| ipmi | OpenIPMI | ipmi 测试 |
+| | ipmitool | |
+|  kabi | gzip | kabi 测试 |
+| | rpm-build | |
+|  kdump | crash | kdump 测试 |
+| | kernel-debuginfo | |
+| | kexec-tools | |
+| memory | memtester | 内存测试 |
+| | libhugetlbfs-utils | |
+| nvme | nvme-cli | nvme 测试 |
+| perf | perf | perf测试 |
+| usb | usbutils | usb 测试 |
+| vgpu | qemu | vgpu测试 |
+| | libvirt | |
+| | xz | |
+| | util-linux | |
+| | expect | |
+
 ### 1.3 License
 
 Mulan V2
@@ -311,7 +351,7 @@ oech 服务提供两种日志，操作日志和业务日志。
 
     oech 服务停止后转储脚本停止，不再进行转储，再次启动时，转储脚本重新执行。
 
-#### 3.7.2 客户端
+#### 3.7.2 服务端
 
   oech-server 服务端的日志由 `nginx` 提供，记录服务端的所有操作信息和访问的用户ip信息。另外 `nginx` 默认提供日志转储功能。
 
