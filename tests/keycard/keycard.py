@@ -14,7 +14,7 @@
 # Desc: Public key card test
 
 import os
-from hwcompatible.command import Command
+import shutil
 from hwcompatible.test import Test
 from hwcompatible.command_ui import CommandUI
 
@@ -25,6 +25,7 @@ class KeyCardTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.com_ui = CommandUI()
+        self.target_file = "/usr/lib64/libswsds.so"
 
     def test(self):
         """
@@ -32,6 +33,8 @@ class KeyCardTest(Test):
         return: result
         """
         result = True
+        original_file = os.path.join(keycard_dir, "libswsds.so")
+        shutil.copy(original_file, self.target_file)
         ui_message_list = [
             "Which test suite would you like to test: ",
             "1|基本函数测试",
@@ -57,3 +60,11 @@ class KeyCardTest(Test):
         else:
             self.logger.error("Test key card failed.")
         return result
+    
+    def teardown(self):
+        """
+        Environment recovery after test
+        :return:
+        """
+        if os.path.exists(self.target_file):
+            os.remove(self.target_file)

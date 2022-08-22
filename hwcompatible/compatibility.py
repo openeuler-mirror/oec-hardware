@@ -174,7 +174,8 @@ class EulerCertification():
         pack_name = self.dir_name + ".tar"
         os.rename(job.job_id, self.dir_name)
         
-        cmd_result = self.command.run_cmd("tar -cf %s %s" % (pack_name, self.dir_name), log_print=False)
+        cmd_result = self.command.run_cmd(
+            "tar -cf %s --exclude '*.lock' %s" % (pack_name, self.dir_name), log_print=False)
         if cmd_result[2] != 0:
             self.logger.error("Collect job log failed.")
             return

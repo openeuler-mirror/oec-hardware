@@ -22,7 +22,6 @@ all: $(APPS)
 
 install:
 	mkdir -p $(DEST)
-	cp $(SO) /usr/lib64/libswsds.so
 	cp $(SO) $(DEST)/libswsds.so
 	$(CC) -O2 -fPIC -Wl,--hash-style=sysv -o $(APPS) $(OBJS) $(LIBS) 
 	cp -a *.py $(DEST)
@@ -33,7 +32,6 @@ install:
 	$(CC) -O2 -c $(CFLAGS)  $< -o $@
 
 $(APPS):$(OBJS)
-	cp $(SO) /usr/lib64/libswsds.so
 	cp $(SO) libswsds.so
 	$(CC) -O2 -fPIC -Wl,--hash-style=sysv -o $(APPS) $(OBJS) $(LIBS) 
 	

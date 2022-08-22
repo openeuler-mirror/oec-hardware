@@ -22,6 +22,7 @@ from .env import CertEnv
 from .command import Command
 from .log import Logger
 from .reboot import Reboot
+from .constants import NO_CONFIG_DEVICES
 
 
 class Job():
@@ -173,7 +174,7 @@ class Job():
         device_name = testcase["device"].get_name()
         if types == "disk":
             return self.config_info.get("disk")
-        if device_name and types not in ("gpu", "vgpu", "nvme", "dpdk"):
+        if device_name and types not in NO_CONFIG_DEVICES:
             for device in self.config_info.get(types).values():
                 if device.get("device") == device_name:
                     return device
