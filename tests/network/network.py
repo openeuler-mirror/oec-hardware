@@ -11,30 +11,99 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-"""Network Test"""
+# Desc: Network Test
 
 import os
 import time
 import base64
+import argparse
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
-
 from hwcompatible.test import Test
 from hwcompatible.command import Command
 from hwcompatible.constants import FILE_FLAGS, FILE_MODES
 
 
 class NetworkTest(Test):
-    """
-    Network Test
-    """
     def __init__(self):
         Test.__init__(self)
         self.requirements = ['ethtool', 'iproute', 'psmisc', 'qperf']
+        self.device = None
+        self.interface = None
+        self.server_ip = ""
+        self.server_port = "80"
+        self.config_data = dict()
+        self.choice = "N"
         self.retries = 3
+        self.speed = 0   # Mb/s
+        self.subtests = []
+        self.target_bandwidth_percent = 0.75
         self.testfile = 'testfile'
-        self.speed = 0
+
+    def setup(self, args=None):
+        """
+        Initialization before test
+        :param args:
+        :return:
+        """
+        self.args = args or argparse.Namespace()
+        self.logger = getattr(self.args, "test_logger", None)
+        self.command = Command(self.logger)
+        self.device = getattr(self.args, 'device', None)
+        self.interface = self.device.get_property("INTERFACE")
+        self.config_data = getattr(args, "config_data", None)
+        if self.config_data:
+            self.server_ip = self.config_data.get("server_ip", "")
+            if ":" in self.server_ip:
+                self.server_ip, self.server_port = self.server_ip.split(":")
+            self.choice = self.config_data.get("if_rdma")
+        else:
+            self.logger.error(
+                "Get test item value from configuration file failed.")
+            return False
+
+        self.show_driver_info()
+        return True
+
+    def test(self):
+        """
+        test case
+        :return:
+        """
+        if not self.server_ip:
+            self.logger.error("Get server ip from configuration file failed.")
+            return False
+
+        if not self.check_fibre():
+            self.logger.error("Get fibre information failed.")
+            return False
+
+        for subtest in self.subtests:
+            if not subtest():
+                return False
+        return True
+
+    def teardown(self):
+        """
+        Environment recovery after test
+        :return:
+        """
+        if os.path.exists(self.testfile):
+            os.remove(self.testfile)
+            
+    def check_fibre(self):
+        cmd = self.command.run_cmd(
+            "ethtool %s | grep 'Port' | awk '{print $2}'" % self.interface)
+        port_type = cmd[0].strip()
+        if port_type != "FIBRE":
+            self.logger.info("The %s port type is %s, skip checking." %
+                             (self.interface, port_type))
+            return True
+
+        self.logger.info(
+            "The %s port type is fibre, next to check fibre." % self.interface)
+        cmd = self.command.run_cmd("ethtool -m %s" % self.interface)
+        return cmd[2] == 0
 
     def ifdown(self, interface):
         """
@@ -42,9 +111,11 @@ class NetworkTest(Test):
         :param interface:
         :return:
         """
-        Command("ip link set down %s" % interface).echo()
+        self.command.run_cmd("ip link set down %s" % interface)
         for _ in range(5):
-            if os.system("ip link show %s | grep 'state DOWN'" % interface) == 0:
+            result = self.command.run_cmd(
+                "ip link show %s | grep 'state DOWN'" % interface)
+            if result[2] == 0:
                 return True
             time.sleep(1)
         return False
@@ -55,11 +126,13 @@ class NetworkTest(Test):
         :param interface:
         :return:
         """
-        Command("ip link set up %s" % interface).echo()
+        self.command.run_cmd("ip link set up %s" % interface)
         for _ in range(5):
-            time.sleep(1)
-            if os.system("ip link show %s | grep 'state UP'" % interface) == 0:
+            result = self.command.run_cmd(
+                "ip link show %s | grep 'state UP'" % interface)
+            if result[2] == 0:
                 return True
+            time.sleep(1)
         return False
 
     def get_speed(self):
@@ -67,28 +140,25 @@ class NetworkTest(Test):
         Get speed on the interface
         :return:
         """
-        com = Command("ethtool %s" % self.interface)
-        pattern = r".*Speed:\s+(?P<speed>\d+)Mb/s"
-        try:
-            speed = com.get_str(pattern, 'speed', False)
-            return int(speed)
-        except Exception:
-            self.logger.error("[X] No speed found on the interface.")
+        speed = self.command.run_cmd(
+            "ethtool %s | grep Speed | awk '{print $2}'" % self.interface)
+        if speed[2] != 0:
+            self.logger.error("No speed found on the interface.")
             return 0
+
+        return int(speed[0][:-5])
 
     def get_interface_ip(self):
         """
         Get interface ip
         :return:
         """
-        com = Command("ip addr show %s" % self.interface)
-        pattern = r".*inet.? (?P<ip>.+)/.*"
-        try:
-            ip_addr = com.get_str(pattern, 'ip', False)
-            return ip_addr
-        except Exception:
-            self.logger.error("[X] No available ip on the interface.")
+        com = self.command.run_cmd(
+            "ip addr show %s | grep inet | awk '{print $2}' | cut -d '/' -f 1" % self.interface)
+        if com[2] != 0:
+            self.logger.error("Get available ip on the interface failed.")
             return ""
+        return com[0].strip()
 
     def test_icmp(self):
         """
@@ -96,18 +166,12 @@ class NetworkTest(Test):
         :return:
         """
         count = 500
-        com = Command("ping -q -c %d -i 0 %s" % (count, self.server_ip))
-        pattern = r".*, (?P<loss>\d+\.{0,1}\d*)% packet loss.*"
-
+        cmd = "ping -q -c %d -i 0 %s | grep 'packet loss' | awk '{print $6}'" % (
+            count, self.server_ip)
         for _ in range(self.retries):
-            self.logger.info(com.command)
-            try:
-                loss = com.get_str(pattern, 'loss', False)
-            except Exception as concrete_error:
-                self.logger.error(concrete_error)
-            if float(loss) == 0:
+            result = self.command.run_cmd(cmd)
+            if result[0].strip() == "0%":
                 return True
-            com.print_output()
         return False
 
     def call_remote_server(self, cmd, act='start', ib_server_ip=''):
@@ -131,8 +195,8 @@ class NetworkTest(Test):
         request = Request(url, data=data, headers=headers)
         try:
             response = urlopen(request)
-        except Exception as concrete_error:
-            self.logger.error(str(concrete_error))
+        except Exception:
+            self.logger.error("Call remote server url %s failed." % url)
             return False
         self.logger.info("Status: %u %s" % (response.code, response.msg))
         return int(response.code) == 200
@@ -143,38 +207,34 @@ class NetworkTest(Test):
         :return:
         """
         cmd = "qperf %s udp_lat" % self.server_ip
-        self.logger.info(cmd)
         for _ in range(self.retries):
-            if os.system(cmd) == 0:
-                return True
-        return False
+            result = self.command.run_cmd(cmd)
+            if result[2] != 0:
+                return False
+        return True
 
     def test_tcp_latency(self):
         """
         tcp test
         """
         cmd = "qperf %s tcp_lat" % self.server_ip
-        self.logger.info(cmd)
         for _ in range(self.retries):
-            if os.system(cmd) == 0:
-                return True
-        return False
+            result = self.command.run_cmd(cmd)
+            if result[2] != 0:
+                return False
+        return True
 
     def test_tcp_bandwidth(self):
         """
         Test tcp bandwidth
         :return:
         """
-        cmd = "qperf %s tcp_bw" % self.server_ip
-        self.logger.info(cmd)
-        com = Command(cmd)
-        pattern = r"\s+bw\s+=\s+(?P<bandwidth>[\.0-9]+ [MG]B/sec)"
+        cmd = "qperf %s tcp_bw | grep 'bw' | grep -v 'tcp_bw' | awk '{print $3,$4}'" % self.server_ip
         for _ in range(self.retries):
-            try:
-                bandwidth = com.get_str(pattern, 'bandwidth', False)
-            except Exception as concrete_error:
-                self.logger.error(concrete_error)
-            band_width = bandwidth.split()
+            result = self.command.run_cmd(cmd)
+            if result[2] != 0:
+                continue
+            band_width = result[0].split()
             if 'GB' in band_width[1]:
                 bandwidth = float(band_width[0]) * 8 * 1024
             else:
@@ -185,6 +245,7 @@ class NetworkTest(Test):
                 "Current bandwidth is %.2fMb/s, target is %.2fMb/s" %
                 (bandwidth, target_bandwidth))
             if bandwidth > target_bandwidth:
+                self.logger.info("Test tcp bandwidth succeed.")
                 return True
         return False
 
@@ -195,8 +256,9 @@ class NetworkTest(Test):
         """
         b_s = 128
         count = self.speed/8
-        cmd = "dd if=/dev/urandom of=%s bs=%uk count=%u" % (self.testfile, b_s, count)
-        return os.system(cmd) == 0
+        cmd = self.command.run_cmd(
+            "dd if=/dev/urandom of=%s bs=%uk count=%u" % (self.testfile, b_s, count))
+        return cmd[2] == 0
 
     def test_http_upload(self):
         """
@@ -210,13 +272,14 @@ class NetworkTest(Test):
         try:
             with open(self.testfile, 'rb') as file_info:
                 filetext = base64.b64encode(file_info.read())
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
+        except Exception:
+            self.logger.error("Encode file %s failed." % self.testfile)
             return False
 
         form['filename'] = filename
         form['filetext'] = filetext
-        url = 'http://%s:%s/api/file/upload' % (self.server_ip, self.server_port)
+        url = 'http://%s:%s/api/file/upload' % (
+            self.server_ip, self.server_port)
         data = urlencode(form).encode('utf8')
         headers = {
             'Content-type': 'application/x-www-form-urlencoded',
@@ -227,8 +290,8 @@ class NetworkTest(Test):
         request = Request(url, data=data, headers=headers)
         try:
             response = urlopen(request)
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
+        except Exception:
+            self.logger.error("Open url %s failed." % url)
             return False
         time_stop = time.time()
         time_upload = time_stop - time_start
@@ -246,13 +309,14 @@ class NetworkTest(Test):
         :return:
         """
         filename = os.path.basename(self.testfile)
-        url = "http://%s:%s/files/%s" % (self.server_ip, self.server_port, filename)
+        url = "http://%s:%s/files/%s" % (self.server_ip,
+                                         self.server_port, filename)
 
         time_start = time.time()
         try:
             response = urlopen(url)
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
+        except Exception:
+            self.logger.error("Open url %s failed." % url)
             return False
         time_stop = time.time()
         time_download = time_stop - time_start
@@ -262,10 +326,10 @@ class NetworkTest(Test):
         filetext = response.read()
         try:
             with os.fdopen(os.open(self.testfile, FILE_FLAGS, FILE_MODES),
-                               "wb") as file_info:
+                           "wb") as file_info:
                 file_info.write(filetext)
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
+        except Exception:
+            self.logger.error("Write file %s failed." % self.testfile)
             return False
 
         size = os.path.getsize(self.testfile)
@@ -280,22 +344,22 @@ class NetworkTest(Test):
         :return:
         """
         if not self.call_remote_server('qperf', 'start'):
-            self.logger.error("[X] start qperf server failed.")
+            self.logger.error("start qperf server failed.")
             return False
 
-        self.logger.info("[+] Testing udp latency...")
+        self.logger.info("Testing udp latency...")
         if not self.test_udp_latency():
-            self.logger.error("[X] Test udp latency failed.")
+            self.logger.error("Test udp latency failed.")
             return False
 
-        self.logger.info("[+] Testing tcp latency...")
+        self.logger.info("Testing tcp latency...")
         if not self.test_tcp_latency():
-            self.logger.error("[X] Test tcp latency failed.")
+            self.logger.error("Test tcp latency failed.")
             return False
 
-        self.logger.info("[+] Testing tcp bandwidth...")
+        self.logger.info("Testing tcp bandwidth...")
         if not self.test_tcp_bandwidth():
-            self.logger.error("[X] Test tcp bandwidth failed.")
+            self.logger.error("Test tcp bandwidth failed.")
             return False
 
         self.call_remote_server('qperf', 'stop')
@@ -306,19 +370,19 @@ class NetworkTest(Test):
         Test http
         :return:
         """
-        self.logger.info("[+] Creating testfile to upload...")
+        self.logger.info("Creating testfile to upload...")
         if not self.create_testfile():
-            self.logger.error("[X] Create testfile failed.")
+            self.logger.error("Create testfile failed.")
             return False
 
-        self.logger.info("[+] Testing http upload(POST)...")
+        self.logger.info("Testing http upload(POST)...")
         if not self.test_http_upload():
-            self.logger.error("[X] Test http upload failed.")
+            self.logger.error("Test http upload failed.")
             return False
 
-        self.logger.info("[+] Testing http download(GET)...")
+        self.logger.info("Testing http download(GET)...")
         if not self.test_http_download():
-            self.logger.error("[X] Test http download failed.")
+            self.logger.error("Test http download failed.")
             return False
 
         return True
@@ -328,21 +392,22 @@ class NetworkTest(Test):
         Test eth link
         :return:
         """
-        self.logger.info("[+] Setting interface %s down..." % self.interface)
+        self.logger.info("Setting interface %s down..." % self.interface)
         if not self.ifdown(self.interface):
-            self.logger.error("[X] Fail to set interface %s down." % self.interface)
+            self.logger.error("Set interface %s down failed." % self.interface)
             return False
 
-        self.logger.info("[+] Setting interface %s up..." % self.interface)
+        self.logger.info("Setting interface %s up..." % self.interface)
         if not self.ifup(self.interface):
-            self.logger.error("[X] Fail to set interface %s up." % self.interface)
+            self.logger.error("Set interface %s up failed." % self.interface)
             return False
 
         self.speed = self.get_speed()
         if self.speed:
-            self.logger.info("[.] The speed of %s is %sMb/s." % (self.interface, self.speed))
+            self.logger.info("The speed of %s is %sMb/s." %
+                             (self.interface, self.speed))
         else:
-            self.logger.error("[X] Fail to get speed of %s." % self.interface)
+            self.logger.error("Set speed of %s failed." % self.interface)
             return False
 
         return True
@@ -353,39 +418,20 @@ class NetworkTest(Test):
         :return:
         """
         if not self.interface:
-            self.logger.error("[X] No interface assigned.")
+            self.logger.error("No interface assigned.")
             return False
-        self.logger.info("[.] The test interface is %s." % self.interface)
+        self.logger.info("The test interface is %s." % self.interface)
 
         if not self.server_ip:
-            self.logger.error("[X] No server ip assigned.")
+            self.logger.error("No server ip assigned.")
             return False
-        self.logger.info("[.] The server ip is %s." % self.server_ip)
+        self.logger.info("The server ip is %s." % self.server_ip)
 
         client_ip = self.get_interface_ip()
         if not client_ip:
-            self.logger.error("[X] No available ip on %s." % self.interface)
+            self.logger.error("No available ip on %s." % self.interface)
             return False
-        self.logger.info("[.] The client ip is %s on %s." % (client_ip, self.interface))
+        self.logger.info("The client ip is %s on %s." %
+                         (client_ip, self.interface))
 
         return True
-
-    def tests(self):
-        """
-        test case
-        :return:
-        """
-        for subtest in self.subtests:
-            if not subtest():
-                return False
-        return True
-
-    def teardown(self):
-        """
-        Environment recovery after test
-        :return:
-        """
-        self.logger.info("[.] Stop all test servers...")
-        self.call_remote_server('all', 'stop')
-
-        self.logger.info("[.] Test finished.")

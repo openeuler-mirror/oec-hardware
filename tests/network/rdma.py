@@ -11,45 +11,22 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-"""RDMA Test"""
+# Desc: RDMA Test
 
 import os
 import re
-import argparse
-from subprocess import getstatusoutput
-
-from builtins import input
-from hwcompatible.command import Command
-from hwcompatible.document import CertDocument
-from hwcompatible.env import CertEnv
 from network import NetworkTest
 
 
 class RDMATest(NetworkTest):
-    """
-    RDMA Test
-    """
     def __init__(self):
         NetworkTest.__init__(self)
-        self.args = None
-        self.cert = None
-        self.device = None
-        self.requirements = ['perftest', 'opensm', 'infiniband-diags',
-                             'librdmacm-utils', 'libibverbs-utils']
-        self.subtests = [self.test_ibstatus, self.test_icmp, self.test_rdma]
-        self.interface = None
+        self.requirements = ['perftest', 'opensm', 'rdma-core']
         self.ib_device = None
         self.ib_port = None
-        self.gid = None
-        self.base_lid = None
-        self.sm_lid = None
-        self.state = None
-        self.phys_state = None
         self.link_layer = None
-        self.server_ip = None
-        self.speed = None   # Mb/s
         self.target_bandwidth_percent = 0.5
+        self.testbw_file = "test_bw.log"
 
     def get_ibstatus(self):
         """
@@ -58,47 +35,36 @@ class RDMATest(NetworkTest):
         """
         path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
         path_pci = path_netdev.split('net')[0]
-        path_ibdev = 'infiniband_verbs/uverb*/ibdev'
-        path_ibdev = ''.join([path_pci, path_ibdev])
-        cmd = "cat %s" % path_ibdev
-        com = Command(cmd)
-        try:
-            self.ib_device = com.read()
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
+        path_ibdev = os.path.join(path_pci, "infiniband_verbs")
+        ibdev_name = self.command.run_cmd("ls %s" % path_ibdev)
+        path_ibdev = os.path.join(path_ibdev, ibdev_name[0].strip())
+        cmd = self.command.run_cmd("cat %s/ibdev" % path_ibdev)
+        if cmd[2] != 0:
+            self.logger.error("Get %s failed." % path_ibdev)
             return False
+        self.ib_device = cmd[0].strip()
 
         path_ibport = '/sys/class/net/%s/dev_id' % self.interface
-        cmd = "cat %s" % path_ibport
-        com = Command(cmd)
-        try:
-            self.ib_port = int(com.read(), 16) + 1
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
+        cmd = self.command.run_cmd("cat %s" % path_ibport)
+        if cmd[2] != 0:
+            self.logger.error("Get %s failed." % path_ibport)
             return False
+        self.ib_port = int(cmd[0], 16) + 1
 
-        ib_str = "Infiniband device '%s' port %d" % (self.ib_device, self.ib_port)
+        ib_str = "Infiniband device '%s' port %d" % (
+            self.ib_device, self.ib_port)
         self.logger.info("Interface %s ===> %s" % (self.interface, ib_str))
 
-        cmd = "ibstatus"
-        self.logger.info(cmd)
-        com = Command(cmd)
-        try:
-            output = com.read()
-            for info in output.split('\n\n'):
-                if ib_str not in info:
-                    continue
-                self.logger.info(info)
-                self.gid = re.search(r"default gid:\s+(.*)", info).group(1)
-                self.base_lid = re.search(r"base lid:\s+(.*)", info).group(1)
-                self.sm_lid = re.search(r"sm lid:\s+(.*)", info).group(1)
-                self.state = re.search(r"state:\s+(.*)", info).group(1)
-                self.phys_state = re.search(r"phys state:\s+(.*)", info).group(1)
-                self.link_layer = re.search(r"link_layer:\s+(.*)", info).group(1)
-                self.speed = int(re.search(r"rate:\s+(\d*)", info).group(1)) * 1024
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
+        cmd = self.command.run_cmd("ibstatus")
+        if cmd[2] != 0:
+            self.logger.error("Execute ibstatus failed.")
             return False
+
+        for info in cmd[0].split('\n\n'):
+            if ib_str not in info:
+                continue
+            self.link_layer = re.search(r"link_layer:\s+(.*)", info).group(1)
+            self.speed = int(re.search(r"rate:\s+(\d*)", info).group(1)) * 1024
 
         return True
 
@@ -111,13 +77,12 @@ class RDMATest(NetworkTest):
             self.logger.info("Start rping server failed.")
             return False
 
-        cmd = "rping -c -a %s -C 50 -v" % self.server_ip
-        self.logger.info(cmd)
-        if getstatusoutput(cmd)[0] == 0:
+        cmd = self.command.run_cmd("rping -c -a %s -C 50 -v" % self.server_ip)
+        if cmd[2] == 0:
             return True
-        else:
-            self.call_remote_server('rping', 'stop')
-            return False
+
+        self.call_remote_server('rping', 'stop', self.server_ip)
+        return False
 
     def test_rcopy(self):
         """
@@ -128,11 +93,12 @@ class RDMATest(NetworkTest):
             self.logger.error("Start rcopy server failed.")
             return False
 
-        cmd = "rcopy %s %s" % (self.testfile, self.server_ip)
-        self.logger.info(cmd)
-        ret = os.system(cmd)
-        self.call_remote_server('rcopy', 'stop')
-        return ret == 0
+        cmd = self.command.run_cmd("rcopy %s %s" %
+                                   (self.testfile, self.server_ip))
+        if cmd[2] == 0:
+            return True
+        self.call_remote_server('rcopy', 'stop', self.server_ip)
+        return False
 
     def test_bw(self, cmd):
         """
@@ -146,57 +112,53 @@ class RDMATest(NetworkTest):
         if not self.call_remote_server(cmd, 'start', self.server_ip):
             self.logger.error("Start %s server failed." % cmd)
             return False
-
-        cmd = "%s %s -d %s -i %s" % (cmd, self.server_ip, self.ib_device, self.ib_port)
-        self.logger.info(cmd)
-        com = Command(cmd)
-        pattern = r"\s+(\d+)\s+(\d+)\s+([\.\d]+)\s+(?P<avg_bw>[\.\d]+)\s+([\.\d]+)"
-        try:
-            avg_bw = com.get_str(pattern, 'avg_bw', False)   # MB/sec
-            avg_bw = float(avg_bw) * 8
-
-            tgt_bw = self.target_bandwidth_percent * self.speed
-            self.logger.info("Current bandwidth is %.2fMb/s, target is %.2fMb/s"
-                             % (avg_bw, tgt_bw))
-            return avg_bw > tgt_bw
-        except Exception as concrete_error:
-            self.logger.error(concrete_error)
-            self.call_remote_server(cmd, 'stop')
+        get_info = self.command.run_cmd(
+            "%s %s -d %s -i %s | tee %s" % (cmd, self.server_ip, self.ib_device, self.ib_port, self.testbw_file))
+        if get_info[2] != 0:
+            self.logger.error("Test bandwidth %s failed." % cmd)
+            self.call_remote_server(cmd, 'stop', self.server_ip)
             return False
+        result = self.command.run_cmd(
+            "grep -A 1 'BW average' %s | awk '{print $4}' | grep -v 'sec'" % self.testbw_file)
+        avg_bw = float(result[0]) * 8
+        tgt_bw = self.target_bandwidth_percent * self.speed
+        self.logger.info("Current bandwidth is %.2fMb/s, target is %.2fMb/s"
+                         % (avg_bw, tgt_bw))
+        return avg_bw > tgt_bw
 
     def test_rdma(self):
         """
         Test Remote Direct Memory Access
         :return:
         """
-        self.logger.info("[+] Testing rping...")
+        self.logger.info("Testing rping...")
         if not self.test_rping():
-            self.logger.error("[X] Test rping failed.")
+            self.logger.error("Test rping failed.")
             return False
 
-        self.logger.info("[+] Creating testfile to upload...")
+        self.logger.info("Creating testfile to upload...")
         if not self.create_testfile():
-            self.logger.error("[X] Create testfile failed.")
+            self.logger.error("Create testfile failed.")
             return False
 
-        self.logger.info("[+] Testing rcopy...")
+        self.logger.info("Testing rcopy...")
         if not self.test_rcopy():
-            self.logger.error("[X] Test rcopy failed.")
+            self.logger.error("Test rcopy failed.")
             return False
 
-        self.logger.info("[+] Testing ib_read_bw...")
+        self.logger.info("Testing ib_read_bw...")
         if not self.test_bw('ib_read_bw'):
-            self.logger.error("[X] Test ib_read_bw failed.")
+            self.logger.error("Test ib_read_bw failed.")
             return False
 
-        self.logger.info("[+] Testing ib_write_bw...")
+        self.logger.info("Testing ib_write_bw...")
         if not self.test_bw('ib_write_bw'):
-            self.logger.error("[X] Test ib_write_bw failed.")
+            self.logger.error("Test ib_write_bw failed.")
             return False
 
-        self.logger.info("[+] Testing ib_send_bw...")
+        self.logger.info("Testing ib_send_bw...")
         if not self.test_bw('ib_send_bw'):
-            self.logger.error("[X] Test ib_send_bw failed.")
+            self.logger.error("Test ib_send_bw failed.")
             return False
 
         return True
@@ -206,40 +168,28 @@ class RDMATest(NetworkTest):
         Test ibstatus
         :return:
         """
-        if os.system("systemctl start opensm") != 0:
-            self.logger.error("[X] start opensm failed.")
+        cmd = self.command.run_cmd("systemctl start opensm")
+        if cmd[2] != 0:
+            self.logger.error("Start opensm failed.")
             return False
 
-        if os.system("modprobe ib_umad") != 0:
-            self.logger.error("[X] modprobe ib_umad failed.")
+        cmd = self.command.run_cmd("modprobe ib_umad")
+        if cmd[2] != 0:
+            self.logger.error("Try to modprobe ib_umad failed.")
             return False
 
         if not self.get_ibstatus():
-            self.logger.error("[X] Get status of InfiniBand/RoCE devices failed.")
+            self.logger.error("Get status of InfiniBand/RoCE devices failed.")
             return False
 
         return True
 
-    def setup(self, args=None):
+    def teardown(self):
         """
-        Initialization before test
-        :param args:
+        Environment recovery after test
         :return:
         """
-        self.args = args or argparse.Namespace()
-        self.device = getattr(self.args, 'device', None)
-        self.interface = self.device.get_property("INTERFACE")
-
-        self.cert = CertDocument(CertEnv.certificationfile, self.logger)
-        self.server_ip = self.cert.get_server()
-
-    def test(self):
-        """
-        test case
-        :return:
-        """
-        message = "Please enter the IP of InfiniBand interface on remote server: \
-                   (default %s)\n> " % self.server_ip
-        self.server_ip = input(message) or self.server_ip
-        
-        return self.tests()
+        if os.path.exists(self.testfile):
+            os.remove(self.testfile)
+        if os.path.exists(self.testbw_file):
+            os.remove(self.testbw_file)

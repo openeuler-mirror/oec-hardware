@@ -23,8 +23,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 
-from flask import Flask, render_template, redirect, url_for, abort, request, \
-    make_response, send_from_directory, flash
+from flask import Flask, render_template, redirect, url_for, abort, request, send_from_directory, flash
 from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
@@ -275,7 +274,8 @@ def upload_job():
 
     with open(tar_job, 'wb') as file_content:
         file_content.write(base64.b64decode(filetext))
-    result = subprocess.getstatusoutput("tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
+    result = subprocess.getstatusoutput(
+        "tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
     if result[0] != 0:
         sys.stderr.write("Decompress log file failed.")
 
@@ -327,8 +327,8 @@ def test_server(act):
     """
     test server
     """
-    valid_commands = ['rping', 'rcopy', 'ib_read_bw', 'ib_write_bw', 'ib_send_bw',
-                      'qperf']
+    valid_commands = ['rping', 'rcopy', 'ib_read_bw',
+                      'ib_write_bw', 'ib_send_bw', 'qperf']
     cmd = request.values.get('cmd', '')
     cmd = cmd.split()
     if (not cmd) or (cmd[0] not in valid_commands + ['all']):
@@ -338,7 +338,6 @@ def test_server(act):
     if act == 'start':
         if cmd[0] == 'rping':
             cmd = ['rping', '-s']
-
         if 'ib_' in cmd[0]:
             ib_server_ip = request.values.get('ib_server_ip', '')
             if not ib_server_ip:
@@ -349,20 +348,33 @@ def test_server(act):
                 sys.stderr.write("No ibdev or ibport found.\n")
                 abort(400)
             cmd.extend(['-d', ibdev, '-i', ibport])
+        __execute_cmd(cmd)
     elif act == 'stop':
         if cmd[0] == 'all':
-            cmd = ['killall', '-9'] + valid_commands
+            for process_name in valid_commands:
+                __stop_process(process_name)
         else:
-            cmd = ['killall', '-9', cmd[0]]
+            __stop_process(cmd[0])
     else:
         abort(404)
 
+    return render_template('index.html')
+
+
+def __stop_process(process_name):
+    check_cmd = [['ps', '-ef'], ['grep', process_name], ['grep', '-v', 'grep']]
+    pipe = subprocess.Popen(check_cmd)
+    if not pipe.poll():
+        return
+    kill_cmd = ['killall', '-9', process_name]
+    __execute_cmd(kill_cmd)
+
+
+def __execute_cmd(cmd):
     pipe = subprocess.Popen(cmd)
     time.sleep(3)
     if pipe.poll():  # supposed to be 0(foreground) or None(background)
         abort(400)
-
-    return render_template('index.html')
 
 
 def __get_ib_dev_port(ib_server_ip):
