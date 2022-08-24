@@ -1,11 +1,10 @@
-%define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.1
-Release:        5
+Release:        6
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -47,7 +46,7 @@ openEuler Hardware Compatibility Test Server
 
 %build
 
-sed -i '15i CFLAGS+=-fstack-protector-strong' tests/memory/Makefile
+sed -i '15i CFLAGS+=-g -fstack-protector-strong' tests/memory/Makefile
 
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
 DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
@@ -85,6 +84,9 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Wed Aug 24 2022 wangkai <wangkai385@h-partners.com> - 1.1.1-6
+- Enable debuginfo for fix strip
+
 * Wed Aug 17 2022 zhangzikang <zhangzikang@kylinos.cn> - 1.1.1-5
 - Fix server.py variable conflict issues in some system environment
 
