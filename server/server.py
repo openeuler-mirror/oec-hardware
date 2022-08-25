@@ -362,9 +362,8 @@ def test_server(act):
 
 
 def __stop_process(process_name):
-    check_cmd = [['ps', '-ef'], ['grep', process_name], ['grep', '-v', 'grep']]
-    pipe = subprocess.Popen(check_cmd)
-    if not pipe.poll():
+    check_cmd = subprocess.getstatusoutput("ps -ef | grep %s | grep -v grep" % process_name)
+    if check_cmd[0] != 0:
         return
     kill_cmd = ['killall', '-9', process_name]
     __execute_cmd(kill_cmd)

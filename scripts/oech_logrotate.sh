@@ -15,9 +15,9 @@ TEST_LOG_PATH="/usr/share/oech/logs"
 
 function backup_active_log() {
     cur_date=$(date -d "yesterday" +"%Y%m%d%H")
+    cd ${TEST_LOG_PATH}
     zip_file="oech-logrotate-${cur_date}.zip"
-    zip -qmo ${zip_file} ${TEST_LOG_PATH}/*.tar
-    mv ${zip_file} ${TEST_LOG_PATH}
+    zip -qmo ${zip_file} ./*.tar
 }
 
 function delete_test_log() {

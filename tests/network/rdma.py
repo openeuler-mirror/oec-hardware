@@ -189,6 +189,8 @@ class RDMATest(NetworkTest):
         Environment recovery after test
         :return:
         """
+        self.logger.info("Stop all test servers.")
+        self.call_remote_server('all', 'stop', self.server_ip)
         if os.path.exists(self.testfile):
             os.remove(self.testfile)
         if os.path.exists(self.testbw_file):

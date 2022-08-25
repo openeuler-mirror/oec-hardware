@@ -88,10 +88,16 @@ class NetworkTest(Test):
         Environment recovery after test
         :return:
         """
+        self.logger.info("Stop all test servers.")
+        self.call_remote_server('all', 'stop')
         if os.path.exists(self.testfile):
             os.remove(self.testfile)
             
     def check_fibre(self):
+        """
+        Check fibre information
+        :return:
+        """
         cmd = self.command.run_cmd(
             "ethtool %s | grep 'Port' | awk '{print $2}'" % self.interface)
         port_type = cmd[0].strip()
