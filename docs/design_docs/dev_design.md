@@ -52,9 +52,7 @@
 | | qperf |  |
 | | perftest | |
 | | opensm | |
-| | infiniband-diags | |
-| | librdmacm-utils | |
-| | libibverbs-utils | |
+| | rdma-core | |
 | ipmi | OpenIPMI | ipmi 测试 |
 | | ipmitool | |
 |  kabi | gzip | kabi 测试 |

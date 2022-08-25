@@ -11,32 +11,14 @@
 # PURPOSE.
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
-
-"""ethernet test"""
-
-import os
-import argparse
+# Desc: Ethernet test
 
 from rdma import RDMATest
 
 
 class EthernetTest(RDMATest):
-    """
-    Ethernet Test
-
-    """
     def __init__(self):
         RDMATest.__init__(self)
-        self.args = None
-        self.name = ""
-        self.cert = None
-        self.device = None
-        self.config_data = dict()
-        self.server_ip = ""
-        self.server_port = "80"
-        self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
-                         self.test_udp_tcp, self.test_http]
-        self.target_bandwidth_percent = 0.75
 
     def is_RoCE(self):
         """
@@ -45,9 +27,8 @@ class EthernetTest(RDMATest):
         """
         path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
         path_pci = path_netdev.split('net')[0]
-        cmd = "ls %s | grep -q infiniband" % path_pci
-        self.logger.info(cmd)
-        return os.system(cmd) == 0
+        result = self.command.run_cmd("ls %s | grep -q infiniband" % path_pci)
+        return result[2] == 0
 
     def setup(self, args=None):
         """
@@ -55,35 +36,15 @@ class EthernetTest(RDMATest):
         :param args:
         :return:
         """
-        self.args = args or argparse.Namespace()
-        self.logger = getattr(self.args, "test_logger", None)
-        self.device = getattr(self.args, 'device', None)
-        self.interface = self.device.get_property("INTERFACE")
-        self.show_driver_info()
-        self.config_data = getattr(args, "config_data", None)
-        if self.config_data:
-            self.server_ip = self.config_data.get("server_ip", "")
-            if ":" in self.server_ip:
-                self.server_ip, self.server_port = self.server_ip.split(":")
-            choice = self.config_data.get("if_rdma")
-        else:
-            self.logger.error("Get test item value from configuration file failed.")
-
+        super().setup(args)
         if self.is_RoCE():
-            if choice.lower() != "y":
+            if self.choice.lower() == "y":
+                self.logger.info("It will test RoCE interface %s, including rdma test." % self.interface)
+                self.link_layer = 'Ethernet'
+                self.subtests = [self.test_ip_info, self.test_ibstatus,
+                                self.test_eth_link, self.test_icmp, self.test_rdma]
                 return
-
-            self.logger.info("[+] Test RoCE interface %s..." % self.interface)
-            self.link_layer = 'Ethernet'
-            self.subtests = [self.test_ip_info, self.test_ibstatus,
-                             self.test_eth_link, self.test_icmp, self.test_rdma]
-
-    def test(self):
-        """
-        Test case
-        :return:
-        """
-        if not self.server_ip:
-            self.logger.error("Get server ip from configuration file failed.")
-            return False
-        return self.tests()
+            
+            self.logger.info("It will test normal ethernet %s." % self.interface)
+            self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
+                                self.test_udp_tcp, self.test_http]
