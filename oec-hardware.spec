@@ -1,4 +1,4 @@
-%define version    1.1.1
+%define version    1.1.2
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -18,6 +18,7 @@ BuildRequires:  gcc
 Requires:       kernel-devel, kernel-headers, dmidecode, tar
 Requires:       kernel >= 4
 Requires:       python3, python3-pyyaml, python3-concurrent-log-handler
+Provides:       libswsds.so()(64bit)
 
 # server subpackage
 %package server
@@ -72,6 +73,11 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Mon Aug 29 2022 meitingli <bubble_mt@outlook.com> - 1.1.2-0
+1. Upgrade command module
+2. Add VGPU testsuite
+3. Bugfix
+
 * Wed Jul 27 2022 cuixucui <cuixucui1@h-partners.com> - 1.1.1-0
 -1. Reconstruct the log module and rectify the log printing
 -2. Add kabi testcase
