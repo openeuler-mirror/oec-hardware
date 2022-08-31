@@ -3,26 +3,21 @@
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
-Version:        1.1.1
-Release:        6
+Version:        1.1.2
+Release:        0
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{version}.tar.gz
 
 # patch fix issue
-Patch0001:       oec-hardware-1.1.1-fix-vesion.patch
-Patch0002:       oec-hardware-1.1.1-fix-fc-raid.patch
-Patch0003:       oec-hardware-1.1.1-fix-network-infiniband-system.patch
-patch0004:       oec-hardware-1.1.1-fix-rebootup_oech.service_issues.patch
-patch0005:       oec-hardware-1.1.1-fix-server.py_variable_conflict.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
-Requires:       kernel-devel, kernel-headers, dmidecode, tar, python3-pyyaml
-Requires:       qperf, fio, memtester
+Requires:       kernel-devel, kernel-headers, dmidecode, tar
 Requires:       kernel >= 4
-Requires:       python3
+Requires:       python3, python3-pyyaml, python3-concurrent-log-handler
+Provides:       libswsds.so()(64bit)
 
 # server subpackage
 %package server
@@ -38,11 +33,6 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
 
 %build
 
@@ -69,6 +59,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 /usr/share/oech/lib/tests
 /usr/share/oech/lib/config
 /usr/lib/systemd/system/oech.service
+/usr/share/oech/lib/oech_logrotate.sh
 %dir /var/oech
 %dir /usr/share/oech/lib
 %dir /usr/share/oech
@@ -84,6 +75,11 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Tue Aug 30 2022 ylzhangah <zhangyale3@h-partners.com> - 1.1.2-0
+- Upgrade command module
+- Add VGPU testsuite
+- Bugfix;
+
 * Wed Aug 24 2022 wangkai <wangkai385@h-partners.com> - 1.1.1-6
 - Enable debuginfo for fix strip
 
