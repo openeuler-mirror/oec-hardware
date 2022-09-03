@@ -42,7 +42,8 @@ function start_logrotate() {
 }
 
 function stop_logrotate() {
-    ps -ef | grep oech_logrotate.sh | grep -v grep | awk '{print $2}' | xargs kill -9 >/dev/null 2>&1
+    ps -ef | grep oech_logrotate.sh | grep -v grep | awk '{print $2}' | xargs killall >/dev/null 2>&1
+    return 0
 }
 
 function main() {
