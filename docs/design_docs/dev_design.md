@@ -39,8 +39,8 @@
 | --------- | ------ | --------- | 
 | acpi | acpica-tools | acpi 测试 |
 | cdrom | dvd+rw-tools | cd/dvd 测试 |
+| | cdrkit | |
 | | genisoimage | |
-| | wodim | |
 | | util-linux | |
 | disk/fc/raid | fio | 硬盘读写测试 |
 | gpu | git | gpu 测试，获取开源项目 gpu_burn/cuda_samples |

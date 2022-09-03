@@ -26,7 +26,7 @@ class CDRomTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.requirements = ["dvd+rw-tools",
-                             "genisoimage", "wodim", "util-linux"]
+                             "cdrkit", "genisoimage", "util-linux"]
         self.method = None
         self.device = None
         self.type = None
@@ -210,7 +210,8 @@ class CDRomTest(Test):
         self.logger.info("Check to copy files.", ignore_errors=True)
         self.command.run_cmd("cp -dpRf ./mnt_cdrom ./device_dir")
 
-        self.logger.info("Check to compare files in directory.", ignore_errors=True)
+        self.logger.info(
+            "Check to compare files in directory.", ignore_errors=True)
         return_code = self.cmp_tree("mnt_cdrom", "device_dir")
         self.command.run_cmd("umount ./mnt_cdrom")
         if return_code:
