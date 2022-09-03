@@ -262,7 +262,7 @@ class CPUFreqTest(Test):
             return False
         self.logger.info("Set governor of all CPUs to ondemand succeed.")
 
-        target_cpu = randint(0, self.cpu.nums)
+        target_cpu = randint(0, self.cpu.nums-1)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'ondemand':
             self.logger.error("The governor of CPU%s(%s) is not ondemand." % (
@@ -311,7 +311,7 @@ class CPUFreqTest(Test):
             return False
         self.logger.info("Set governor of all CPUs to conservative.")
 
-        target_cpu = randint(0, self.cpu.nums)
+        target_cpu = randint(0, self.cpu.nums-1)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'conservative':
             self.logger.error("The governor of CPU%s(%s) is not conservative." %
@@ -350,7 +350,7 @@ class CPUFreqTest(Test):
             return False
         self.logger.info("Set governor of all CPUs to powersave.")
 
-        target_cpu = randint(0, self.cpu.nums)
+        target_cpu = randint(0, self.cpu.nums-1)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'powersave':
             self.logger.error("The governor of CPU%s(%s) is not powersave." %
@@ -389,7 +389,7 @@ class CPUFreqTest(Test):
             return False
         self.logger.info("Set governor of all CPUs to performance.")
 
-        target_cpu = randint(0, self.cpu.nums)
+        target_cpu = randint(0, self.cpu.nums-1)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'performance':
             self.logger.error("The governor of CPU%s(%s) is not performance." %

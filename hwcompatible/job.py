@@ -22,7 +22,8 @@ from .env import CertEnv
 from .command import Command
 from .log import Logger
 from .reboot import Reboot
-from .constants import NO_CONFIG_DEVICES
+from .cert_info import CertInfo
+from .constants import NO_CONFIG_DEVICES, NODEVICE
 
 
 class Job():
@@ -59,7 +60,7 @@ class Job():
         for tests in self.test_suite:
             for pkg in tests["test"].requirements:
                 cmd_result = self.command.run_cmd(
-                    "rpm -q %s" % pkg, ignore_errors=True)
+                    "rpm -q %s" % pkg, ignore_errors=True, log_print=False)
                 return_code = cmd_result[2]
                 if return_code != 0 and pkg not in required_rpms:
                     required_rpms.append(pkg)
@@ -88,16 +89,22 @@ class Job():
 
         self.get_config()
         self.test_suite.sort(key=lambda k: k["test"].pri)
+        cert_infos = CertInfo(self.logger, self.command)
         for testcase in self.test_suite:
             config_data = self.get_device(testcase)
             if self._run_test(testcase, config_data, subtests_filter):
                 testcase["status"] = "PASS"
                 self.logger.info("Test %s succeed." %
                                  testcase["name"], terminal_print=False)
+
+                if testcase["name"] not in NODEVICE:
+                    cert_infos.create_json(testcase["device"])
             else:
                 testcase["status"] = "FAIL"
                 self.logger.error("Test %s failed." %
                                   testcase["name"], terminal_print=False)
+
+        cert_infos.export_cert_info()
 
     def run(self):
         """

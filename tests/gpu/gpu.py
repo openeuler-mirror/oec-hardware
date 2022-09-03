@@ -78,8 +78,8 @@ class GpuTest(Test):
             os.environ['CUDA_VISIBLE_DEVICES'] = id_num
 
         self.command.run_cmd("bash %s/test_gpu.sh install_gpu_burn" % gpu_dir)
-        self.command.run_cmd(
-            '/opt/gpu-burn/gpu_burn 10 | tee %s' % self.gpu_burn)
+        os.chdir("/opt/gpu-burn")
+        self.command.run_cmd('./gpu_burn 10 | tee %s' % self.gpu_burn)
         time.sleep(1)
         for _ in range(10):
             cmd = self.command.run_cmd(
