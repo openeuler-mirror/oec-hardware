@@ -1,0 +1,12 @@
+diff -Naur rpm/tests/system/system.py oech/tests/system/system.py
+--- rpm/tests/system/system.py	2022-09-05 16:28:46.418278940 +0800
++++ oech/tests/system/system.py	2022-09-05 16:31:23.830278940 +0800
+@@ -62,7 +62,7 @@
+ 
+             output = rpm_verify[0].split('\n')
+             for file in output:
+-                if "test_config.yaml" in file:
++                if not file or "test_config.yaml" in file:
+                     continue
+                 flag = False
+                 self.logger.error(
