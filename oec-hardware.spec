@@ -4,7 +4,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.2
-Release:        1
+Release:        2
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -12,6 +12,7 @@ Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{v
 
 # patch fix issue
 Patch0001:      oec-hardware-1.1.2-fix-oech.service_status_failed.patch
+Patch0002:      oec-hardware-1.1.2-fix-system.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -35,6 +36,7 @@ openEuler Hardware Compatibility Test Server
 %prep
 %setup -q -c
 %patch1 -p1
+%patch2 -p1
 
 %build
 
@@ -77,6 +79,9 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Mon Sep 05 2022 cuixucui <cuixucui1@h-partners.com> - 1.1.2-2
+- Fix Check whether the tool is modified failed
+
 * Sat Sep 03 2022 ylzhangah <zhangyale3@h-partners.com> - 1.1.2-1
 - Fix the status failed in checking oech.service status after stoped oech.service
 
