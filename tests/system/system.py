@@ -24,6 +24,7 @@ class SystemTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.pri = 1
+        self.requirements = ["policycoreutils"]
         self.sysinfo = SysInfo(CertEnv.releasefile)
 
     def test(self):
@@ -62,7 +63,7 @@ class SystemTest(Test):
 
             output = rpm_verify[0].split('\n')
             for file in output:
-                if "test_config.yaml" in file:
+                if not file or "test_config.yaml" in file:
                     continue
                 flag = False
                 self.logger.error(

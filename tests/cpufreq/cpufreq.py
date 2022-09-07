@@ -16,6 +16,7 @@
 import argparse
 from random import randint
 from time import sleep
+from threading import Thread
 from hwcompatible.env import CertEnv
 from hwcompatible.test import Test
 from hwcompatible.command import Command
@@ -114,12 +115,13 @@ class CPU:
         return cmd[0].strip()
 
 
-class Load:
+class Load(Thread):
     """
     Let a program run on a specific CPU
     """
 
     def __init__(self, cpu, command):
+        Thread.__init__(self)
         self.cpu = cpu
         self.command = command
         self.process = None
@@ -138,16 +140,14 @@ class Load:
         Get the running time of the process
         :return:
         """
-        if not self.process:
-            return False
-
-        while self.returncode is None:
-            self.returncode = self.process[2]
-
+        while self.is_alive():
+            sleep(0.02)
+            
+        self.returncode = self.process[2]
         if self.returncode == 0:
             line = self.process[0]
             return float(line)
-        return False
+        return 0
 
 
 class CPUFreqTest(Test):
@@ -203,7 +203,7 @@ class CPUFreqTest(Test):
         runtime_list = []
         for cpu in self.cpu.list:
             load_test = Load(cpu, self.command)
-            load_test.run()
+            load_test.start()
             load_list.append(load_test)
         for cpu in self.cpu.list:
             runtime = load_list[cpu].get_runtime()
@@ -221,7 +221,7 @@ class CPUFreqTest(Test):
         runtime_list = []
         for cpu in self.cpu.list:
             load_test = Load(cpu, self.command)
-            load_test.run()
+            load_test.start()
             load_list.append(load_test)
         for cpu in self.cpu.list:
             runtime = load_list[cpu].get_runtime()
@@ -272,7 +272,7 @@ class CPUFreqTest(Test):
                          (target_cpu, target_cpu_governor))
 
         load_test = Load(target_cpu, self.command)
-        load_test.run()
+        load_test.start()
         sleep(1)
         target_cpu_freq = self.cpu.get_freq(target_cpu)
         if target_cpu_freq != self.cpu.max_freq:
@@ -321,7 +321,7 @@ class CPUFreqTest(Test):
                          (target_cpu, target_cpu_governor))
 
         load_test = Load(target_cpu, self.command)
-        load_test.run()
+        load_test.start()
         sleep(1)
         target_cpu_freq = self.cpu.get_freq(target_cpu)
         if not self.cpu.min_freq <= target_cpu_freq <= self.cpu.max_freq:
@@ -368,7 +368,7 @@ class CPUFreqTest(Test):
                          (target_cpu, target_cpu_freq))
 
         load_test = Load(target_cpu, self.command)
-        load_test.run()
+        load_test.start()
         load_test_time = load_test.get_runtime()
         self.logger.info("Time of CPU%s powersave load test: %.2f" %
                          (target_cpu, load_test_time))
@@ -407,7 +407,7 @@ class CPUFreqTest(Test):
                          (target_cpu, target_cpu_freq))
 
         load_test = Load(target_cpu, self.command)
-        load_test.run()
+        load_test.start()
         load_test_time = load_test.get_runtime()
         self.logger.info("Time of CPU%s performance load test: %.2f" %
                          (target_cpu, load_test_time))
