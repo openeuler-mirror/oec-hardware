@@ -69,6 +69,7 @@ class Device:
     def __init__(self, properties=None, logger=None):
         self.logger = logger
         self.command = Command(self.logger)
+        self.name = ""
         self.path = ""
         self.pci = ""
         self.quad = list()
@@ -109,6 +110,7 @@ class Device:
         get board model name
         :return:
         """
+        self.name = name
         self.file = file
         self.file.seek(0)
         # get PCI number
