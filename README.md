@@ -462,6 +462,8 @@ oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的o
 
 # FAQ
 
- [鲲鹏小智](https://ic-openlabs.huawei.com/chat/#/)提供了oec-hardware测试过程中可能遇到的问题的解决方案，如果在适配过程中遇到问题，可以优先通过鲲鹏小智获取支撑。
+ [鲲鹏小智](https://ic-openlabs.huawei.com/chat/#/) 提供了oec-hardware测试过程中可能遇到的问题的解决方案，用户可以通过检索获取问题的解决方法。另外 [鲲鹏论坛] (https://bbs.huaweicloud.com/forum/forum-927-1.html)上提供了完整的[oec-hardware安装使用问题解答](https://bbs.huaweicloud.com/forum/thread-0210979171291590002-1-1.html) ，用户可以根据场景获取解决方案。
+ 
+ 如果在适配过程中遇到问题，建议用户优先通过鲲鹏小智或鲲鹏论坛获取支撑。
 
 如果鲲鹏小智无法解决，可在本仓库下提issue反馈或者发邮件至openEuler社区兼容性SIG组邮箱：oecompatibility@openeuler.org。

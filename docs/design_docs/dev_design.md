@@ -65,11 +65,12 @@
 | nvme | nvme-cli | nvme 测试 |
 | perf | perf | perf测试 |
 | usb | usbutils | usb 测试 |
-| vgpu | qemu | vgpu测试 |
+| vgpu | qemu | vgpu 测试 |
 | | libvirt | |
 | | xz | |
 | | util-linux | |
 | | expect | |
+| system | policycoreutils | system 测试 |
 
 ### 1.3 License
 
