@@ -1,0 +1,151 @@
+.topnav {
+  overflow: hidden;
+  font-weight: bold;
+  bottom: 10%;
+  margin-bottom: 20px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background-color: #333;
+}
+
+.topnav a {
+  float: left;
+  display: block;
+  text-align: center;
+  padding: 14px 16px;
+  margin-left: 10px;
+  margin-right: 20px;
+  color: #f2f2f2;
+}
+
+.topnav a:hover {
+  text-align: center;
+  border-radius: 5px;
+  color: black;
+  background-color: #ddd;
+}
+
+img {
+  text-align: center;
+  font-weight: bold;
+  font-size: 10px;
+  font-weight: 100;
+  vertical-align: middle;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+li {
+  font-weight: bold;
+  padding: 6px;
+}
+
+p {
+  margin-left: 10px;
+  font-weight: bold;
+  color: #000000;
+}
+
+.dropdown-toggle {
+  font-size: medium;
+  color: #000000;
+}
+
+.dropdown-menu {
+  border-radius: 5px;
+  font-size: medium;
+}
+
+.dropdown-content {
+  font-weight: bold;
+  color: #000000;
+  min-width: 160px;
+  padding: 12px;
+}
+
+.navbar a {
+  display: inline-block;
+  width: 100px;
+  height: 40px;
+  font-size: medium;
+  font-weight: bold;
+  text-align: center;
+  line-height: 40px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  color: #337ab7;
+  text-decoration: none;
+  margin-bottom: 20px;
+  margin-left: 10px;
+  margin-right: 20px;
+}
+
+.navbar a:hover {
+  text-align: center;
+  border-radius: 5px;
+  color: white;
+  background-color: #337ab7;
+}
+
+button {
+  width: 100px;
+  height: 40px;
+  font-size: medium;
+  font-weight: bold;
+  text-align: center;
+  background-color: #337ab7;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+}
+
+table {
+  margin-left: 30px;
+  margin-bottom: 50px;
+  padding: 8px;
+  line-height: 1.5;
+  vertical-align: top;
+  border-spacing: 0;
+  border-collapse: collapse;
+  width: 360px;
+  border-collapse: collapse;
+  min-width: 800px;
+
+}
+
+th {
+  font-weight: bold;
+  vertical-align: bottom;
+  text-align: left;
+  background-color: #fff;
+  color: #333;
+  font: 14px Arial;
+  padding: 8px;
+}
+
+td {
+  color: #333;
+  font: 14px Arial;
+  padding: 8px;
+  text-indent: 0;
+  width: 360px;
+  border-collapse: collapse;
+}
+
+tr {
+  color: #333;
+  border-top: none;
+  border-bottom: 1px solid #ddd;
+  background-color: rgb(250, 250, 250);
+}
+
+tr:nth-child(even) {
+  color: #333;
+  background-color: #fff;
+}
+
+a {
+  font-weight: bold;
+  color: #337ab7;
+  text-decoration: none
+}

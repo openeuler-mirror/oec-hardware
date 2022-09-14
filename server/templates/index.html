@@ -1,10 +1,16 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+  {% extends 'base.html' %}
 
-{% block title %}OECH{% endblock %}
+  {% block title %}
+    oec-hardware
+  {% endblock %}
 
-{% block page_content %}
-<div class="page-header">
-    <h1>Compatibility Test Server</h1>
-</div>
-<p>Welcome to the openEuler Hardware Compatibility Test.</p>
-{% endblock %}
+  <body>
+    {% block page_content %}
+      <div class="page-home">
+        <p>Welcome to the openEuler Hardware Compatibility Test.</p>
+      </div>
+    {% endblock %}
+  </body>
+</html>

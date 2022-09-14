@@ -1,13 +1,28 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+  {% extends 'base.html' %}
 
-{% block title %}OECH{% endblock %}
-
-{% block page_content %}
-    <div class="page-header">
-        <h3>openEuler Hardware Compatibility Test</h3>
+  {% block title %}
+    oec-hardware
+  {% endblock %}
+  
+  {% block page_content %}
+    <div class="navbar navbar-inverse" role="navigation">
+      <div class="container">
+        <div class="navbar-menu">
+          <a class="btn" href="/results/{{ host }}/{{ id }}/{{ job }}">Summary</a>
+          <a class="btn" href="/results/{{ host }}/{{ id }}/{{ job }}/devices">Devices</a>
+          <a class="btn" href="/results/{{ host }}/{{ id }}/{{ job }}/logs/job">Runtime</a>
+          <a class="btn" href="/results/{{ host }}/{{ id }}/{{ job }}/attachment">Attachment</a>
+        </div>
+      </div>
     </div>
-    <h4>{{ testcase }}</h4>
-    {% for line in log %}
-        {{ line }}<br>
-    {% endfor %}
-{% endblock %}
+
+    <div class="sub-class">
+      <h4>{{ testcase }}</h4>
+      {% for line in log %}
+        {{ line }}<br />
+      {% endfor %}
+    </div>
+  {% endblock %}
+</html>

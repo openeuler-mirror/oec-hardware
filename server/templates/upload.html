@@ -1,35 +1,40 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+  {% extends 'base.html' %}
 
-{% block title %}OECH{% endblock %}
+  {% block title %}
+    oec-hardware
+  {% endblock %}
 
-{% block page_content %}
+  {% block page_content %}
     <div class="page-header">
-        <h3>Upload {{ ret }}</h3>
+      <h3>Upload {{ ret }}</h3>
     </div>
     <table class="table table-striped table-hover">
-        <tbody>
-            <tr>
-                <td>id</td>
-                <td>{{ id }}</td>
-            </tr>
-            <tr>
-                <td>host</td>
-                <td>{{ host }}</td>
-            </tr>
-            <tr>
-                <td>job</td>
-                <td>{{ job }}</td>
-            </tr>
+      <tbody>
+        <tr>
+          <td>id</td>
+          <td>{{ id }}</td>
+        </tr>
+        <tr>
+          <td>host</td>
+          <td>{{ host }}</td>
+        </tr>
+        <tr>
+          <td>job</td>
+          <td>{{ job }}</td>
+        </tr>
         {% if filename %}
-            <tr>
-                <td>filename</td>
-                <td>{{ filename }}</td>
-            </tr>
+          <tr>
+            <td>filename</td>
+            <td>{{ filename }}</td>
+          </tr>
         {% endif %}
-            <tr>
-                <td>filetext(base64)</td>
-                <td>{{ filetext }}</td>
-            </tr>
-        </tbody>
+        <tr>
+          <td>filetext(base64)</td>
+          <td>{{ filetext }}</td>
+        </tr>
+      </tbody>
     </table>
-{% endblock %}
+  {% endblock %}
+</html>
