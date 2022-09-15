@@ -50,7 +50,7 @@ oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具�
 
 ## 整机兼容性结论继承策略
 
-如果验证适配的服务器共主板，可以继承兼容性结论。
+如果验证适配的服务器共主板、CPU代次相同，可以继承兼容性结论。
 
 ## 板卡兼容性结论继承策略
 
@@ -65,7 +65,6 @@ oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具�
     四元组查看方式：
         - 通过iBMC查看
         - 在系统中执行命令"lspci -nvv"查看
-
 
 板卡兼容性结论继承有以下三点:
 
@@ -93,7 +92,7 @@ oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具�
 
 ## 版本维护声明
 
-oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的oec-hardware进行安装使用。
+oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 oec-hardware 进行安装使用。
 
 # 工具使用
 
@@ -119,31 +118,36 @@ oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的o
 
 |   项目    |                       要求                    |
 |-----------|---------------------------------------------|
-|    服务器型号   | Taishan200(Model 2280)、2288H V5或同等类型的服务器，对于x86_64服务器，icelake/cooperlake/cascade可任选一种，优选icelake   |
+|    服务器型号   | Taishan200(Model 2280)、2288H V5或同等类型的服务器（详见社区 [整机兼容性清单](https://www.openeuler.org/zh/compatibility/)），对于x86_64服务器，icelake/cooperlake/cascade可任选一种，优选icelake   |
 |    RAID卡   | 需要组raid，至少组raid0   |
 |    NIC/IB卡   | 服务端和测试端需要分别插入一张同类型板卡，配置同网段IP，保证直连互通  |
 |    FC卡   | 需要连接磁阵，至少组两个lun   |
 
-### 依赖组件
+**注意** 
 
-#### 客户端依赖组件
+   如果要测试外部驱动，请提前安装驱动，配置测试环境。
 
-| 组件      | 组件描述  | 可获得性 |
-| --------- | ------ | ----------- |
-| python3    | python3 及以上 | 可使用dnf进行安装 |
-
-#### 服务端依赖组件
-
-| 组件      | 组件描述  | 可获得性 |
-| --------- | ------- | ----------- |
-| python3   | python3 及以上 | 可使用dnf进行安装 |
-| Flask    | v2.1.2 及以上版本        | 可使用pip3进行安装   |
-| Flask-bootstrap    | v3.3.7.1 及以上版本        | 可使用pip3进行安装  |
-| uwsgi    | v2.0.20 及以上版本        | 可使用pip3进行安装   |
+   GPU、VGPU、keycard等测试项需要提前安装外部驱动，保证环境部署完成，然后使用本工具进行测试。
 
 ### 运行环境组网
 
 ![test-network](docs/pictures/test-network.png)
+
+# 离线安装环境部署要求
+
+1. 下载 openEuler 官方的 everything iso，挂载本地 repo 源。
+
+   如果在 everything iso 中无法找到依赖的软件包，请手动从 [openEuler 官方 repo](https://repo.openeuler.org/) 中下载软件包，上传至测试机中进行安装。
+
+2. 根部不同的测试项，配置离线测试依赖
+
+   | 测试项 | 文件名 | 路径 |
+   | ---- | ----- | ----- |
+   | kabi | 下载对应版本和架构的内核白名单，此处以openEuler 22.03LTS、aarch64为例：https://gitee.com/src-openeuler/kernel/blob/openEuler-22.03-LTS/kabi_whitelist_aarch64 | `/var/oech` |
+   | GPU  | https://github.com/wilicc/gpu-burn | `/opt` |
+   |      | https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip | `/opt` |
+   | VGPU | nvidia vgpu client驱动软件包 | /root |
+   |      | 下载对应版本和架构的虚拟机镜像文件，此处以openEuler 22.03LTS、x86_64为例：https://repo.openeuler.org/openEuler-22.03-LTS/virtual_machine_img/x86_64/openEuler-22.03-LTS-x86_64.qcow2.xz | `/opt` |
 
 # 工具安装
 
@@ -175,20 +179,14 @@ oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的o
    dnf install oec-hardware-server
    ```
 
-2. 服务端 web 展示页面需要的部分组件系统本身不提供，需要使用 `pip3` 安装（请自行配置可用 pip 源）。
-
-   ```
-   pip3 install Flask Flask-bootstrap uwsgi
-   ```
-
-3. 启动服务。本服务默认使用 8080 端口，同时搭配 nginx（默认端口 80）提供 web 服务，请保证这些端口未被占用。
+2. 启动服务。本服务通过搭配 nginx 服务提供 web 服务，默认使用 80 端口，可以通过 nginx 服务配置文件修改对外端口，启动前请保证这些端口未被占用。
 
    ```
    systemctl start oech-server.service
    systemctl start nginx.service
    ```
 
-4. 关闭防火墙和 SElinux。
+3. 关闭防火墙和 SElinux。
 
    ```
    systemctl stop firewalld
@@ -201,7 +199,9 @@ oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的o
 ## 前提条件
 
 * `/usr/share/oech/kernelrelease.json` 文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
+
 * 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能 `ping` 通服务端的 ip；如果客户端是对 InfiniBand 网卡进行测试，服务端也必须有一个 InfiniBand 网卡并提前配好 ip 。建议不要使用业务网口进行网卡测试。
+
 * `/usr/share/oech/lib/config/test_config.yaml ` 是硬件测试项配置文件模板，`fc`、`raid`、`disk`、`ethernet`、`infiniband`硬件测试前需先根据实际环境进行修改，其它硬件测试不需要修改。
 
 ## 使用步骤
@@ -412,6 +412,16 @@ oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的o
     - 使用 perftest 测试 infiniband(IB) 网络协议的延迟和带宽。
     - **注意** 进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
 
+20. **kabi**
+
+    - 测试内核 kabi 和标准系统相比是否发生变化。
+
+21. **VGPU**
+
+    - 测试 VGPU 服务端基本功能。
+    - 部署 VGPU 客户端虚拟机，测试驱动安装，测试客户端 VGPU 功能。
+    - VGPU 服务端监控客户端的运行。
+
 # 社区开发者参与介绍
 
 ## 环境部署
@@ -436,7 +446,7 @@ oec-hardware-1.1.0 版本将不再进行更新维护，请获取最新版本的o
     ```
     dnf install -y rpm-build 
     cd oec-hardware
-    tar oec-hardware-1.0.0.tar.bz2 *
+    tar jcvf oec-hardware-1.0.0.tar.bz2 *
     mkdir -p /root/rpmbuild/SOURCES
     cp oec-hardware-1.0.0.tar.bz2 /root/rpmbuild/SOURCES/
     rpmbuild -ba oec-hardware.spec
