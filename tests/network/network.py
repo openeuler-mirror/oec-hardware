@@ -31,6 +31,7 @@ class NetworkTest(Test):
         self.device = None
         self.interface = None
         self.server_ip = ""
+        self.client_ip = ""
         self.server_port = "80"
         self.config_data = dict()
         self.choice = "N"
@@ -54,6 +55,7 @@ class NetworkTest(Test):
         self.config_data = getattr(args, "config_data", None)
         if self.config_data:
             self.server_ip = self.config_data.get("server_ip", "")
+            self.client_ip = self.config_data.get("client_ip", "")
             if ":" in self.server_ip:
                 self.server_ip, self.server_port = self.server_ip.split(":")
             self.choice = self.config_data.get("if_rdma")
@@ -433,11 +435,10 @@ class NetworkTest(Test):
             return False
         self.logger.info("The server ip is %s." % self.server_ip)
 
-        client_ip = self.get_interface_ip()
-        if not client_ip:
+        if not self.client_ip:
             self.logger.error("No available ip on %s." % self.interface)
             return False
         self.logger.info("The client ip is %s on %s." %
-                         (client_ip, self.interface))
+                         (self.client_ip, self.interface))
 
         return True

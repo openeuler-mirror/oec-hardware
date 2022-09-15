@@ -19,6 +19,9 @@ import sys
 import time
 import subprocess
 import base64
+import re
+import operator
+import stat
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
@@ -33,6 +36,7 @@ bootstrap = Bootstrap(app)
 dir_server = os.path.dirname(os.path.realpath(__file__))
 dir_results = os.path.join(dir_server, 'results')
 dir_files = os.path.join(dir_server, 'files')
+ip_file = os.path.join(dir_server, "ip.txt")
 
 
 @app.errorhandler(400)
@@ -322,6 +326,36 @@ def upload_file():
                            ret='Successful')
 
 
+@app.route('/api/config/ip', methods=['GET', 'POST'])
+def config_ip():
+    """
+    config server ip
+    """
+    sever_ip = request.values.get('serverip', '')
+    card_id = request.values.get('cardid', '')
+    cmd_result = subprocess.getstatusoutput("ip link show up | grep 'state UP'")
+
+    ports = []
+    for port in cmd_result[1].split('\n'):
+        ports.append(port.split(':')[1].strip())
+
+    for pt in ports:
+        cmd_result = subprocess.getstatusoutput("ethtool -i %s" % pt)
+        for data in cmd_result[1].split('\n'):
+            if "bus-info" in data:
+                pci_num = data.split(':', 1)[1].strip()
+                quad = __get_quad(pci_num)
+                if operator.eq(quad, eval(card_id)):
+                    subprocess.getstatusoutput(
+                        "ifconfig %s:0 %s/24" % (pt, sever_ip))
+                    with os.fdopen(os.open(ip_file, os.O_WRONLY |
+                                           os.O_CREAT, stat.S_IRUSR), 'w+') as f:
+                        f.write('{},{}'.format(pt, sever_ip))
+                    break
+
+    return render_template('index.html')
+
+
 @app.route('/api/<act>', methods=['GET', 'POST'])
 def test_server(act):
     """
@@ -353,6 +387,7 @@ def test_server(act):
         if cmd[0] == 'all':
             for process_name in valid_commands:
                 __stop_process(process_name)
+            __delete_ip()
         else:
             __stop_process(cmd[0])
     else:
@@ -401,6 +436,39 @@ def __get_ib_dev_port(ib_server_ip):
     except Exception as concrete_error:
         sys.stderr.write("Get ibdev, ibport failed.\n")
         return None, None
+
+
+def __get_quad(pci_num):
+    """
+    Get network card quad
+    """
+    cmd_result = subprocess.getstatusoutput("lspci -xs %s" % pci_num)[1]\
+        .split('\n')
+
+    quad = []
+    for ln in cmd_result:
+        if re.match("00: ", ln):
+            tmp = ln.split(" ")[1:5]
+            quad.extend([tmp[1] + tmp[0], tmp[3] + tmp[2]])
+        if re.match("20: ", ln):
+            tmp = ln.split(" ")[-4:]
+            quad.extend([tmp[-3] + tmp[-4], tmp[-1] + tmp[-2]])
+    return quad
+
+
+def __delete_ip():
+    """
+    Delete the IP configured on the server
+    """
+    if not os.path.exists(ip_file):
+        return
+
+    with os.fdopen(os.open(ip_file, os.O_RDONLY,
+                           stat.S_IRUSR), 'r') as f:
+        ip = f.read().split(',')
+        subprocess.Popen("ip addr del %s dev %s" % (ip[1], ip[0]), shell=True)
+        time.sleep(3)
+    os.remove(ip_file)
 
 
 if __name__ == '__main__':

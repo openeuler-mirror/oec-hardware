@@ -51,14 +51,16 @@ class NvmeTest(Test):
             self.logger.error("%s is in use now, skip this test." % disk)
             return False
 
-        size = getoutput("cat /sys/block/%s/size" % disk)
-        size = int(int(size))/2/2
+        block_count = getoutput("cat /sys/block/%s/size" % disk)
+        block_size = getoutput("cat /sys/block/%s/queue/logical_block_size" % disk)
+        size = int(block_count) * int(block_size)
+        size = size/2/2
         if size <= 0:
             self.logger.error(
                 "The size of %s is not suitable for this test." % disk)
             return False
-        elif size > 10*1024*1014*1024:
-            size = 10*1024*1014*1024
+        elif size > 128*1024:
+            size = 128*1024
 
         self.logger.info("Start to format nvme.")
         return_code = True

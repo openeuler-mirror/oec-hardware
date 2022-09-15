@@ -164,7 +164,6 @@ class DeviceDocument(Document):
             self.document.append(device.properties)
            
 
-
 class FactoryDocument(Document):
     """
     Get factory from file or factory parameter

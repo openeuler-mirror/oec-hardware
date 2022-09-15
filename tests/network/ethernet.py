@@ -44,7 +44,7 @@ class EthernetTest(RDMATest):
                 self.subtests = [self.test_ip_info, self.test_ibstatus,
                                 self.test_eth_link, self.test_icmp, self.test_rdma]
                 return
-            
-            self.logger.info("It will test normal ethernet %s." % self.interface)
-            self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
-                                self.test_udp_tcp, self.test_http]
+                
+        self.logger.info("It will test normal ethernet %s." % self.interface)
+        self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
+                         self.test_udp_tcp, self.test_http]
