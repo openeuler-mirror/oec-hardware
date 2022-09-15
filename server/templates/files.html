@@ -1,14 +1,21 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+  {% extends 'base.html' %}
 
-{% block title %}OECH{% endblock %}
+  {% block title %}
+    oec-hardware
+  {% endblock %}
 
-{% block page_content %}
+  {% block page_content %}
     <div class="page-header">
-        <h3>Directory listing for /files</h3>
+      <h3>Directory listing for /files</h3>
     </div>
     <ul>
-    {% for file in files %}
-        <li><a href="/files/{{ file }}">{{ file }}</a></li>
-    {% endfor %}
+      {% for file in files %}
+        <li>
+          <a href="/files/{{ file }}">{{ file }}</a>
+        </li>
+      {% endfor %}
     </ul>
-{% endblock %}
+  {% endblock %}
+</html>
