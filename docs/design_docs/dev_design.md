@@ -29,9 +29,8 @@
 | tar |  打包、解压测试日志 | 可使用 `dnf/yum` 进行安装 |
 | qperf | 用于服务端网络自测 | 可使用 `dnf/yum` 进行安装 |
 | psmisc | 提供进程管理服务 | 可使用 `dnf/yum` 进行安装 |
-| Flask | 提供web访问的http协议的框架，v2.1.2 及以上版本 | 可使用 `pip3` 进行安装   |
-| Flask-bootstrap | 提供Web页面美化，v3.3.4.1 及以上版本 | 可使用 `pip3` 进行安装  |
-| uwsgi | 提供wsgi协议的服务器，v2.0.20 及以上版本 | 可使用 `pip3` 进行安装   |
+| python3-flask | 提供web访问的http协议的框架 | 可使用 `dnf/yum` 进行安装   |
+| python3-uWSGI | 提供wsgi协议的服务器 | 可使用 `dnf/yum` 进行安装   |
 
 #### 1.2.3 客户端测试项依赖组件 
 
@@ -116,7 +115,7 @@ Mulan V2
 │   ├── oech-server-pre.sh    服务预执行脚本
 │   ├── results/              测试结果存放目录
 │   ├── server.py             服务端主程序
-│   ├── static/               图片存放目录
+│   ├── static/               网页图片、样式设计文件存放目录
 │   ├── templates/            网页模板存放目录
 │   ├── uwsgi.conf            nginx 服务配置
 │   └── uwsgi.ini             uwsgi 服务配置
@@ -190,6 +189,8 @@ oec-hardware工具框架有如下特点：
 
     停止 oech 服务：`systemctl stop oech.service`
 
+    重启 oech 服务：`systemctl restart oech.service`
+
 * 服务端
 
     启动 oech-server 服务：`systemctl start oech-server.service`
@@ -197,6 +198,8 @@ oec-hardware工具框架有如下特点：
     查看 oech-server 状态：`systemctl status oech-server.service`
 
     停止 oech-server 服务：`systemctl stop oech-server.service`
+
+    重启 oech-server 服务：`systemctl restart oech-server.service`
 
 #### 3.4.3 配置文件
 
