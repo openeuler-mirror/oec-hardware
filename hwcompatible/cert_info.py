@@ -62,7 +62,7 @@ class CertInfo:
         oec_json["chipVendor"] = chip_vendor[0].strip("\n")
         oec_json["boardModel"] = device.board
         oec_json["chipModel"] = device.chip
-        oec_json["type"] = device.name
+        oec_json["type"] = device.name.upper()
         arch = self.command.run_cmd("uname -m", log_print=False)
         oec_json["architecture"] = arch[0].strip("\n")
         os_cmd = self.command.run_cmd(

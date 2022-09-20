@@ -18,7 +18,7 @@ oec-hardware 工具和版本是解耦的，为了保证稳定版本发布，源�
 
     2.1 openEuler/oec-hardware
 
-    源码仓库里的版本号通过 Version 进行管理。在新增功能特性后，工具的版本号+1，并在SPEC中增加 changelog 说明，Version 演讲说明如下：
+    源码仓库里的版本号通过 Version 进行管理。在新增功能特性后，工具的版本号+1，并在SPEC中增加 changelog 说明，Version 演进说明如下：
 
         Version: X.Y.Z
 

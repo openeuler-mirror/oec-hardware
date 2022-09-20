@@ -97,6 +97,14 @@ class NetworkTest(Test):
                              (self.interface, port_type))
             return True
 
+        cmd = self.command.run_cmd(
+            "ethtool %s | grep 'Speed' | awk '{print $2}'" % self.interface)
+        speed = cmd[0].strip()
+        if speed == "1000Mb/s":
+            self.logger.info("The %s fibre speed is %s, skip checking." %
+                             (self.interface, speed))
+            return True
+
         self.logger.info(
             "The %s port type is fibre, next to check fibre." % self.interface)
         cmd = self.command.run_cmd("ethtool -m %s" % self.interface)
@@ -125,7 +133,9 @@ class NetworkTest(Test):
         for _ in range(self.retries):
             result = self.command.run_cmd(cmd)
             if result[0].strip() == "0%":
+                self.logger.info("Test icmp succeed.")
                 return True
+        self.logger.error("Test icmp failed.")
         return False
 
     def call_remote_server(self, cmd, act='start', ib_server_ip=''):

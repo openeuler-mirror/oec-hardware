@@ -39,12 +39,13 @@ class EthernetTest(RDMATest):
         super().setup(args)
         if self.is_RoCE():
             if self.choice.lower() == "y":
-                self.logger.info("It will test RoCE interface %s, including rdma test." % self.interface)
+                self.logger.info(
+                    "It will test RoCE interface %s, including rdma test." % self.interface)
                 self.link_layer = 'Ethernet'
                 self.subtests = [self.test_ip_info, self.test_ibstatus,
-                                self.test_eth_link, self.test_icmp, self.test_rdma]
+                                 self.test_eth_link, self.test_icmp, self.test_rdma]
                 return
-                
+
         self.logger.info("It will test normal ethernet %s." % self.interface)
         self.subtests = [self.test_ip_info, self.test_eth_link, self.test_icmp,
                          self.test_udp_tcp, self.test_http]

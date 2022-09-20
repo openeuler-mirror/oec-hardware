@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=notify
 ExecStartPre=/usr/bin/bash /usr/share/oech/lib/server/oech-server-pre.sh
-ExecStart=/usr/local/bin/uwsgi --ini /usr/share/oech/lib/server/uwsgi.ini
-ExecStop=/usr/local/bin/uwsgi --stop /usr/share/oech/lib/server/uwsgi.pid 
+ExecStart=/usr/bin/uwsgi --ini /usr/share/oech/lib/server/uwsgi.ini
+ExecStop=/usr/bin/uwsgi --stop /usr/share/oech/lib/server/uwsgi.pid 
 
 [Install]
 WantedBy=multi-user.target
