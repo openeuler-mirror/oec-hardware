@@ -13,12 +13,10 @@
 # Author: @cuixucui
 # Create: 2022-09-02
 
-import random
 import time
 import hashlib
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
-import yaml
 
 from .command import Command
 from .document import CertDocument
@@ -32,6 +30,7 @@ class ConfigIP:
     :para:
     :return:
     """
+
     def __init__(self, config_data, logger, testcase):
         self.config_data = config_data
         self.logger = logger
@@ -52,7 +51,8 @@ class ConfigIP:
 
         self.device = self.config_data.get("device", "")
         if not self.device:
-            self.logger.error("Get the device failed from the configuration file.")
+            self.logger.error(
+                "Get the device failed from the configuration file.")
             return False
 
         if self.get_port_status():
@@ -73,9 +73,10 @@ class ConfigIP:
         # If the client does not configured an IP address, obtain the IP
         # of the client and server from the configuration file.
         client_ip = self.config_data.get("client_ip", "")
-        server_ip = self.config_data.get("server_ip", "")  
+        server_ip = self.config_data.get("server_ip", "")
         if client_ip and server_ip:
-            self.logger.info("Configure IP obtained from the configuration file.")
+            self.logger.info(
+                "Configure IP obtained from the configuration file.")
             self.client_ip = client_ip
             self.server_ip = server_ip
 
@@ -101,17 +102,19 @@ class ConfigIP:
         """
         Get the port with up status.
         """
-        result = self.command.run_cmd("ip link show %s | grep 'state UP'" % self.device)
+        result = self.command.run_cmd(
+            "ip link show %s | grep 'state UP'" % self.device)
         return result[2]
 
     def get_ip(self):
         """
-        Obtain the IP address and MAC address of the client and the IP address of the server.
+        Obtain the IP address and MAC address of the client and the IP
+        address of the server.
         """
-        self.client_ip = self.command.run_cmd("ifconfig %s | grep '.*inet' "
-                                              "| awk '{print $2}'" % self.device)[0]
-        self.client_mac = self.command.run_cmd("ifconfig %s | grep '.*ether' "
-                                               "| awk '{print $2}'" % self.device)[0]
+        self.client_ip = self.command.run_cmd(
+            "ifconfig %s | grep '.*inet' | awk '{print $2}'" % self.device)[0]
+        self.client_mac = self.command.run_cmd(
+            "ifconfig %s | grep '.*ether' | awk '{print $2}'" % self.device)[0]
         self.server_ip = self.config_data.get('server_ip', '')
 
     def generate_ip(self):
@@ -139,22 +142,24 @@ class ConfigIP:
         """
         Configure the IP address of the client.
         """
-        result = CommandUI().prompt_confirm("Are you sure to configure %s on port %s?"
-                                            % (self.client_ip, self.device))
+        result = CommandUI().prompt_confirm(
+            "Are you sure to configure %s on port %s?" % (
+                self.client_ip, self.device))
 
         if result:
-            self.command.run_cmd("ifconfig %s:0 %s\/24" %
-                                 (self.device, self.client_ip))
+            self.command.run_cmd(
+                "ifconfig %s:0 %s\/24" % (self.device, self.client_ip))
             return True
-        self.logger.warning("User won't use the generate IP address, stop the test.")
+        self.logger.warning(
+            "User won't use the generate IP address, stop the test.")
         return False
 
     def config_server_ip(self):
         """
          Configure the IP address of the server.
         """
-        result = CommandUI().prompt_confirm("Are you sure to configure %s "
-                                            "on server port?" % self.server_ip)
+        result = CommandUI().prompt_confirm(
+            "Are you sure to configure %s on server port?" % self.server_ip)
         if not result:
             self.logger.warning(
                 "User won't use the generate IP address, stop the test.")
@@ -181,7 +186,7 @@ class ConfigIP:
         Determine whether the IP address can be pinged.
         """
         count = 1
-        cmd = "ping -q -c %d -W 1 %s | grep 'packet loss' | awk '{print $6}'" \
+        cmd = "ping -q -c %d -W 1 %s | grep 'packet loss' | awk '{print $6}'"\
               % (count, ip)
         result = self.command.run_cmd(cmd)
         if result[0].strip() == "0%":
@@ -194,19 +199,17 @@ class ConfigIP:
         """
         while True:
             now_time = str(time.time())
-            ip0 = self.str_to_netip(str(mac) + now_time, maxnum=223)
-            ip1 = self.str_to_netip(mac)
-            ip2 = self.str_to_netip(now_time)
-            ip = "%s.%s.%s" % (ip0, ip1, ip2)
-            if int(ip0) <= 223 and int(ip0) != 127:
+            ip0 = self._str_to_netip(mac + now_time, maxnum=223)
+            ip1 = self._str_to_netip(mac)
+            ip2 = self._str_to_netip(now_time)
+            ip = "%d.%d.%d" % (ip0, ip1, ip2)
+            if ip0 <= 223 and ip0 != 127:
                 return ip
 
     @staticmethod
-    def str_to_netip(strs, maxnum=False):
+    def _str_to_netip(strs, maxnum=255):
         """
         Generate each value of IP address.
         """
-        maxnum = maxnum if maxnum else 255
-        ipn = int(hashlib.sha512(strs.encode('utf-8')).hexdigest(), 16) % int(
-            maxnum)
-        return str(ipn)
+        ipn = int(hashlib.sha512(strs.encode('utf-8')).hexdigest(), 16) % maxnum
+        return ipn

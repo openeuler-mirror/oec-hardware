@@ -267,7 +267,7 @@ def upload_job():
     oec_id = request.values.get('id', '').strip().replace(' ', '-')
     job = request.values.get('job', '').strip().replace(' ', '-')
     filetext = request.values.get('filetext', '')
-    if not(all([host, oec_id, job, filetext])):
+    if not (all([host, oec_id, job, filetext])):
         return render_template('upload.html', host=host, id=id, job=job,
                                filetext=filetext, ret='Failed'), 400
 
@@ -311,7 +311,7 @@ def upload_file():
     """
     filename = request.values.get('filename', '')
     filetext = request.values.get('filetext', '')
-    if not(all([filename, filetext])):
+    if not (all([filename, filetext])):
         return render_template('upload.html', filename=filename, filetext=filetext,
                                ret='Failed'), 400
 
@@ -333,23 +333,22 @@ def config_ip():
     """
     sever_ip = request.values.get('serverip', '')
     card_id = request.values.get('cardid', '')
-    cmd_result = subprocess.getstatusoutput("ip link show up | grep 'state UP'")
+    cmd_result = subprocess.getoutput("ip link show up | grep 'state UP'")
 
     ports = []
-    for port in cmd_result[1].split('\n'):
+    for port in cmd_result.split('\n'):
         ports.append(port.split(':')[1].strip())
 
     for pt in ports:
-        cmd_result = subprocess.getstatusoutput("ethtool -i %s" % pt)
-        for data in cmd_result[1].split('\n'):
+        cmd_result = subprocess.getoutput("ethtool -i %s" % pt)
+        for data in cmd_result.split('\n'):
             if "bus-info" in data:
                 pci_num = data.split(':', 1)[1].strip()
                 quad = __get_quad(pci_num)
                 if operator.eq(quad, eval(card_id)):
-                    subprocess.getstatusoutput(
-                        "ifconfig %s:0 %s/24" % (pt, sever_ip))
-                    with os.fdopen(os.open(ip_file, os.O_WRONLY |
-                                           os.O_CREAT, stat.S_IRUSR), 'w+') as f:
+                    subprocess.getoutput("ifconfig %s:0 %s/24" % (pt, sever_ip))
+                    with os.fdopen(os.open(ip_file, os.O_WRONLY | os.O_CREAT,
+                                           stat.S_IRUSR), 'w+') as f:
                         f.write('{},{}'.format(pt, sever_ip))
                     break
 
@@ -397,7 +396,8 @@ def test_server(act):
 
 
 def __stop_process(process_name):
-    check_cmd = subprocess.getstatusoutput("ps -ef | grep %s | grep -v grep" % process_name)
+    check_cmd = subprocess.getstatusoutput(
+        "ps -ef | grep %s | grep -v grep" % process_name)
     if check_cmd[0] != 0:
         return
     kill_cmd = ['killall', '-9', process_name]
@@ -442,8 +442,7 @@ def __get_quad(pci_num):
     """
     Get network card quad
     """
-    cmd_result = subprocess.getstatusoutput("lspci -xs %s" % pci_num)[1]\
-        .split('\n')
+    cmd_result = subprocess.getoutput("lspci -xs %s" % pci_num).split('\n')
 
     quad = []
     for ln in cmd_result:
@@ -463,11 +462,9 @@ def __delete_ip():
     if not os.path.exists(ip_file):
         return
 
-    with os.fdopen(os.open(ip_file, os.O_RDONLY,
-                           stat.S_IRUSR), 'r') as f:
+    with open(ip_file, 'r') as f:
         ip = f.read().split(',')
-        subprocess.Popen("ip addr del %s dev %s" % (ip[1], ip[0]), shell=True)
-        time.sleep(3)
+        subprocess.Popen(['ip', 'addr', 'del', ip[1], "dev", ip[0]])
     os.remove(ip_file)
 
 
