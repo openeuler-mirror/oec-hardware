@@ -196,8 +196,7 @@ class RDMATest(NetworkTest):
         if os.path.exists(self.testbw_file):
             os.remove(self.testbw_file)
         ip = self.command.run_cmd(
-            "ifconfig %s:0 | grep '.*inet' | awk '{print $2}'" %
-            self.interface)[0]
+            "ifconfig %s:0 | grep '.*inet' | awk '{print $2}'" % self.interface)[0]
         if ip:
             self.command.run_cmd(
                 "ip addr del %s dev %s:0" % (ip, self.interface))

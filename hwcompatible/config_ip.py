@@ -27,8 +27,6 @@ from .command_ui import CommandUI
 class ConfigIP:
     """
      Configure the IP address of the client and server ports
-    :para:
-    :return:
     """
 
     def __init__(self, config_data, logger, testcase):
