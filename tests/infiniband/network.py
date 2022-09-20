@@ -33,6 +33,7 @@ class NetworkTest(Test):
         self.config_data = None
         self.interface = None
         self.server_ip = None
+        self.client_ip = None
         self.server_port = "80"
         self.retries = 3
         self.speed = 1000   # Mb/s
@@ -57,6 +58,7 @@ class NetworkTest(Test):
             return False
 
         self.server_ip = self.config_data.get("server_ip", "")
+        self.client_ip = self.config_data.get("client_ip", "")
         if ":" in self.server_ip:
             self.server_ip, self.server_port = self.server_ip.split(":")
 
@@ -189,11 +191,10 @@ class NetworkTest(Test):
             return False
         self.logger.info("The server ip is %s." % self.server_ip)
 
-        client_ip = self.get_interface_ip()
-        if not client_ip:
+        if not self.client_ip:
             self.logger.error("No available ip on %s." % self.interface)
             return False
         self.logger.info("The client ip is %s on %s." %
-                         (client_ip, self.interface))
+                         (self.client_ip, self.interface))
 
         return True

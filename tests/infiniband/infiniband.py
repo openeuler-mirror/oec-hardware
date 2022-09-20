@@ -28,7 +28,7 @@ class InfiniBandTest(NetworkTest):
         self.sm_lid = None
         self.state = None
         self.phys_state = None
-        self.speed = 56000   # Mb/s
+        self.speed = 56000  # Mb/s
         self.target_bandwidth_percent = 0.5
         self.testbw_file = "test_bw.log"
 
@@ -227,3 +227,8 @@ class InfiniBandTest(NetworkTest):
             os.remove(self.testfile)
         if os.path.exists(self.testbw_file):
             os.remove(self.testbw_file)
+        ip = self.command.run_cmd(
+            "ifconfig %s:0 | grep '.*inet' | awk '{print $2}'" % self.interface)[0]
+        if ip:
+            self.command.run_cmd(
+                "ip addr del %s dev %s:0" % (ip, self.interface))

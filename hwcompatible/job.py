@@ -24,6 +24,7 @@ from .log import Logger
 from .reboot import Reboot
 from .cert_info import CertInfo
 from .constants import NO_CONFIG_DEVICES, NODEVICE
+from .config_ip import ConfigIP
 
 
 class Job():
@@ -202,6 +203,11 @@ class Job():
         test = None
         logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
         logger.start()
+        if testcase['name'] in ('ethernet', 'infiniband'):
+            auto_config_ip = ConfigIP(config_data, logger, testcase["device"])
+            if not auto_config_ip.config_ip():
+                self.logger.error("Config IP address failed.")
+                return False
         try:
             test = testcase["test"]
             if subtests_filter and name != "system":
