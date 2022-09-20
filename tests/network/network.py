@@ -94,7 +94,7 @@ class NetworkTest(Test):
         self.call_remote_server('all', 'stop')
         if os.path.exists(self.testfile):
             os.remove(self.testfile)
-            
+
     def check_fibre(self):
         """
         Check fibre information
@@ -106,6 +106,14 @@ class NetworkTest(Test):
         if port_type != "FIBRE":
             self.logger.info("The %s port type is %s, skip checking." %
                              (self.interface, port_type))
+            return True
+
+        cmd = self.command.run_cmd(
+            "ethtool %s | grep 'Speed' | awk '{print $2}'" % self.interface)
+        speed = cmd[0].strip()
+        if speed == "1000Mb/s":
+            self.logger.info("The %s fibre speed is %s, skip checking." %
+                             (self.interface, speed))
             return True
 
         self.logger.info(
@@ -141,6 +149,7 @@ class NetworkTest(Test):
             if result[2] == 0:
                 return True
             time.sleep(1)
+
         return False
 
     def get_speed(self):
@@ -179,7 +188,9 @@ class NetworkTest(Test):
         for _ in range(self.retries):
             result = self.command.run_cmd(cmd)
             if result[0].strip() == "0%":
+                self.logger.error("Test icmp failed.")
                 return True
+        self.logger.error("Test icmp failed.")
         return False
 
     def call_remote_server(self, cmd, act='start', ib_server_ip=''):

@@ -25,13 +25,10 @@ import stat
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
-
 from flask import Flask, render_template, redirect, url_for, abort, request, send_from_directory, flash
-from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-bootstrap = Bootstrap(app)
 
 dir_server = os.path.dirname(os.path.realpath(__file__))
 dir_results = os.path.join(dir_server, 'results')
@@ -139,7 +136,7 @@ def get_device(host, oec_id, job, interface):
     for testcase in results:
         device = testcase.get('device')
         if device and device.get('INTERFACE') == interface:
-            return render_template('device.html', device=device, interface=interface)
+            return render_template('device.html', host=host, id=oec_id, job=job, device=device, interface=interface)
     else:
         abort(404)
 
@@ -165,7 +162,7 @@ def get_devices(host, oec_id, job):
         sys.stderr.write("The file %s is not json file.\n")
         return False
 
-    return render_template('devices.html', devices=devices)
+    return render_template('devices.html', host=host, id=oec_id, job=job, devices=devices)
 
 
 @app.route('/results/<host>/<oec_id>/<job>/attachment')
@@ -202,7 +199,7 @@ def get_log(host, oec_id, job, name):
     with open(logpath, 'r') as file_content:
         log = file_content.read().split('\n')
 
-    return render_template('log.html', name=name, log=log)
+    return render_template('log.html', host=host, id=oec_id, job=job, name=name, log=log)
 
 
 @app.route('/results/<host>/<oec_id>/<job>/submit')
@@ -397,7 +394,8 @@ def test_server(act):
 
 
 def __stop_process(process_name):
-    check_cmd = subprocess.getstatusoutput("ps -ef | grep %s | grep -v grep" % process_name)
+    check_cmd = subprocess.getstatusoutput(
+        "ps -ef | grep %s | grep -v grep" % process_name)
     if check_cmd[0] != 0:
         return
     kill_cmd = ['killall', '-9', process_name]
