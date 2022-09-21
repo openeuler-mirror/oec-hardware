@@ -4,7 +4,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.2
-Release:        3
+Release:        4
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -14,6 +14,7 @@ Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{v
 Patch0001:      oec-hardware-1.1.2-fix-oech.service_status_failed.patch
 Patch0002:      oec-hardware-1.1.2-fix-system.patch
 Patch0003:      oec-hardware-1.1.2-add-compatibility.patch
+Patch0004:      oec-hardware-1.1.2-add-new-function-add-fixbug.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -26,7 +27,8 @@ Provides:       libswsds.so()(64bit)
 %package server
 Summary:        openEuler Hardware Compatibility Test Server
 Group:          Development/Tools
-Requires:       python3, python3-devel, nginx, tar, qperf, psmisc
+Requires:       python3, python3-devel, python3-flask, python3-uWSGI
+Requires:       nginx, tar, qperf, psmisc
 
 %description
 openEuler Hardware Compatibility Test Suite
@@ -39,6 +41,7 @@ openEuler Hardware Compatibility Test Server
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 
 %build
 
@@ -81,6 +84,16 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Wed Sep 21 2022 cuixucui <cuixucui1@h-partners.com> - 1.1.2-4
+- Add requirements for system and bugfix
+- Upgrade oec-hardware-server
+- Update readme and design doc
+- Fix nvme error
+- Update network fibre check and log 
+- Update description for perf test
+- Add automatic configuration network card IP 
+
+
 * Tue Sep 06 2022 meitingli <bubble_mt@outlook.com> - 1.1.2-3
 - Add generate compatibility information
 - Fix gpu and keycard issues
