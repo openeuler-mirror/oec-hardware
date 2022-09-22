@@ -95,7 +95,7 @@ Mulan V2
 │   ├── compatibility.py  框架核心功能
 │   ├── client.py         上传测试结果到服务端
 │   ├── command.py        bash命令执行封装
-│   ├── command_ui.py      命令行交互工具
+│   ├── command_ui.py     命令行交互工具
 │   ├── device.py         扫描设备信息
 │   ├── document.py       收集配置信息
 │   ├── env.py            全局变量，主要是各个配置文件或目录的路径
@@ -103,6 +103,7 @@ Mulan V2
 │   ├── log.py            日志模块
 │   ├── reboot.py         重启类任务专用，便于机器重启后仍能继续执行测试
 │   ├── sysinfo.py        收集系统信息
+│   ├── config_ip.py      自动检测并配置网卡IP
 │   └── test.py           测试套模板
 ├── scripts  工具脚本 
 │   ├── oech                  工具客户端命令行工具
@@ -239,24 +240,43 @@ disk: all
 # 网卡测试项配置信息，指定测试的端口设备号、测试RDMA、服务端IP
 # device为网卡端口设备号，可通过oech或ip a查看
 # if_rdma表示是否测试网卡RDMA，默认是N，表示不测试RDMA
-# server_ip为服务端直连的网卡配置的IP
+# client_ip为客户端测试网卡配置的IP
+# server_ip为服务端测试网卡配置的IP
+# 服务端的端口默认是80，如果有修改，需要添加上修改后的端口号，如下面的eth2示例。
 ethernet:
+  # 已手动配置客户端和服务端测试网卡的IP，这里需要添加上服务端的IP地址。
   eth1:
     device: enp125s0f0
     if_rdma: N
-    server_ip: 127.0.0.1
+    client_ip:
+    server_ip: 2.2.2.4
+  # 未手动配置IP，使用这里提供的IP进行客户端和服务端配置。
   eth2:
     device: enp125s0f1
     if_rdma: N
-    server_ip: 127.0.0.1:8090
-# IB卡测试项配置信息，指定测试的端口设备号、服务端IP
+    client_ip: 2.2.2.3
+    server_ip: 2.2.2.4:8090
+  # 前面两种情况都没有满足，且客户端和服务端的IP地址未提供，程序会自动生成IP，进行配置。
+  eth3:
+    device: enp125s0f2
+    if_rdma: y
+    client_ip:
+    server_ip:
+# IB卡测试项配置信息，指定测试的端口设备号、服务端IP。
+# IB卡IP的配置原则同普通网卡。
 infiniband:
   ib1:
     device: ibp1s0
-    server_ip: 127.0.0.1
+    client_ip:
+    server_ip: 2.2.2.4
   ib2:
+    device: ibp1s1
+    client_ip: 2.2.2.3
+    server_ip: 2.2.2.4:8090
+  ib3
     device: ibp1s0
-    server_ip: 127.0.0.1:8090
+    client_ip:
+    server_ip: 
   ```
 
 ### 3.5 内部模块间接口清单
@@ -280,6 +300,7 @@ infiniband:
 | 15 | `ConfigFile()` | 文档模块 | 配置信息读取 |
 | 16 | `CertEnv()` | 工具环境信息模块 | 提供工具文件环境路径 |
 | 17 | `SysInfo()` | 系统信息模块 | 系统信息获取 |
+| 18 | `ConfigIP()` | 网卡IP配置模块 | 查询并配置网卡IP |
 
 ### 3.6 web服务接口清单
 
@@ -297,6 +318,7 @@ infiniband:
 | 10 | `/files/<path:path>` |  | 文件下载，辅助客户端网卡测试 |
 | 11 | `/api/file/upload` | GET/POST | 文件上传，辅助客户端网卡测试 |
 | 12 | `/api/<act>` | GET/POST | 文件读写，辅助客户端网卡测试 |
+| 13 | `/api/config/ip`| GET/POST | 配置服务端网卡IP |
 
 ### 3.7 日志查看和转储
 
