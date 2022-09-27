@@ -188,7 +188,7 @@ class NetworkTest(Test):
         for _ in range(self.retries):
             result = self.command.run_cmd(cmd)
             if result[0].strip() == "0%":
-                self.logger.error("Test icmp failed.")
+                self.logger.error("Test icmp succeed.")
                 return True
         self.logger.error("Test icmp failed.")
         return False

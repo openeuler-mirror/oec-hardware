@@ -51,6 +51,7 @@ class Job():
         self.command = Command(self.logger)
         self.total_count = 0
         self.current_num = 0
+        self.config_flag = 0
 
     def check_test_depends(self):
         """
@@ -180,11 +181,14 @@ class Job():
         """
         types = testcase["name"]
         device_name = testcase["device"].get_name()
+        self.config_flag = 0
         if types == "disk":
-            return self.config_info.get("disk")
+            self.config_flag = 1
+            return self.config_info.get("disk", "all")
         if device_name and types not in NO_CONFIG_DEVICES:
             for device in self.config_info.get(types).values():
                 if device.get("device") == device_name:
+                    self.config_flag = 1
                     return device
         return None
 
@@ -196,18 +200,14 @@ class Job():
         :return:
         """
         name = testcase["name"]
-        if testcase["device"].get_name():
-            name = testcase["name"] + "-" + testcase["device"].get_name()
+        device_name = testcase["device"].get_name()
+        if device_name:
+            name = testcase["name"] + "-" + device_name
         logname = name + ".log"
         reboot = None
         test = None
         logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
         logger.start()
-        if testcase['name'] in ('ethernet', 'infiniband'):
-            auto_config_ip = ConfigIP(config_data, logger, testcase["device"])
-            if not auto_config_ip.config_ip():
-                self.logger.error("Config IP address failed.")
-                return False
         try:
             test = testcase["test"]
             if subtests_filter and name != "system":
@@ -216,6 +216,17 @@ class Job():
                 self.current_num += 1
                 self.logger.info("Start to run %s/%s test suite: %s." %
                                  (self.current_num, self.total_count, name))
+
+                if device_name and self.config_flag == 0 and testcase["name"] not in NO_CONFIG_DEVICES:
+                    self.logger.error("Please configure the board information in the configuration file.")
+                    return False
+
+                if testcase['name'] in ('ethernet', 'infiniband'):
+                    auto_config_ip = ConfigIP(config_data, logger, testcase["device"])
+                    if not auto_config_ip.config_ip():
+                        self.logger.error("Config IP address failed.")
+                        return False
+
                 args = argparse.Namespace(
                     device=testcase["device"], config_data=config_data,
                     test_logger=logger, logdir=logger.logdir, testname=name)
