@@ -12,6 +12,7 @@
 # See the Mulan PSL v2 for more details.
 # Author: @meitingli
 # Create: 2022-07-09
+# Desc: Common functions
 
 import os
 import sys
@@ -20,37 +21,76 @@ import filecmp
 import importlib
 from .test import Test
 from .env import CertEnv
+from .constants import NODEVICE
 
 
 def create_test_suite(test_factory, logger, subtests_filter=None):
     """
-    Create test suites
-    :param subtests_filter:
-    :return:
+    Create test suites for job testing
+    Args:
+        test_factory (list): total test factory
+        logger (Logger): logger object to record
+        subtests_filter (list, optional): filter object. Defaults to None.
+
+    Returns:
+        test_suite (list）: available test suites 
     """
     test_suite = []
     test_name = []
+    kabi_select = 0
+    kabi_test = None
     for test in test_factory:
         if test["run"]:
-            testclass = discover(test["name"], logger, subtests_filter)
-            if not testclass:
-                if not subtests_filter:
-                    test["status"] = "FAIL"
-                    logger.error("The testcase %s is not found." % test["name"])
-                continue
-            testcase = dict()
-            testcase["test"] = testclass
-            testcase["name"] = test["name"]
-            testcase["device"] = test["device"]
-            testcase["status"] = "FAIL"
+            testcase = __create_testcase(test, logger, subtests_filter)
+            if testcase:
+                test_suite.append(testcase)
+                test_name.append(test["name"])
+
+            if test["name"] not in NODEVICE:
+                kabi_select = 1
+            if "kabi" in test_name:
+                kabi_select = 0
+        if test["name"] == "kabi":
+            kabi_test = test
+
+    if kabi_select:
+        logger.info("The hardware will test kabi automatically.")
+        kabi_test["run"] = True
+        testcase = __create_testcase(kabi_test, logger, subtests_filter)
+        if testcase:
             test_suite.append(testcase)
-            test_name.append(test["name"])
+            test_name.append("kabi")
 
     total_count = len(test_suite)
     if total_count:
         logger.info("There are %s selected test suites: %s." %
                     (total_count, ", ".join(test_name)))
     return test_suite
+
+
+def __create_testcase(test, logger, subtests_filter):
+    """
+    Create testcase
+    Args:
+        test (dict): _description_
+        logger (Logger): logger object to record
+        subtests_filter (list, optional): filter object. Defaults to None.
+
+    Returns:
+        testcase (dict): available testcase or None 
+    """
+    testclass = discover(test["name"], logger, subtests_filter)
+    if not testclass and not subtests_filter:
+        test["status"] = "FAIL"
+        logger.error("The testcase %s is not found." % test["name"])
+        return False
+
+    testcase = dict()
+    testcase["test"] = testclass
+    testcase["name"] = test["name"]
+    testcase["device"] = test["device"]
+    testcase["status"] = "FAIL"
+    return testcase
 
 
 def copy_pci():
