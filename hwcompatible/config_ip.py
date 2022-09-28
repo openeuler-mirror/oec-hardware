@@ -63,6 +63,7 @@ class ConfigIP:
         if self.client_ip:
             self.logger.info("The client IP address already configured.")
             if self.server_ip and self.ping_ip(self.server_ip):
+                self.config_data["client_ip"] = self.client_ip
                 return True
             self.client_ip = ""
             self.server_ip = ""
