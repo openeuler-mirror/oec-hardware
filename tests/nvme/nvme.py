@@ -13,6 +13,7 @@
 # Create: 2020-04-01
 # Desc: Test Non-Volatile Memory express
 
+import os
 import argparse
 from subprocess import getoutput
 from hwcompatible.test import Test
@@ -25,7 +26,7 @@ class NvmeTest(Test):
         self.requirements = ["nvme-cli"]
         self.args = None
         self.device = None
-        self.name = ""
+        self.filename = "test.file"
         self.logpath = ""
 
     def setup(self, args=None):
@@ -54,20 +55,31 @@ class NvmeTest(Test):
         block_count = getoutput("cat /sys/block/%s/size" % disk)
         block_size = getoutput("cat /sys/block/%s/queue/logical_block_size" % disk)
         size = int(block_count) * int(block_size)
-        size = size/2/2
+        size = size / 2 / 2
         if size <= 0:
             self.logger.error(
                 "The size of %s is not suitable for this test." % disk)
             return False
-        elif size > 128*1024:
-            size = 128*1024
+        elif size > 128 * 1024:
+            size = 128 * 1024
+
+        size_per_block = int(self.command.run_cmd("nvme list | grep %s | awk '{print $10}'" % disk)[0])
+        block_num = 1
+        if size_per_block != 0:
+            block_num = int(int(size) / size_per_block) - 1
+
+        cmd = "seq -s a 150000 | tee %s" % self.filename
+        result = self.command.run_cmd(cmd, log_print=False)
+        if result[2] != 0:
+            self.logger.error("Create file failed!")
+            return False
 
         self.logger.info("Start to format nvme.")
         return_code = True
         cmd_list = [
             "nvme format -l 0 -i 0 /dev/%s" % disk,
-            "nvme write -z %d -s 0 -d /dev/urandom /dev/%s" % (size, disk),
-            "nvme read -s 0 -z %d /dev/%s" % (size, disk),
+            "nvme write -c %d -s 0 -z %d -d %s /dev/%s" % (block_num, size, self.filename, disk),
+            "nvme read -c %d -s 0 -z %d /dev/%s" % (block_num, size, disk),
             "nvme smart-log /dev/%s" % disk,
             "nvme get-log -i 1 -l 128 /dev/%s" % disk
         ]
@@ -82,7 +94,6 @@ class NvmeTest(Test):
         else:
             self.logger.info("Test nvme failed.")
         return return_code
-        
 
     def in_use(self, disk):
         """
@@ -102,12 +113,19 @@ class NvmeTest(Test):
 
         if ("/dev/%s" % disk) in swap or disk in mdstat:
             return True
-        
+
         if ("/dev/%s" % disk) in mounts:
             return True
 
         result = self.command.run_cmd("pvs | grep -q '/dev/%s'" % disk)
         if result[2] == 0:
             return True
-        
+
         return False
+
+    def teardown(self):
+        """
+        Environment recovery
+        """
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
