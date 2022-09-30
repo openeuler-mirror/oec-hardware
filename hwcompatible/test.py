@@ -32,21 +32,6 @@ class Test:
         self.command = None
         self.log_path = ""
 
-    @staticmethod
-    def valid_disk(disk, disks):
-        """
-        Is the disk valid
-        """
-        result = True
-        if disk:
-            if disk != "all" and disk not in disks:
-                print("%s is in use or disk does not exist." % disk)
-                result = False
-        else:
-            print("Failed to get disk information.")
-            result = False
-        return result
-
     def setup(self, args=None):
         """
         setup

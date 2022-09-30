@@ -15,7 +15,7 @@
 
 import os
 import re
-from network import NetworkTest
+from tests.network.network import NetworkTest
 
 
 class RDMATest(NetworkTest):
@@ -25,32 +25,20 @@ class RDMATest(NetworkTest):
         self.ib_device = None
         self.ib_port = None
         self.link_layer = None
+        self.base_lid = None
+        self.sm_lid = None
+        self.state = None
+        self.phys_state = None
+        self.speed = 56000  # Mb/s
         self.target_bandwidth_percent = 0.5
-        self.testbw_file = "test_bw.log"
 
     def get_ibstatus(self):
         """
         Get ibstatus
         :return:
         """
-        path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
-        path_pci = path_netdev.split('net')[0]
-        path_ibdev = os.path.join(path_pci, "infiniband_verbs")
-        ibdev_name = self.command.run_cmd("ls %s" % path_ibdev)
-        path_ibdev = os.path.join(path_ibdev, ibdev_name[0].strip())
-        cmd = self.command.run_cmd("cat %s/ibdev" % path_ibdev)
-        if cmd[2] != 0:
-            self.logger.error("Get %s failed." % path_ibdev)
+        if not self.get_ibdev_ibport():
             return False
-        self.ib_device = cmd[0].strip()
-
-        path_ibport = '/sys/class/net/%s/dev_id' % self.interface
-        cmd = self.command.run_cmd("cat %s" % path_ibport)
-        if cmd[2] != 0:
-            self.logger.error("Get %s failed." % path_ibport)
-            return False
-        self.ib_port = int(cmd[0], 16) + 1
-
         ib_str = "Infiniband device '%s' port %d" % (
             self.ib_device, self.ib_port)
         self.logger.info("Interface %s ===> %s" % (self.interface, ib_str))
@@ -63,9 +51,12 @@ class RDMATest(NetworkTest):
         for info in cmd[0].split('\n\n'):
             if ib_str not in info:
                 continue
+            self.base_lid = re.search(r"base lid:\s+(.*)", info).group(1)
+            self.sm_lid = re.search(r"sm lid:\s+(.*)", info).group(1)
+            self.state = re.search(r"state:\s+(.*)", info).group(1)
+            self.phys_state = re.search(r"phys state:\s+(.*)", info).group(1)
             self.link_layer = re.search(r"link_layer:\s+(.*)", info).group(1)
             self.speed = int(re.search(r"rate:\s+(\d*)", info).group(1)) * 1024
-
         return True
 
     def test_rping(self):
@@ -184,19 +175,28 @@ class RDMATest(NetworkTest):
 
         return True
 
-    def teardown(self):
+    def get_ibdev_ibport(self):
         """
-        Environment recovery after test
+        Get the drive and port of IB card
         :return:
         """
-        self.logger.info("Stop all test servers.")
-        self.call_remote_server('all', 'stop', self.server_ip)
-        if os.path.exists(self.testfile):
-            os.remove(self.testfile)
-        if os.path.exists(self.testbw_file):
-            os.remove(self.testbw_file)
-        ip = self.command.run_cmd(
-            "ifconfig %s:0 | grep '.*inet' | awk '{print $2}'" % self.interface)[0]
-        if ip:
-            self.command.run_cmd(
-                "ip addr del %s dev %s:0" % (ip, self.interface))
+        path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
+        path_pci = path_netdev.split('net')[0]
+        path_ibdev = os.path.join(path_pci, "infiniband_verbs")
+        ibdev_name = self.command.run_cmd("ls %s" % path_ibdev)
+        path_ibdev = os.path.join(path_ibdev, ibdev_name[0].strip())
+        cmd = self.command.run_cmd("cat %s/ibdev" % path_ibdev)
+        if cmd[2] != 0:
+            self.logger.error("Get %s failed." % path_ibdev)
+            return False
+        self.ib_device = cmd[0].strip()
+
+        path_ibport = '/sys/class/net/%s/dev_id' % self.interface
+        cmd = self.command.run_cmd("cat %s" % path_ibport)
+        if cmd[2] != 0:
+            self.logger.error("Get %s failed." % path_ibport)
+            return False
+        self.ib_port = int(cmd[0], 16) + 1
+        return True
+
+

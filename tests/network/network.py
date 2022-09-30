@@ -40,6 +40,7 @@ class NetworkTest(Test):
         self.subtests = []
         self.target_bandwidth_percent = 0.75
         self.testfile = 'testfile'
+        self.testbw_file = "test_bw.log"
 
     def setup(self, args=None):
         """
@@ -91,9 +92,16 @@ class NetworkTest(Test):
         :return:
         """
         self.logger.info("Stop all test servers.")
-        self.call_remote_server('all', 'stop')
+        self.call_remote_server('all', 'stop', self.server_ip)
         if os.path.exists(self.testfile):
             os.remove(self.testfile)
+        if os.path.exists(self.testbw_file):
+            os.remove(self.testbw_file)
+        ip = self.command.run_cmd(
+            "ifconfig %s:0 | grep '.*inet' | awk '{print $2}'" % self.interface)[0]
+        if ip:
+            self.command.run_cmd(
+                "ip addr del %s dev %s:0" % (ip, self.interface))
 
     def check_fibre(self):
         """
@@ -188,7 +196,7 @@ class NetworkTest(Test):
         for _ in range(self.retries):
             result = self.command.run_cmd(cmd)
             if result[0].strip() == "0%":
-                self.logger.error("Test icmp succeed.")
+                self.logger.info("Test icmp succeed.")
                 return True
         self.logger.error("Test icmp failed.")
         return False
