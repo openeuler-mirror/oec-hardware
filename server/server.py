@@ -175,7 +175,7 @@ def get_attachment(host, oec_id, job):
     :return:
     """
     dir_job = os.path.join(dir_results, host, oec_id, job)
-    attachment = dir_job + '.tar.gz'
+    attachment = dir_job + '.tar'
     filedir = os.path.dirname(attachment)
     filename = os.path.basename(attachment)
     return send_from_directory(filedir, filename, as_attachment=True)
@@ -212,7 +212,7 @@ def submit(host, oec_id, job):
     :return:
     """
     dir_job = os.path.join(dir_results, host, oec_id, job)
-    tar_job = dir_job + '.tar.gz'
+    tar_job = dir_job + '.tar'
     json_cert = os.path.join(dir_job, 'compatibility.json')
     if not os.path.exists(json_cert) or not os.path.exists(tar_job):
         abort(500)
@@ -221,7 +221,7 @@ def submit(host, oec_id, job):
     try:
         with open(json_cert, 'r') as file_content:
             cert = json.load(file_content)
-    except json.decoder.JSONDecodeError as error:
+    except json.decoder.JSONDecodeError:
         sys.stderr.write("The file %s is not json file.\n")
         return False
 
@@ -268,17 +268,25 @@ def upload_job():
         return render_template('upload.html', host=host, id=id, job=job,
                                filetext=filetext, ret='Failed'), 400
 
+    ori_file = base64.b64decode(filetext)
+    filesize = len(ori_file)
+    if filesize > 1073741824:
+        sys.stderr.write(
+            "The file size is more than 1GB, upload file failed.\n")
+        return render_template('upload.html', host=host, id=id, job=job,
+                               filetext=filetext, ret='Failed'), 500
+
     dir_job = os.path.join(dir_results, host, oec_id, job)
-    tar_job = dir_job + '.tar.gz'
     if not os.path.exists(dir_job):
         os.makedirs(dir_job)
 
+    tar_job = dir_job + '.tar'
     with open(tar_job, 'wb') as file_content:
-        file_content.write(base64.b64decode(filetext))
+        file_content.write(ori_file)
     result = subprocess.getstatusoutput(
         "tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
     if result[0] != 0:
-        sys.stderr.write("Decompress log file failed.")
+        sys.stderr.write("Decompress log file failed.\n")
 
     return render_template('upload.html', host=host, id=oec_id, job=job,
                            filetext=filetext, ret='Successful')
@@ -343,9 +351,9 @@ def config_ip():
                 pci_num = data.split(':', 1)[1].strip()
                 quad = __get_quad(pci_num)
                 if operator.eq(quad, eval(card_id)):
-                    subprocess.getoutput("ifconfig %s:0 %s/24" % (pt, sever_ip))
-                    with os.fdopen(os.open(ip_file, os.O_WRONLY | os.O_CREAT,
-                                           stat.S_IRUSR), 'w+') as f:
+                    subprocess.getoutput(
+                        "ifconfig %s:0 %s/24" % (pt, sever_ip))
+                    with os.fdopen(os.open(ip_file, os.O_WRONLY | os.O_CREAT, stat.S_IRUSR), 'w+') as f:
                         f.write('{},{}'.format(pt, sever_ip))
                     break
 
