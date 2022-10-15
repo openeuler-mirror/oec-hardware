@@ -10,16 +10,20 @@
 # See the Mulan PSL v2 for more details.
 # Author: @meitingli
 # Create: 2022-05-05
+# Desc: Shell script used for testing nvidia gpu
+
+cuda_version=$(nvidia-smi -q | grep "CUDA Version" | awk '{print $4}')
+cuda_name="cuda-samples-${cuda_version}"
 
 function install_gpu_burn() {
     cd /opt
     res_code=0
-    if [ ! -d gpu-burn ];then
+    if [ ! -d gpu-burn ]; then
         git clone https://github.com/wilicc/gpu-burn.git
     fi
     cd gpu-burn
     lsmod | grep bi_driver >/dev/null
-    if [ $? -eq 0 ];then
+    if [ $? -eq 0 ]; then
         COREX_PATH=${COREX_PATH:-/usr/local/corex}
         clang++ compare.cu -o compare.ll -I${COREX_PATH}/include --cuda-gpu-arch=ivcore10 --cuda-path=${COREX_PATH} --cuda-device-only -S -x cuda || res_code=1
         llc -mcpu=ivcore10 -mtriple=bi-iluvatar-ilurt -show-mc-encoding -filetype=obj compare.ll -o compare.o || res_code=1
@@ -38,10 +42,10 @@ function install_gpu_burn() {
 
 function install_cuda_samples() {
     cd /opt
-    if [ ! -d cuda-samples-master ];then
-        wget https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip
-        unzip master.zip >/dev/null
-        rm -rf master.zip
+    if [ ! -d ${cuda_name} ]; then
+        wget https://github.com/NVIDIA/cuda-samples/archive/refs/tags/v${cuda_version}.zip
+        unzip v${cuda_version}.zip >/dev/null
+        rm -rf v${cuda_version}.zip
     fi
     return 0
 }
@@ -50,7 +54,7 @@ function test_nvidia_case() {
     casename=$1
     logfile=$2
     res_code=0
-    cd /opt/cuda-samples-master
+    cd /opt/${cuda_name}
     path=$(find ./ -name $casename -type d)
     cd $path
     make &>/dev/null
@@ -69,11 +73,11 @@ function test_iluvatar_case() {
     logfile=$2
     res_code=0
     CUDA_PATH=${CUDA_PATH:-/usr/local/corex}
-    cd /opt/cuda-samples-master
+    cd /opt/${cuda_name}
     path=$(find ./ -name $casename)
     cd $path
     src_file=${casename}.cu
-    if [ ! -f ./$src_file ] && [ -f ./${casename}.cpp ];then
+    if [ ! -f ./$src_file ] && [ -f ./${casename}.cpp ]; then
         src_file=${casename}.cpp
     fi
     clang++ -std=c++11 -I../../../Common -I${CUDA_PATH}/include --cuda-path=${CUDA_PATH} -L${CUDA_PATH}/lib64 -lcudart -lixlogger -lcuda -lixthunk -o ${casename} ./${src_file}
@@ -81,7 +85,7 @@ function test_iluvatar_case() {
     if [[ $? -eq 0 ]]; then
         echo "Test $casename succeed."
     else
-        echo "Test $casename failed." 
+        echo "Test $casename failed."
         res_code=1
     fi
     return $res_code
@@ -92,7 +96,7 @@ function test_cuda_samples() {
     allcases=(${2//,/ })
     res_code=0
     install_cuda_samples
-    cd /opt/cuda-samples-master
+    cd /opt/${cuda_name}
     lsmod | grep bi_driver
     if [[ $? -eq 0 ]]; then
         for casename in ${allcases[@]}; do
