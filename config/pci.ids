@@ -3572,7 +3572,52 @@
 	7341  Navi 14 [Radeon Pro W5500]
 	7347  Navi 14 [Radeon Pro W5500M]
 	734f  Navi 14 [Radeon Pro W5300M]
-	7360  Navi 12 [Radeon Pro 5600M]
+	7360  Navi 12 [Radeon Pro 5600M/V520/BC-160]
+	7362  Navi 12 [Radeon Pro V520]
+	7388  Arcturus GL-XL
+	738c  Arcturus GL-XL [Instinct MI100]
+	738e  Arcturus GL-XL [Instinct MI100]
+	73a1  Navi 21 [Radeon Pro V620]
+	73a2  Navi 21 Pro-XTA [Radeon Pro W6900X]
+	73a3  Navi 21 GL-XL [Radeon PRO W6800]
+		1002 0e1e  Radeon PRO W6800
+	73a4  Navi 21 USB
+	73a5  Navi 21 [Radeon RX 6950 XT]
+	73ab  Navi 21 Pro-XLA [Radeon Pro W6800X/Radeon Pro W6800X Duo]
+	73ae  Navi 21 [Radeon Pro V620 MxGPU]
+	73af  Navi 21 [Radeon RX 6900 XT]
+		148c 2414  Navi 21 XTXH [PowerColor Red Devil RX 6900 XT Ultimate]
+	73bf  Navi 21 [Radeon RX 6800/6800 XT / 6900 XT]
+		1002 0e3a  Radeon RX 6900 XT
+		148c 2408  Red Devil AMD Radeon RX 6900 XT
+		1da2 440f  TOXIC RX 6900 XT
+		1eae 6701  Speedster MERC 319 AMD Radeon RX 6800 XT Black
+		1eae 6901  Speedster MERC 319 AMD Radeon RX 6900 XT Black
+	73c3  Navi 22
+	73c4  Navi 22 USB
+	73ce  Navi22-XL SRIOV MxGPU
+	73df  Navi 22 [Radeon RX 6700/6700 XT/6750 XT / 6800M]
+		1043 16c2  Radeon RX 6800M
+	73e0  Navi 23
+	73e1  Navi 23 WKS-XM [Radeon PRO W6600M]
+	73e3  Navi 23 WKS-XL [Radeon PRO W6600]
+	73e4  Navi 23 USB
+	73ef  Navi 23 [Radeon RX 6650 XT]
+		1002 73ef  Navi 23 [Radeon RX 6700S / 6650 XT]
+	73ff  Navi 23 [Radeon RX 6600/6600 XT/6600M]
+		1462 5022  RX 6600 MECH 2X
+		148c 2412  PowerColor Red Devil RX 6600 XT
+# This is the non-XT version
+		1849 5218  Radeon RX 6600 Challenger ITX 8GB
+	7408  Aldebaran
+	740c  Aldebaran
+	740f  Aldebaran
+	7421  Navi 24 [Radeon PRO W6500M]
+	7422  Navi 24 [Radeon PRO W6400]
+	7423  Navi 24 [Radeon PRO W6300/W6300M]
+	7424  Navi 24 [Radeon RX 6300]
+	743f  Navi 24 [Radeon RX 6400/6500 XT/6500M]
+		1da2 e457  PULSE AMD Radeon RX 6500 XT
 	7833  RS350 Host Bridge
 	7834  RS350 [Radeon 9100 PRO/XT IGP]
 	7835  RS350M [Mobility Radeon 9000 IGP]
@@ -3732,7 +3777,7 @@
 		17aa 21bb  Mobility Radeon HD 545v
 	9555  RV710/M92 [Mobility Radeon HD 4350/4550]
 		103c 1411  ProBook 4720s GPU (Mobility Radeon HD 4350)
-	9557  RV711 GL [FirePro RG220]
+	9557  RV711/M93 GL [FirePro RG220]
 	955f  RV710/M92 [Mobility Radeon HD 4330]
 	9580  RV630 [Radeon HD 2600 PRO]
 	9581  RV630/M76 [Mobility Radeon HD 2600]
@@ -3780,13 +3825,17 @@
 	95cd  RV620 GL [FirePro 2450]
 	95cf  RV620 GL [FirePro 2260]
 	960f  RS780 HDMI Audio [Radeon 3000/3100 / HD 3200/3300]
+		1462 7596  760GM-E51(MS-7596) Motherboard
 	9610  RS780 [Radeon HD 3200]
 		1458 d000  GA-MA78GM-S2H Motherboard
 	9611  RS780C [Radeon 3100]
 	9612  RS780M [Mobility Radeon HD 3200]
 	9613  RS780MC [Mobility Radeon HD 3100]
 	9614  RS780D [Radeon HD 3300]
+	9615  RS780E [Radeon HD 3200]
 	9616  RS780L [Radeon 3000]
+# ID is probably a copy-paste error by a MSI developer from another mainboard, since all other ID numbers on this mainboard including the sub-device of this device has used subsystem ID 1462:7596
+		1462 7501  760GM-E51(MS-7596) Motherboard
 	9640  Sumo [Radeon HD 6550D]
 	9641  Sumo [Radeon HD 6620G]
 	9642  SuperSumo [Radeon HD 6370D]
@@ -3826,6 +3875,7 @@
 	9809  Wrestler [Radeon HD 7310]
 	980a  Wrestler [Radeon HD 7290]
 	9830  Kabini [Radeon HD 8400 / R3 Series]
+		1043 8623  AM1I-A Motherboard
 	9831  Kabini [Radeon HD 8400E]
 	9832  Kabini [Radeon HD 8330]
 		1849 9832  QC5000-ITX/PH
@@ -3838,6 +3888,7 @@
 	9839  Kabini [Radeon HD 8180]
 	983d  Temash [Radeon HD 8250/8280G]
 	9840  Kabini HDMI/DP Audio
+		1043 8623  AM1I-A Motherboard
 		1849 9840  QC5000-ITX/PH
 	9850  Mullins [Radeon R3 Graphics]
 	9851  Mullins [Radeon R4/R5 Graphics]
@@ -3899,7 +3950,7 @@
 	9917  Trinity [Radeon HD 7620G]
 	9918  Trinity [Radeon HD 7600G]
 	9919  Trinity [Radeon HD 7500G]
-	991e  Bishop
+	991e  Bishop [Xbox One S APU]
 	9920  Liverpool [Playstation 4 APU]
 	9921  Liverpool HDMI/DP Audio Controller
 	9922  Starshp
@@ -3963,13 +4014,13 @@
 	aae0  Baffin HDMI/DP Audio [Radeon RX 550 640SP / RX 560/560X]
 	aae8  Fiji HDMI/DP Audio [Radeon R9 Nano / FURY/FURY X]
 	aaf0  Ellesmere HDMI Audio [Radeon RX 470/480 / 570/580/590]
-		1002 aaf0  Radeon Pro WX5100 Audio
 	aaf8  Vega 10 HDMI Audio [Radeon Vega 56/64]
 	ab00  Baffin HDMI/DP Audio [Radeon RX 550 640SP / RX 560/560X]
 	ab08  Polaris 22 HDMI Audio
 	ab10  Lexa HDMI Audio
 	ab18  Vega 12 HDMI Audio
 	ab20  Vega 20 HDMI Audio [Radeon VII]
+	ab28  Navi 21/23 HDMI/DP Audio Controller
 	ab38  Navi 10 HDMI Audio
 	ac00  Theater 506 World-Wide Analog Decoder
 	ac01  Theater 506 World-Wide Analog Decoder

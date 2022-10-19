@@ -28,6 +28,18 @@ class Command:
         self.logger = logger
 
     def run_cmd(self, command, ignore_errors=False, log_print=True, terminal_print=False, timeout=None):
+        """
+        Run single or multiple shell command
+        Args:
+            command (string): Actual execution command
+            ignore_errors (bool, optional): Use for if ignore command execution error. Defaults to False.
+            log_print (bool, optional): Use for print messages into log file. Defaults to True.
+            terminal_print (bool, optional): Use for print messages into terminal. Defaults to False.
+            timeout (number, optional): Determine command execution timeout. Defaults to None.
+
+        Returns:
+            list: [output, error, returncode]
+        """
         cmd_list = self.change_command_format(
             command, log_print=log_print, terminal_print=terminal_print)
         output = ""
@@ -47,14 +59,14 @@ class Command:
 
             output, error = pipes[-1].communicate(timeout=timeout)
             returncode = pipes[-1].returncode
-            if returncode == 0 and len(error) == 0:
-                self.logger.info(
-                    "Execute command %s succeed.\n %s" % (command, output), log_print, terminal_print)
 
-            if returncode != 0 and len(error) != 0 and not ignore_errors:
+            if returncode != 0 and not ignore_errors:
                 error = error.replace("\n", "").replace("\r", "")
                 self.logger.error(
                     "Execute command %s failed.\n %s" % (command, error), log_print, terminal_print)
+            else:
+                self.logger.info(
+                    "Execute command %s succeed.\n %s" % (command, output), log_print, terminal_print)
         except subprocess.TimeoutExpired:
             pipe.kill()
             pipe.terminate()
@@ -67,6 +79,16 @@ class Command:
         return [output, error, returncode]
 
     def change_command_format(self, command, log_print=True, terminal_print=False):
+        """
+        Change command format from string to list
+        Args:
+            command (string): Actual execution command
+            log_print (bool, optional): Use for print messages into log file. Defaults to True.
+            terminal_print (bool, optional): Use for print messages into terminal. Defaults to False.
+
+        Returns:
+            list: result
+        """
         cmd_list = []
         result = []
         self.logger.info("The command is: %s." %
