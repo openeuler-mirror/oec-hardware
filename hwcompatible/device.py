@@ -14,6 +14,7 @@
 
 import re
 from .command import Command
+from .env import CertEnv
 
 
 class CertDevice:
@@ -116,32 +117,38 @@ class Device:
         # get PCI number
         if not self.get_pci():
             return self.board, self.chip
-        # get quadruple
-        self.get_quadruple()
-        if name == "fc":
-            self.get_fc_card()
-        elif name == "gpu" or name == "vgpu":
-            self.get_gpu_card()
-        elif name == "raid":
-            self.get_raid_card()
-        elif name == "nvme":
-            self.get_nvme_card()
-        else:
-            # 8080 indicate intel
-            if self.quad[0] == "8086":
-                self.get_nic_intel()
-            # 15b3 indicate mellanox
-            if self.quad[0] == "15b3":
-                self.get_nic_mellanox()
-            # 14e4 indicate Broadcom
-            if self.quad[0] == "14e4":
-                self.get_nic_broadcom()
-            # 19e5 indicate huawei
-            if self.quad[0] == "19e5":
-                self.get_nic_huawei()
-            # 8088 indicate Netswift
-            if self.quad[0] == "8088":
-                self.get_nic_netswift()
+
+        try:
+            # get quadruple
+            self.get_quadruple()
+            if name == "fc":
+                self.get_fc_card()
+            elif name == "gpu" or name == "vgpu":
+                self.get_gpu_card()
+            elif name == "raid":
+                self.get_raid_card()
+            elif name == "nvme":
+                self.get_nvme_card()
+            else:
+                # 8080 indicate intel
+                if self.quad[0] == "8086":
+                    self.get_nic_intel()
+                # 15b3 indicate mellanox
+                if self.quad[0] == "15b3":
+                    self.get_nic_mellanox()
+                # 14e4 indicate Broadcom
+                if self.quad[0] == "14e4":
+                    self.get_nic_broadcom()
+                # 19e5 indicate huawei
+                if self.quad[0] == "19e5":
+                    self.get_nic_huawei()
+                # 8088 indicate Netswift
+                if self.quad[0] == "8088":
+                    self.get_nic_netswift()
+        except Exception:
+            self.logger.error(
+                "Get board information failed, please check %s!" % CertEnv.pcifile, terminal_print=False)
+
         self._is_null()
         return self.board, self.chip
 
@@ -157,13 +164,9 @@ class Device:
             elif flag == 1:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
-                    result = re.search(r"\b(SAS\S*)\s*", ln)
-                    if result:
-                        self.chip = result.group(1)
+                    self.chip = self._search_info(r"\b(SAS\S*)\s*", ln)
                     if len(self.chip) < 7:
-                        result = re.search(r"(\bSAS\S* \S*)\s*", ln)
-                        if result:
-                            self.chip = result.group(1)
+                        self.chip = self._search_info(r"(\bSAS\S* \S*)\s*", ln)
                     if not self.chip:
                         self.chip = ln.replace(ln[0:7], "").strip()
             elif flag == 2:
@@ -206,7 +209,7 @@ class Device:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
                     if self.quad[0] == "8086":
-                        self.chip = re.search(r'\[(.*)\]', ln).group(1)
+                        self.chip = self._search_info(r'\[(.*)\]', ln)
                     elif self.quad[0] == "19e5":
                         self.chip = re.sub(ln[0:7], "", ln).split(" ")[0]
                     else:
@@ -215,10 +218,10 @@ class Device:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
                     flag += 1
                     if self.quad[0] == "8086":
-                        self.board = re.search(r'\((.*)\)', ln).group(1)
+                        self.board = self._search_info(r'\((.*)\)', ln)
                     else:
-                        self.board = re.search(
-                            r'(\b(?:SP|ES|PM|SM)\S*)', ln).group(1)
+                        self.board = self._search_info(
+                            r'(\b(?:SP|ES|PM|SM)\S*)', ln)
                     break
 
     def get_nic_intel(self):
@@ -234,14 +237,12 @@ class Device:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
                     info = ln.replace(self.quad[1], "").strip()
-                    self.chip = re.search(r'(\S+[0-9]{3,6}\S*)', info).group(1)
+                    self.chip = self._search_info(r'(\S+[0-9]{3,6}\S*)', info)
             else:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
                     info = ln.replace(
                         self.quad[2] + " " + self.quad[3], "").strip()
-                    tmp = re.search(r'(\S*[0-9]{3,6}\S*)', info)
-                    if tmp:
-                        self.board = tmp.group(1)
+                    self.board = self._search_info(r'(\S*[0-9]{3,6}\S*)', info)
                     if not self.board:
                         self.board = info.strip()
                     break
@@ -258,10 +259,10 @@ class Device:
             elif flag == 1:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
-                    self.chip = re.search(r'(\bBCM\S*)', ln).group(1)
+                    self.chip = self._search_info(r'(\bBCM\S*)', ln)
             else:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
-                    self.board = re.search(r'(\b(?:BCM|QLE)\S*)', ln).group(1)
+                    self.board = self._search_info(r'(\b(?:BCM|QLE)\S*)', ln)
                     break
 
     def get_nic_huawei(self):
@@ -276,14 +277,12 @@ class Device:
             elif flag == 1:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
-                    hns = re.search(r'(HNS\s*\S*)\s*', ln)
-                    if hns:
-                        self.chip = hns.group(1)
+                    self.chip = self._search_info(r'(HNS\s*\S*)\s*', ln)
                     if not self.chip:
                         self.chip = ln.strip().split(" ")[2]
             else:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
-                    self.board = re.search(r'(\b(?:SP|TM)\S*)', ln).group(1)
+                    self.board = self._search_info(r'(\b(?:SP|TM)\S*)', ln)
                     break
 
     def get_nic_netswift(self):
@@ -298,10 +297,10 @@ class Device:
             elif flag == 1:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
-                    self.chip = re.search(r'(RP\S*)', ln).group(1)
+                    self.chip = self._search_info(r'(RP\S*)', ln)
             else:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
-                    self.board = re.search(r'(RP\S*)', ln).group(1)
+                    self.board = self._search_info(r'(RP\S*)', ln)
                     break
 
     def get_broadcom_card(self):
@@ -318,8 +317,10 @@ class Device:
                     flag += 1
                     chip_info = ln.replace("{0} {1}  ".format(
                         self.quad[0], self.quad[1]), "")
-                    self.chip = re.match(
-                        r'\s*(\w*\d{4}\w*)\s*', chip_info).group(1)
+                    val = re.match(r'\s*(\w*\d{4}\w*)\s*', chip_info)
+                    self.chip = ""
+                    if val:
+                        self.chip = val.group(1)
             else:
                 if re.match("\t\t" + self.quad[3] + " " + self.quad[2], ln) and ";" in ln:
                     model = ln.split(" ")[2].strip().split(";").strip()
@@ -342,11 +343,10 @@ class Device:
             elif flag == 1:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
-                    self.chip = re.search("\[(.*)\]", ln).group(1)
+                    self.chip = self._search_info("\[(.*)\]", ln)
             else:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
-                    self.board = re.search(
-                        r'(\b(?:SP|SM|MCX)\S*)', ln).group(1)
+                    self.board = self._search_info(r'(\b(?:SP|SM|MCX)\S*)', ln)
                     break
 
     def get_gpu_card(self):
@@ -437,3 +437,10 @@ class Device:
             self.chip = "N/A"
         if not self.board:
             self.board = "N/A"
+
+    @staticmethod
+    def _search_info(restr, line):
+        value = re.search(restr, line)
+        if value:
+            return value.group(1)
+        return ""

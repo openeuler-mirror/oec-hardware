@@ -63,7 +63,7 @@ class SystemTest(Test):
 
             output = rpm_verify[0].split('\n')
             for file in output:
-                if not file or "test_config.yaml" in file:
+                if not file or "test_config.yaml" in file or "pci.ids" in file:
                     continue
                 flag = False
                 self.logger.error(
@@ -147,6 +147,8 @@ class SystemTest(Test):
                 continue
             else:
                 self.logger.error("Files in %s were modified.\n" % kernel_rpm)
+                self.logger.error(
+                    "The tampered files are as follows:\n%s" % kernel_verfiy[0], terminal_print=False)
                 return_code = False
                 break
 
