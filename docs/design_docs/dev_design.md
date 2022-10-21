@@ -42,9 +42,6 @@
 | | genisoimage | |
 | | util-linux | |
 | disk/fc/raid | fio | 硬盘读写测试 |
-| gpu | git | gpu 测试，获取开源项目 gpu_burn/cuda_samples |
-| | gcc-c++ |  |
-| | make | |
 | ethernet/infiniband | ethtool | 网卡/IB卡测试 |
 | | iproute | |
 | | psmisc | |
@@ -64,6 +61,28 @@
 | nvme | nvme-cli | nvme 测试 |
 | perf | perf | perf测试 |
 | usb | usbutils | usb 测试 |
+| gpu (Nvidia) | git | Nvidia GPU测试依赖 |
+| | gcc-c++ |  |
+| | make | |
+| gpu (AMD) | 图形桌面 | AMD GPU需要在图形界面测试，桌面类型无限制，需要用户提前安装配置 |
+| | git | AMD GPU测试依赖 |
+| | gcc-c++ |  |
+| | make | |
+| | libdrm-devel | |
+| | ncurses-devel | |
+| | ncurses-libs | |
+| | libpciaccess-devel | |
+| | libxcb-devel | |
+| | meson | |
+| | libX11-devel | |
+| | libpng-devel | |
+| | cmake | |
+| | pkgconf | |
+| | libjpeg | |
+| | libjpeg-turbo-devel | |
+| | libdrm-devel | |
+| | mesa-libgbm-devel | |
+| | libgudev-devel | |
 | vgpu | qemu | vgpu 测试 |
 | | libvirt | |
 | | xz | |

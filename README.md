@@ -146,7 +146,7 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
    | kabi | 下载对应版本和架构的内核白名单，此处以openEuler 22.03LTS、aarch64为例：https://gitee.com/src-openeuler/kernel/blob/openEuler-22.03-LTS/kabi_whitelist_aarch64 | `/var/oech` |
    | GPU  | https://github.com/wilicc/gpu-burn | `/opt` |
    |      | https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip | `/opt` |
-   | VGPU | nvidia vgpu client驱动软件包 | /root |
+   | VGPU | NVIDIA vgpu client驱动软件包 | /root |
    |      | 下载对应版本和架构的虚拟机镜像文件，此处以openEuler 22.03LTS、x86_64为例：https://repo.openeuler.org/openEuler-22.03-LTS/virtual_machine_img/x86_64/openEuler-22.03-LTS-x86_64.qcow2.xz | `/opt` |
 
 # 工具安装
@@ -289,16 +289,17 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
 2. 进入单个任务页可以看到具体的测试结果展示，包括环境信息和执行结果等。
 
+   - `Summary` 查看所有测试结果。
+
+   - `Devices` 查看所有硬件设备信息。
+
+   - `Runtime` 查看测试运行时间和总任务执行日志。
+
+   - `Attachment` 下载测试日志附件。
+
    - `Submit` 表示将结果上传到欧拉官方认证服务器（**当前尚未开放**）。
 
-   - `Devices` 查看所有测试设备信息。
-
-   - `Runtime` 查看测试运行日志。
-
-   - `Attachment` 下载测试附件。
-
      ![result-qemu](docs/pictures/result-qemu.png)
-
 
 
 ## 结果说明
@@ -309,9 +310,9 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
 如果测试的硬件、整机需要发布到openEuler的兼容性清单，请将以下测试结果全部上传至相关的适配issue下：
 
-   - oech测试日志
+   - oec-hardware 测试日志
 
-   - oech生成的html测试报告
+   - oec-hardware-server 生成的html测试报告
 
    - 兼容性清单文件（请参考templates目录下的模板)
 
@@ -351,7 +352,10 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
    - 使用 ethtool 获取网卡信息和 ifconfig 对网卡进行 down/up 测试。
    - 使用 qperf 测试以太网卡tcp/udp延迟和带宽，以及 http 上传、下载速率。
    - 使用 perftest 测试 infiniband(IB) 或 RoCE 网络协议的延迟和带宽。
-   - **注意** 进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
+
+      **注意** 
+   
+      进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
 
 6. **disk**
 
@@ -404,14 +408,29 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
 18. **GPU**
 
-    - 使用gpu_burn工具对GPU进行加压测试。
-    - 使用cuda_samples测试GPU是否能正常使用。
+    - NVIDIA GPU
+
+      - 使用 gpu_burn 工具对GPU进行加压测试。
+      - 使用 cuda_samples 测试GPU的基本功能。
+
+    - AMD GPU
+
+      - 使用 radeontop 工具查看GPU使用率。
+      - 使用 glmark2 工具查看GPU screen信息。
+      - 使用 glmark2 工具对GPU进行加压测试。
+
+         **注意** 
+      
+         AMD GPU测试依赖图形界面，在测试前需要部署并切换到图形界面。
 
 19. **infiniband**
 
     - 使用 ethtool 获取网卡信息。
     - 使用 perftest 测试 infiniband(IB) 网络协议的延迟和带宽。
-    - **注意** 进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
+    
+      **注意** 
+      
+      进行网络带宽测试时，请提前确认服务端网卡速率不小于客户端，并保证测试网络无其他流量干扰。
 
 20. **kabi**
 
@@ -419,8 +438,8 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
 21. **VGPU**
 
-    - 测试 VGPU 服务端基本功能。
-    - 部署 VGPU 客户端虚拟机，测试驱动安装，测试客户端 VGPU 功能。
+    - 测试 NVIDIA VGPU 服务端基本功能。
+    - 部署 NVIDIA VGPU 客户端虚拟机，测试驱动安装，测试客户端 VGPU 功能。
     - VGPU 服务端监控客户端的运行。
 
 # 社区开发者参与介绍
@@ -442,7 +461,7 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
     make && make install
     ```
     
-4. 如果要进行打包验证，请安装4.17版本以上的rpm-build软件包，此处以1.0.0版本为例进行打包，具体打包的版本请以spec文件里的版本为准。
+4. 打包验证，此处以1.0.0版本为例进行打包，具体打包的版本请以spec文件里的版本为准。
 
     ```
     dnf install -y rpm-build 
@@ -473,7 +492,7 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
 # FAQ
 
- [鲲鹏小智](https://ic-openlabs.huawei.com/chat/#/) 提供了oec-hardware测试过程中可能遇到的问题的解决方案，用户可以通过检索获取问题的解决方法。另外 [鲲鹏论坛] (https://bbs.huaweicloud.com/forum/forum-927-1.html)上提供了完整的[oec-hardware安装使用问题解答](https://bbs.huaweicloud.com/forum/thread-0210979171291590002-1-1.html) ，用户可以根据场景获取解决方案。
+ [鲲鹏小智](https://ic-openlabs.huawei.com/chat/#/) 提供了oec-hardware测试过程中可能遇到的问题的解决方案，用户可以通过检索获取问题的解决方法。另外 [鲲鹏论坛](https://bbs.huaweicloud.com/forum/forum-927-1.html)上提供了完整的[oec-hardware安装使用问题解答](https://bbs.huaweicloud.com/forum/thread-0210979171291590002-1-1.html) ，用户可以根据场景获取解决方案。
  
  如果在适配过程中遇到问题，建议用户优先通过鲲鹏小智或鲲鹏论坛获取支撑。
 
