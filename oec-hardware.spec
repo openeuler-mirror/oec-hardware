@@ -1,4 +1,4 @@
-%define version    1.1.2
+%define version    1.1.3
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -74,6 +74,12 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Mon Oct 24 2022 meitingli <bubble_mt@outlook.com> - 1.1.3-0
+1. Add support for openEuler 22.03LTS SP1
+2. Add AMD GPU testcase
+3. Add automatic configuration network card IP
+4. Add generate compatibility information
+
 * Mon Aug 29 2022 meitingli <bubble_mt@outlook.com> - 1.1.2-0
 1. Upgrade command module
 2. Add VGPU testsuite
