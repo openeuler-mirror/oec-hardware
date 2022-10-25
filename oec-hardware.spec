@@ -3,19 +3,14 @@
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
-Version:        1.1.2
-Release:        5
+Version:        1.1.3
+Release:        0
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{version}.tar.gz
 
 # patch fix issue
-Patch0001:      oec-hardware-1.1.2-fix-oech.service_status_failed.patch
-Patch0002:      oec-hardware-1.1.2-fix-system.patch
-Patch0003:      oec-hardware-1.1.2-add-compatibility.patch
-Patch0004:      oec-hardware-1.1.2-add-new-function-add-fixbug.patch
-Patch0005:      oec-hardware-1.1.2-add-kabi-optimize-testcase-fixbug.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -39,11 +34,6 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
 
 %build
 
@@ -86,6 +76,12 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Mon Oct 24 2022 zhangyale <zhangyale3@h-partners.com> - 1.1.3-0
+- Add support for openEuler 22.03 LTS SP1
+- Add AMD GPU testcase
+- Add automatic configuration network card IP
+- Add generate compatibility information
+
 * Mon Oct 10 2022 cuixucui <cuixucui1@h-partners.com> - 1.1.2-5
 - fix the bug that the test board information is not added to the configuration file
 - Add kabi for hardware critical test
