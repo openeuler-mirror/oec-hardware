@@ -39,7 +39,7 @@ def query_disk(logger, command):
     command.run_cmd("cat /proc/mdstat")
 
 
-def get_disk(logger, command, config_data, pci_num):
+def get_disk(logger, command, config_data, pci_num=""):
     """
     Get disk info
     """
