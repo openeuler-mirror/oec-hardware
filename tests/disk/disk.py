@@ -42,7 +42,7 @@ class DiskTest(Test):
         """
         Start test
         """
-        self.disks = get_disk(self.logger, self.command, self.config_data, self.pci_num)
+        self.disks = get_disk(self.logger, self.command, self.config_data)
         if len(self.disks) == 0:
             self.logger.error("No suite disk found to test.")
             return False
