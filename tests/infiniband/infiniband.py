@@ -13,7 +13,6 @@
 # Create: 2022-05-24
 # Desc: InfiniBand Test
 
-import re
 from tests.network.rdma import RDMATest
 
 

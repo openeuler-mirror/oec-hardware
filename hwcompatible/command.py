@@ -13,9 +13,9 @@
 # Create: 2020-04-01
 
 import os
-from signal import signal
-import subprocess
 import shlex
+import signal
+import subprocess
 from .constants import SHELL_ENV
 
 
