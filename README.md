@@ -200,9 +200,9 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
 * `/usr/share/oech/kernelrelease.json` 文件中列出了当前支持的所有系统版本，使用`uname -a` 命令确认当前系统内核版本是否属于框架支持的版本。
 
-* 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能 `ping` 通服务端的 ip；如果客户端是对 InfiniBand 网卡进行测试，服务端也必须有一个 InfiniBand 网卡并提前配好 ip 。建议不要使用业务网口进行网卡测试。
+* 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡；要求测试端口连通，状态为up。建议不要使用业务网口进行网卡测试。
 
-* `/usr/share/oech/lib/config/test_config.yaml ` 是硬件测试项配置文件模板，`fc`、`raid`、`disk`、`ethernet`、`infiniband`硬件测试前需先根据实际环境进行修改，其它硬件测试不需要修改。
+* `/usr/share/oech/lib/config/test_config.yaml ` 是硬件测试项配置文件模板，`fc`、`raid`、`disk`、`ethernet`、`infiniband`硬件测试前需先根据实际环境进行配置，其它硬件测试不需要配置。对于网卡测试，如果是工具自动添加的IP地址，测试完成后，为了安全，服务端的IP需手动删除。
 
 ## 使用步骤
 

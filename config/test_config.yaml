@@ -3,6 +3,7 @@
 #disk: fc\raid\disk testcase need configuration, The disk to be tested, such as sda; Or all, test all qualified disks.
 #if_rdma: ethernet testcase need configuration, N means to test according to ordinary network card, y means to test according to RDMA card
 #server_ip: ethernet\infiniband testcase need configuration. If the server port is modified, need to add the port number after the IP address. eg: 2.2.2.4:8090.
+#          User need to delete the ip manually which are configured by tool after testing.
 #clent_ip: ethernet\infiniband testcase need configuration. IP to be configured for the client port
 fc:
   fc1:

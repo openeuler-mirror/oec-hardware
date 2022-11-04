@@ -57,7 +57,7 @@ class SystemTest(Test):
         flag = True
         for cert_package in ["oec-hardware"]:
             rpm_verify = self.command.run_cmd(
-                "rpm -V --nomtime --nomode --nocontexts %s" % cert_package)
+                "rpm -V --nomtime --nomode --nocontexts %s" % cert_package, ignore_errors=True)
             if rpm_verify[2] == 0:
                 continue
 

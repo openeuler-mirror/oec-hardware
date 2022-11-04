@@ -158,7 +158,8 @@ class ConfigIP:
          Configure the IP address of the server.
         """
         result = CommandUI().prompt_confirm(
-            "Are you sure to configure %s on server port?" % self.server_ip)
+            "Are you sure to configure %s on server port?\n"
+            "After the test, need to manually delete this ip." % self.server_ip)
         if not result:
             self.logger.warning(
                 "User won't use the generate IP address, stop the test.")
