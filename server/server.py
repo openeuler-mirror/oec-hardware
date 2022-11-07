@@ -21,7 +21,6 @@ import subprocess
 import base64
 import re
 import operator
-import stat
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
@@ -33,7 +32,6 @@ app.secret_key = os.urandom(24)
 dir_server = os.path.dirname(os.path.realpath(__file__))
 dir_results = os.path.join(dir_server, 'results')
 dir_files = os.path.join(dir_server, 'files')
-ip_file = os.path.join(dir_server, "ip.txt")
 
 
 @app.errorhandler(400)
@@ -353,8 +351,6 @@ def config_ip():
                 if operator.eq(quad, eval(card_id)):
                     subprocess.getoutput(
                         "ifconfig %s:0 %s/24" % (pt, sever_ip))
-                    with os.fdopen(os.open(ip_file, os.O_WRONLY | os.O_CREAT, stat.S_IRUSR), 'w+') as f:
-                        f.write('{},{}'.format(pt, sever_ip))
                     break
 
     return render_template('index.html')
@@ -391,7 +387,6 @@ def test_server(act):
         if cmd[0] == 'all':
             for process_name in valid_commands:
                 __stop_process(process_name)
-            __delete_ip()
         else:
             __stop_process(cmd[0])
     else:
@@ -458,20 +453,6 @@ def __get_quad(pci_num):
             tmp = ln.split(" ")[-4:]
             quad.extend([tmp[-3] + tmp[-4], tmp[-1] + tmp[-2]])
     return quad
-
-
-def __delete_ip():
-    """
-    Delete the IP configured on the server
-    """
-    if not os.path.exists(ip_file):
-        return
-
-    with open(ip_file, 'r') as f:
-        ip = f.read().split(',')
-        subprocess.Popen(['ip', 'addr', 'del', ip[1], "dev", ip[0]])
-    os.remove(ip_file)
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)
