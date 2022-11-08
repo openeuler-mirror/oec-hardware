@@ -32,6 +32,9 @@ class CDRomTest(Test):
         self.type = None
         self.com_ui = CommandUI()
         self.test_dir = "/usr/share/doc"
+        read_dir = os.getcwd()
+        self.mnt_dir = os.path.join(read_dir, "mnt_cdrom")
+        self.device_dir = os.path.join(read_dir, "device_dir")
 
     def setup(self, args=None):
         """
@@ -191,29 +194,32 @@ class CDRomTest(Test):
         :return:
         """
         devname = self.device.get_property("DEVNAME")
-        os.mkdir("mnt_cdrom")
-
+        if os.path.exists(self.mnt_dir):
+            shutil.rmtree(self.mnt_dir)
+        os.mkdir(self.mnt_dir)
         self.logger.info("Check to mount media.", terminal_print=True)
         self.command.run_cmd("umount %s" % devname, ignore_errors=True)
-        self.command.run_cmd("mount -o ro %s ./mnt_cdrom" % devname)
+        self.command.run_cmd("mount -o ro %s %s" % (devname, self.mnt_dir))
 
         cmd_result = self.command.run_cmd(
             "df %s | tail -n1 | awk '{print $3}'" % devname)
         size = int(cmd_result[0])
         if size == 0:
             self.logger.error("This is a blank disc.")
-            self.command.run_cmd("umount ./mnt_cdrom")
-            shutil.rmtree("mnt_cdrom")
+            self.command.run_cmd("umount %s" % self.mnt_dir)
+            shutil.rmtree(self.mnt_dir)
             return False
 
-        os.mkdir("device_dir")
-        self.logger.info("Check to copy files.", ignore_errors=True)
-        self.command.run_cmd("cp -dpRf ./mnt_cdrom ./device_dir")
+        if os.path.exists(self.device_dir):
+            shutil.rmtree(self.device_dir)
+        os.mkdir(self.device_dir)
+        self.logger.info("Check to copy files.", terminal_print=True)
+        self.command.run_cmd("cp -dprf %s/. %s" % (self.mnt_dir, self.device_dir))
 
         self.logger.info(
-            "Check to compare files in directory.", ignore_errors=True)
-        return_code = self.cmp_tree("mnt_cdrom", "device_dir")
-        self.command.run_cmd("umount ./mnt_cdrom")
+            "Check to compare files in directory.", terminal_print=True)
+        return_code = self.cmp_tree(self.mnt_dir, self.device_dir)
+        self.command.run_cmd("umount %s" % self.mnt_dir)
         if return_code:
             self.logger.info("Compare directory succeed.")
         else:
@@ -259,7 +265,7 @@ class CDRomTest(Test):
         return True
 
     def teardown(self):
-        if os.path.exists("mnt_cdrom"):
-            shutil.rmtree("mnt_cdrom")
-        if os.path.exists("device_dir"):
-            shutil.rmtree("device_dir")
+        if os.path.exists(self.mnt_dir):
+            shutil.rmtree(self.mnt_dir)
+        if os.path.exists(self.device_dir):
+            shutil.rmtree(self.device_dir)
