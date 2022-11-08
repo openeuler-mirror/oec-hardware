@@ -27,8 +27,13 @@ class EthernetTest(RDMATest):
         """
         path_netdev = ''.join(['/sys', self.device.get_property("DEVPATH")])
         path_pci = path_netdev.split('net')[0]
-        result = self.command.run_cmd("ls %s | grep -q infiniband" % path_pci)
-        return result[2] == 0
+        result = self.command.run_cmd("ls %s | grep -q infiniband" % path_pci, ignore_errors=False)
+        if result[2] == 0:
+            self.logger.info("Current ethernet supports RoCE.")
+            return True
+        
+        self.logger.info("Current ethernet doesn't support RoCE, no need test Roce.")
+        return False
 
     def setup(self, args=None):
         """

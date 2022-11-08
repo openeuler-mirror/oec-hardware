@@ -138,10 +138,13 @@ class NetworkTest(Test):
         self.command.run_cmd("ip link set down %s" % interface)
         for _ in range(5):
             result = self.command.run_cmd(
-                "ip link show %s | grep 'state DOWN'" % interface)
+                "ip link show %s | grep 'state DOWN'" % interface, ignore_errors=False)
             if result[2] == 0:
+                self.logger.info("Set interface %s down succeed." % self.interface)
                 return True
             time.sleep(1)
+            
+        self.logger.error("Set interface %s down failed." % self.interface)
         return False
 
     def ifup(self, interface):
@@ -153,11 +156,13 @@ class NetworkTest(Test):
         self.command.run_cmd("ip link set up %s" % interface)
         for _ in range(5):
             result = self.command.run_cmd(
-                "ip link show %s | grep 'state UP'" % interface)
+                "ip link show %s | grep 'state UP'" % interface, ignore_errors=False)
             if result[2] == 0:
+                self.logger.info("Set interface %s up succeed." % self.interface)
                 return True
             time.sleep(1)
 
+        self.logger.error("Set interface %s up failed." % self.interface)
         return False
 
     def get_speed(self):
@@ -419,14 +424,12 @@ class NetworkTest(Test):
         Test eth link
         :return:
         """
-        self.logger.info("Setting interface %s down..." % self.interface)
+        self.logger.info("Setting interface %s down." % self.interface)
         if not self.ifdown(self.interface):
-            self.logger.error("Set interface %s down failed." % self.interface)
             return False
 
-        self.logger.info("Setting interface %s up..." % self.interface)
+        self.logger.info("Setting interface %s up." % self.interface)
         if not self.ifup(self.interface):
-            self.logger.error("Set interface %s up failed." % self.interface)
             return False
 
         self.speed = self.get_speed()

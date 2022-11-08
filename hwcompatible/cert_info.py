@@ -71,13 +71,13 @@ class CertInfo:
         oec_json["os"] = os_version
         curday = date.today().strftime("%Y.%m.%d")
         oec_json["date"] = curday
-        shanum = self.command.run_cmd(
-            "modinfo %s | grep signature | awk '{print $2}'" % device.driver, log_print=False)
-        oec_json["sha256"] = shanum[0].replace(":", "").strip("\n")
         filename = self.command.run_cmd(
             "modinfo %s | grep filename | awk '{print $2}'" % device.driver, log_print=False)
+        shanum = self.command.run_cmd(
+            "sha256sum %s | awk '{print $1}'" % filename[0].strip("\n"), log_print=False)
+        oec_json["sha256"] = shanum[0].strip("\n")
         driver_size = self.command.run_cmd(
-            "ls -lh %s | awk '{print $5}'" % filename[0], log_print=False)
+            "ls -lh %s | awk '{print $5}'" % filename[0].strip("\n"), log_print=False)
         oec_json["driverSize"] = driver_size[0].strip("\n")
         oec_json["downloadLink"] = "inbox"
 
