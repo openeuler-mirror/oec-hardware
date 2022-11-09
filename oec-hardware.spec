@@ -4,7 +4,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.3
-Release:        1
+Release:        2
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -12,6 +12,7 @@ Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{v
 
 # patch fix issue
 Patch0001:      oec-hardware-1.1.3-fix-disk.patch
+Patch0002:      oec-hardware-1.1.3-fix-network-cdrom-bug-update-log-print.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -36,6 +37,7 @@ openEuler Hardware Compatibility Test Server
 %prep
 %setup -q -c
 %patch1 -p1
+%patch2 -p1
 
 %build
 
@@ -78,6 +80,11 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Wed Nov 09 2022 cuixucui <cuixucui1@h-partner.com> - 1.1.3-2
+- Fix code issue and update log print in network
+- Cancel deleting the IP that automatically configured on the server
+- Fix cdrom bug
+
 * Wed Oct 26 2022 cuixucui <cuixucui1@h-partner.com> - 1.1.3-1
 - Add default values to the parameters of get_disk function 
 
