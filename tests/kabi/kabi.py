@@ -19,6 +19,7 @@ from subprocess import getoutput
 from hwcompatible.env import CertEnv
 from hwcompatible.command import Command
 from hwcompatible.test import Test
+from hwcompatible.constants import TEST_KABI_ARCH
 
 kabi_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -55,6 +56,11 @@ class KabiTest(Test):
         Run kabi test case
         return: result
         """
+        arch = self.command.run_cmd("uname -m")[0].strip()
+        if arch not in TEST_KABI_ARCH:
+            self.logger.info(" %s architecture does not support kabi testing." % arch)
+            return True
+
         result = True
         os_version = getoutput(
             "grep openeulerversion /etc/openEuler-latest | awk -F = '{print $2}'")

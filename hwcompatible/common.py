@@ -21,7 +21,8 @@ import filecmp
 import importlib
 from .test import Test
 from .env import CertEnv
-from .constants import NODEVICE
+from .constants import NODEVICE, TEST_KABI_ARCH
+from .command import Command
 
 
 def create_test_suite(test_factory, logger, subtests_filter=None):
@@ -53,7 +54,9 @@ def create_test_suite(test_factory, logger, subtests_filter=None):
         if test["name"] == "kabi":
             kabi_test = test
 
-    if kabi_select:
+    command = Command(logger)
+    arch = command.run_cmd("uname -m")[0].strip()
+    if kabi_select and arch in TEST_KABI_ARCH:
         logger.info("The hardware will test kabi automatically.")
         kabi_test["run"] = True
         testcase = __create_testcase(kabi_test, logger, subtests_filter)
