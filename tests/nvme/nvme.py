@@ -63,7 +63,8 @@ class NvmeTest(Test):
         elif size > 128 * 1024:
             size = 128 * 1024
 
-        size_per_block = int(self.command.run_cmd("nvme list | grep %s | awk '{print $10}'" % disk)[0])
+        size_per_block = int(self.command.run_cmd("nvme list -o json /dev/%s | grep SectorSize "
+                                                  "| awk -F : '{print $2}'" % disk)[0].strip())
         block_num = 1
         if size_per_block != 0:
             block_num = int(int(size) / size_per_block) - 1
