@@ -20115,7 +20115,8 @@
 		15b3 0113  MCX565M-CDAB
 	101a  MT28800 Family [ConnectX-5 Ex Virtual Function]
 	101b  MT28908 Family [ConnectX-6]
-		15b3 0006  MCX653105A-EFAT
+		15b3 0006  MCX653105A-ECAT
+		15b3 0029  MCX653105A-EFAT
 	101c  MT28908 Family [ConnectX-6 Virtual Function]
 	101d  MT2892 Family [ConnectX-6 Dx]
 	101e  ConnectX Family mlx5Gen Virtual Function
