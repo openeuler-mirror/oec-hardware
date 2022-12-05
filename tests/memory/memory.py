@@ -65,7 +65,7 @@ class MemoryTest(Test):
         if not self.hugetlb_test():
             self.logger.error("Hugepages test failed.")
             return False
-        self.logger.error("Hugepages test succeed.")
+        self.logger.info("Hugepages test succeed.")
 
         return True
 
