@@ -131,7 +131,7 @@ class KabiTest(Test):
 
     def _get_kernel_source_rpm(self, arch):
         standard_kernel_version = getoutput(
-            "dnf list --repo=source | grep kernel.src | head -n 1 | awk '{print $2}'")
+            "dnf list --repo=source | grep '^kernel.src' | awk '{print $2}'")
         rpmpath = "/root/rpmbuild/SOURCES"
         standard_symvers = os.path.join(rpmpath, "Module.kabi_" + arch)
         if os.path.exists(standard_symvers):
