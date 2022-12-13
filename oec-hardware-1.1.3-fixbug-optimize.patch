@@ -1,0 +1,144 @@
+diff -Naur rpm/config/pci.ids oech/config/pci.ids
+--- rpm/config/pci.ids	2022-10-24 08:36:33.000000000 +0800
++++ oech/config/pci.ids	2022-12-13 10:13:13.228273472 +0800
+@@ -20115,7 +20115,8 @@
+ 		15b3 0113  MCX565M-CDAB
+ 	101a  MT28800 Family [ConnectX-5 Ex Virtual Function]
+ 	101b  MT28908 Family [ConnectX-6]
+-		15b3 0006  MCX653105A-EFAT
++		15b3 0006  MCX653105A-ECAT
++		15b3 0029  MCX653105A-EFAT
+ 	101c  MT28908 Family [ConnectX-6 Virtual Function]
+ 	101d  MT2892 Family [ConnectX-6 Dx]
+ 	101e  ConnectX Family mlx5Gen Virtual Function
+diff -Naur rpm/docs/design_docs/dev_design.md oech/docs/design_docs/dev_design.md
+--- rpm/docs/design_docs/dev_design.md	2022-12-13 17:29:04.328175692 +0800
++++ oech/docs/design_docs/dev_design.md	2022-12-13 10:13:13.228273472 +0800
+@@ -321,6 +321,7 @@
+ | 16 | `CertEnv()` | 工具环境信息模块 | 提供工具文件环境路径 |
+ | 17 | `SysInfo()` | 系统信息模块 | 系统信息获取 |
+ | 18 | `ConfigIP()` | 网卡IP配置模块 | 查询并配置网卡IP |
++| 19 | `CertInfo()` | 兼容性信息收集模块 | 自动收集并生成兼容性信息文件 |
+ 
+ ### 3.6 web服务接口清单
+ 
+diff -Naur rpm/hwcompatible/common.py oech/hwcompatible/common.py
+--- rpm/hwcompatible/common.py	2022-10-24 08:36:33.000000000 +0800
++++ oech/hwcompatible/common.py	2022-12-13 10:13:13.232273494 +0800
+@@ -21,7 +21,8 @@
+ import importlib
+ from .test import Test
+ from .env import CertEnv
+-from .constants import NODEVICE
++from .constants import NODEVICE, TEST_KABI_ARCH
++from .command import Command
+ 
+ 
+ def create_test_suite(test_factory, logger, subtests_filter=None):
+@@ -53,7 +54,9 @@
+         if test["name"] == "kabi":
+             kabi_test = test
+ 
+-    if kabi_select:
++    command = Command(logger)
++    arch = command.run_cmd("uname -m")[0].strip()
++    if kabi_select and arch in TEST_KABI_ARCH:
+         logger.info("The hardware will test kabi automatically.")
+         kabi_test["run"] = True
+         testcase = __create_testcase(kabi_test, logger, subtests_filter)
+diff -Naur rpm/hwcompatible/constants.py oech/hwcompatible/constants.py
+--- rpm/hwcompatible/constants.py	2022-10-24 08:36:33.000000000 +0800
++++ oech/hwcompatible/constants.py	2022-12-13 10:13:13.232273494 +0800
+@@ -26,6 +26,7 @@
+ VERSION = "driverVersion"
+ NODEVICE = ("cpufreq", "memory", "clock", "profiler", "system",
+             "stress", "kdump", "perf", "acpi", "watchdog", "kabi")
++TEST_KABI_ARCH = ("aarch64", "x86_64")
+ CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
+            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD")
+ GPU_DRIVER = ("nouveau", "nvidia", "bi_driver", "amdgpu")
+diff -Naur rpm/oec-hardware.spec oech/oec-hardware.spec
+--- rpm/oec-hardware.spec	2022-10-24 08:36:33.000000000 +0800
++++ oech/oec-hardware.spec	2022-12-13 10:13:13.232273494 +0800
+@@ -37,6 +37,7 @@
+ %setup -q -c
+ 
+ %build
++strip tests/keycard/libswsds_%{_arch}.so
+ [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
+ DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
+ 
+diff -Naur rpm/README.md oech/README.md
+--- rpm/README.md	2022-12-13 17:29:04.328175692 +0800
++++ oech/README.md	2022-12-13 10:13:13.224273450 +0800
+@@ -314,9 +314,11 @@
+ 
+    - oec-hardware-server 生成的html测试报告
+ 
+-   - 兼容性清单文件（请参考templates目录下的模板)
++   - 兼容性清单文件
+ 
+-        整机适配需要测试至少一张RAID卡、一张网卡，并提供对应的信息。
++      oec-hardware 执行结束后会自动为测试通过的硬件生成兼容性信息文件`hw_compatibility.json`，请参考该文件填写templates目录下的模板，然后上传填写的模板文件。
++
++      整机适配需要测试至少一张RAID卡、一张网卡，并提供对应的信息。
+ 
+ # 测试项介绍
+ 
+diff -Naur rpm/tests/kabi/kabi.py oech/tests/kabi/kabi.py
+--- rpm/tests/kabi/kabi.py	2022-10-24 08:36:33.000000000 +0800
++++ oech/tests/kabi/kabi.py	2022-12-13 10:13:13.236273516 +0800
+@@ -19,6 +19,7 @@
+ from hwcompatible.env import CertEnv
+ from hwcompatible.command import Command
+ from hwcompatible.test import Test
++from hwcompatible.constants import TEST_KABI_ARCH
+ 
+ kabi_dir = os.path.dirname(os.path.realpath(__file__))
+ 
+@@ -55,6 +56,11 @@
+         Run kabi test case
+         return: result
+         """
++        arch = self.command.run_cmd("uname -m")[0].strip()
++        if arch not in TEST_KABI_ARCH:
++            self.logger.info(" %s architecture does not support kabi testing." % arch)
++            return True
++
+         result = True
+         os_version = getoutput(
+             "grep openeulerversion /etc/openEuler-latest | awk -F = '{print $2}'")
+@@ -125,7 +131,7 @@
+ 
+     def _get_kernel_source_rpm(self, arch):
+         standard_kernel_version = getoutput(
+-            "dnf list --repo=source | grep kernel.src | head -n 1 | awk '{print $2}'")
++            "dnf list --repo=source | grep '^kernel.src' | awk '{print $2}'")
+         rpmpath = "/root/rpmbuild/SOURCES"
+         standard_symvers = os.path.join(rpmpath, "Module.kabi_" + arch)
+         if os.path.exists(standard_symvers):
+diff -Naur rpm/tests/memory/memory.py oech/tests/memory/memory.py
+--- rpm/tests/memory/memory.py	2022-10-24 08:36:33.000000000 +0800
++++ oech/tests/memory/memory.py	2022-12-13 10:13:13.244273560 +0800
+@@ -65,7 +65,7 @@
+         if not self.hugetlb_test():
+             self.logger.error("Hugepages test failed.")
+             return False
+-        self.logger.error("Hugepages test succeed.")
++        self.logger.info("Hugepages test succeed.")
+ 
+         return True
+ 
+diff -Naur rpm/tests/nvme/nvme.py oech/tests/nvme/nvme.py
+--- rpm/tests/nvme/nvme.py	2022-10-24 08:36:33.000000000 +0800
++++ oech/tests/nvme/nvme.py	2022-12-13 10:13:13.248273582 +0800
+@@ -63,7 +63,8 @@
+         elif size > 128 * 1024:
+             size = 128 * 1024
+ 
+-        size_per_block = int(self.command.run_cmd("nvme list | grep %s | awk '{print $10}'" % disk)[0])
++        size_per_block = int(self.command.run_cmd("nvme list -o json /dev/%s | grep SectorSize "
++                                                  "| awk -F : '{print $2}'" % disk)[0].strip())
+         block_num = 1
+         if size_per_block != 0:
+             block_num = int(int(size) / size_per_block) - 1
