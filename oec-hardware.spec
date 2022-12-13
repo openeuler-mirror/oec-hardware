@@ -4,7 +4,7 @@
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
 Version:        1.1.3
-Release:        2
+Release:        3
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
@@ -13,6 +13,7 @@ Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{v
 # patch fix issue
 Patch0001:      oec-hardware-1.1.3-fix-disk.patch
 Patch0002:      oec-hardware-1.1.3-fix-network-cdrom-bug-update-log-print.patch
+Patch0003:      oec-hardware-1.1.3-fixbug-optimize.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -38,9 +39,10 @@ openEuler Hardware Compatibility Test Server
 %setup -q -c
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 %build
-
+strip tests/keycard/libswsds_%{_arch}.so
 sed -i '15i CFLAGS+=-g -fstack-protector-strong' tests/memory/Makefile
 
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
@@ -80,6 +82,14 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Tue Dec 13 2022 liqiang <liqiang332@h-partner.com> - 1.1.3-3
+- Fix libswsds.so not stripped
+- Fix the value of kernel.src obtained by the kabi test case is incorrect
+- Add board infomation and fix memory bug
+- Fix the block size fails to be obtained during the NVME test
+- Judge whether to support kabi testing by architecture
+- Update readme and dev_design
+
 * Wed Nov 09 2022 cuixucui <cuixucui1@h-partner.com> - 1.1.3-2
 - Fix code issue and update log print in network
 - Cancel deleting the IP that automatically configured on the server
