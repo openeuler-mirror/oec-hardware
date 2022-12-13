@@ -37,6 +37,7 @@ openEuler Hardware Compatibility Test Server
 %setup -q -c
 
 %build
+strip tests/keycard/libswsds_%{_arch}.so
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
 DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
 
