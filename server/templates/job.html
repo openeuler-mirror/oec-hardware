@@ -45,18 +45,30 @@
             <p>Device</p>
           </th>
           <th>
+            <p>driverName</p>
+          </th>
+          <th>
+            <p>driverVersion</p>
+          </th>
+          <th>
+            <p>chipModel</p>
+          </th>
+          <th>
+            <p>boardModel</p>
+          </th>
+          <th>
             <p>Result</p>
           </th>
         </thead>
         <tbody>
           {% for d in results %}
             <tr>
-              {% set int = d.get('device').get('INTERFACE', '') %}
+              {% set testcase = d.get('name') %}
 
-              {% if int %}
-                {% set testcase = d.get('name') + '-' + int %}
+              {% if testcase == 'ethernet' %}
+                {% set int = d.get('device').get('INTERFACE', '') %}
               {% else %}
-                {% set testcase = d.get('name') %}
+                {% set int = d.get('device').get('PCI_SLOT_NAME', '') %}
               {% endif %}
 
               {% if d.get('run') %}
@@ -69,6 +81,10 @@
               <td>
                 <a href="/results/{{ host }}/{{ id }}/{{ job }}/devices/{{ int }}">{{ int }}</a>
               </td>
+              <td>{{ d.get('driverName', '') }}</td>
+              <td>{{ d.get('driverVersion', '') }}</td>
+              <td>{{ d.get('chipModel', '') }}</td>
+              <td>{{ d.get('boardModel', '') }}</td>
               <td>
                 <a href="/results/{{ host }}/{{ id }}/{{ job }}/logs/{{ testcase }}">{{ result }}</a>
               </td>

@@ -251,24 +251,28 @@ class EulerCertification():
                         not filename.startswith("__init__"):
                     casenames.append(filename.split(".")[0])
 
-        for testname in casenames:
-            if sort_devices.get(testname):
-                for device in sort_devices[testname]:
+        with open(CertEnv.pcifile) as file:
+            for testname in casenames:
+                if sort_devices.get(testname):
+                    for device in sort_devices[testname]:
+                        test = dict()
+                        test["name"] = testname
+                        test["device"] = device
+                        test["run"] = True
+                        test["status"] = "NotRun"
+                        test["reboot"] = False
+                        test["driverName"] = test.get("device", "").get_driver()
+                        test["driverVersion"] = test.get("device", "").get_driver_version()
+                        test["boardModel"], test["chipModel"] = test.get("device", "").get_model(testname, file)
+                        test_factory.append(test)
+                elif testname in NODEVICE:
                     test = dict()
                     test["name"] = testname
-                    test["device"] = device
+                    test["device"] = empty_device
                     test["run"] = True
                     test["status"] = "NotRun"
                     test["reboot"] = False
                     test_factory.append(test)
-            elif testname in NODEVICE:
-                test = dict()
-                test["name"] = testname
-                test["device"] = empty_device
-                test["run"] = True
-                test["status"] = "NotRun"
-                test["reboot"] = False
-                test_factory.append(test)
         return test_factory
 
     def sort_tests(self, devices):
@@ -422,34 +426,34 @@ class EulerCertification():
                          CHIP.ljust(20)
                          + "%s\033[0m" % BOARD, log_print=False)
         num = 0
-        with open(CertEnv.pcifile) as file:
-            for test in self.test_factory:
-                name = test["name"]
-                if name == "system":
-                    test["run"] = True
-                    if test["status"] == "PASS":
-                        test["status"] = "Force"
+        for test in self.test_factory:
+            name = test["name"]
+            if name == "system":
+                test["run"] = True
+                if test["status"] == "PASS":
+                    test["status"] = "Force"
 
-                status = test["status"]
-                device = test["device"].get_name()
-                board, chip = test["device"].get_model(name, file)
-                driver = test["device"].get_driver()
-                version = test["device"].get_driver_version()
-                run = "no"
-                if test["run"] is True:
-                    run = "yes"
-                num = num + 1
-                if status == "PASS":
-                    color = "2"
-                elif status == "FAIL":
-                    color = "1"
-                elif status == "Force":
-                    color = "3"
-                else:
-                    color = "4"
-                device = device_info(color, status, num, run, name,
-                                     device, driver, version, chip, board)
-                self._print_tests(device)
+            status = test["status"]
+            device = test["device"].get_name()
+            board = test.get("boardModel", "")
+            chip = test.get("chipModel", "")
+            driver = test.get("driverName", "")
+            version = test.get("driverVersion", "")
+            run = "no"
+            if test["run"] is True:
+                run = "yes"
+            num = num + 1
+            if status == "PASS":
+                color = "2"
+            elif status == "FAIL":
+                color = "1"
+            elif status == "Force":
+                color = "3"
+            else:
+                color = "4"
+            device = device_info(color, status, num, run, name,
+                                 device, driver, version, chip, board)
+            self._print_tests(device)
 
     def choose_tests(self):
         """
