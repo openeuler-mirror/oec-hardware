@@ -15,6 +15,7 @@
 import os
 import json
 import configparser
+import copy
 from subprocess import getoutput
 from .command_ui import CommandUI
 from .device import Device
@@ -175,11 +176,8 @@ class FactoryDocument(Document):
             self.load()
             return
         for member in factory:
-            element = dict()
-            element["name"] = member["name"]
+            element = copy.copy(member)
             element["device"] = member["device"].properties
-            element["run"] = member["run"]
-            element["status"] = member["status"]
             self.document.append(element)
 
     def get_factory(self):
@@ -189,12 +187,9 @@ class FactoryDocument(Document):
         """
         factory = list()
         for element in self.document:
-            test = dict()
+            test = element
             device = Device(element["device"], self.logger)
             test["device"] = device
-            test["name"] = element["name"]
-            test["run"] = element["run"]
-            test["status"] = element["status"]
             factory.append(test)
         return factory
 
