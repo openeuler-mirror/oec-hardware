@@ -34,7 +34,7 @@ KEYCARD_VENDORS = ('Xilinx', 'Renesas', 'Texas', 'PLX')
 IB = "infiniband"
 DEVICE_INFO = ('color', 'status', 'num', 'run', 'name',
                'device', 'driver', 'version', 'chip', 'board')
-NO_CONFIG_DEVICES = ("gpu", "vgpu", "nvme", "dpdk", "cdrom", "keycard")
+NO_CONFIG_DEVICES = ("gpu", "vgpu", "nvme", "dpdk", "cdrom", "keycard", "spdk")
 
 # File access control
 FILE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
