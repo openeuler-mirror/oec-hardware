@@ -127,7 +127,7 @@ class Device:
                 self.get_gpu_card()
             elif name == "raid":
                 self.get_raid_card()
-            elif name == "nvme":
+            elif name == "nvme" or name == "spdk":
                 self.get_nvme_card()
             else:
                 # 8080 indicate intel

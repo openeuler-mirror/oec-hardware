@@ -298,8 +298,10 @@ class EulerCertification():
                     sort_devices["disk"] = [empty_device]
                     if "nvme" in sort_devices.keys():
                         sort_devices["nvme"].extend([device])
+                        sort_devices["spdk"].extend([device])
                     else:
                         sort_devices["nvme"] = [device]
+                        sort_devices["spdk"] = [device]
                 elif "/host" in device.get_property("DEVPATH"):
                     sort_devices["disk"] = [empty_device]
             if "RAID" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") or \
