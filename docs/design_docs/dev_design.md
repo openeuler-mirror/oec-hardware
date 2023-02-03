@@ -89,6 +89,7 @@
 | | util-linux | |
 | | expect | |
 | system | policycoreutils | system 测试 |
+| spdk | spdk | spdk 测试 |
 
 ### 1.3 License
 
