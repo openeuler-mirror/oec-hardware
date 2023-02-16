@@ -428,6 +428,7 @@ class Device:
             if re.match("20: ", ln):
                 tmp = ln.split(" ")[-4:]
                 self.quad.extend([tmp[-3] + tmp[-4], tmp[-1] + tmp[-2]])
+        return self.quad
 
     def _is_null(self):
         """

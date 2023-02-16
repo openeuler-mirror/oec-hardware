@@ -345,6 +345,10 @@ class EulerCertification():
                             sort_devices["ethernet"].extend([device])
                         else:
                             sort_devices["ethernet"] = [device]
+                        if "dpdk" in sort_devices.keys():
+                            sort_devices["dpdk"].extend([device])
+                        else:
+                            sort_devices["dpdk"] = [device]
                     elif interface in line and "wifi" in line:
                         if "wlan" in sort_devices.keys():
                             sort_devices["wlan"].extend([device])
