@@ -1,0 +1,4 @@
+separator: .
+src_repo: openeuler/oec-hardware
+tag_prefix: ^
+version_control: gitee
