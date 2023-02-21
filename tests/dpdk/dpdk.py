@@ -89,7 +89,7 @@ class DPDKTest(Test):
                               % (self.kernel_driver, self.support_driver))
             return False
         else:
-            self.logger.error("DPDK driver is loading...")
+            self.logger.info("DPDK driver is loading...")
             subprocess.getoutput("modprobe uio; modprobe uio_pci_generic")
             if self.command.run_cmd("lsmod | grep uio_pci_generic", terminal_print=True)[2] != 0:
                 self.logger.error("DPDK driver is loaded failed!")
