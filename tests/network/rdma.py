@@ -21,7 +21,7 @@ from tests.network.network import NetworkTest
 class RDMATest(NetworkTest):
     def __init__(self):
         NetworkTest.__init__(self)
-        self.requirements = ['perftest', 'opensm', 'rdma-core']
+        self.requirements += ['perftest', 'opensm', 'rdma-core']
         self.ib_device = None
         self.ib_port = None
         self.link_layer = None

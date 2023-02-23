@@ -513,7 +513,7 @@ def __setting_dpdk_env():
     """
     dpdk_driver = "uio_pci_generic"
     subprocess.getoutput("modprobe uio; modprobe %s" % dpdk_driver)
-    if subprocess.getoutput("lsmod | grep uio_pci_generic")[2] != 0:
+    if subprocess.getstatusoutput("lsmod | grep uio_pci_generic")[0] != 0:
         sys.stderr.write("Dpdk driver moprobe failed.\n")
         return False
     subprocess.getoutput("dpdk-hugepages.py -u")

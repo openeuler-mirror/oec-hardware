@@ -90,6 +90,7 @@
 | | expect | |
 | system | policycoreutils | system 测试 |
 | spdk | spdk | spdk 测试 |
+| dpdk | dpdk-testpmd | dpdk 测试 |
 
 ### 1.3 License
 
