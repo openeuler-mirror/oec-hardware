@@ -3,17 +3,14 @@
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
-Version:        1.1.3
-Release:        3
+Version:        1.1.4
+Release:        0
 Group:          Development/Tools
 License:        Mulan PSL v2
 URL:            https://gitee.com/openeuler/oec-hardware
 Source0:        https://gitee.com/openeuler/oec-hardware/repository/archive/v%{version}.tar.gz
 
 # patch fix issue
-Patch0001:      oec-hardware-1.1.3-fix-disk.patch
-Patch0002:      oec-hardware-1.1.3-fix-network-cdrom-bug-update-log-print.patch
-Patch0003:      oec-hardware-1.1.3-fixbug-optimize.patch
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
@@ -37,9 +34,6 @@ openEuler Hardware Compatibility Test Server
 
 %prep
 %setup -q -c
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
 
 %build
 strip tests/keycard/libswsds_%{_arch}.so
@@ -82,6 +76,12 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Tue Feb 28 2023 cuixucui <cuixucui1@h-partner.com> - 1.1.4-0
+- Add board information in the test report
+- Add spdk test case
+- Add dpdk test case
+- Update pci.ids file
+
 * Tue Dec 13 2022 liqiang <liqiang332@h-partner.com> - 1.1.3-3
 - Fix libswsds.so not stripped
 - Fix the value of kernel.src obtained by the kabi test case is incorrect
