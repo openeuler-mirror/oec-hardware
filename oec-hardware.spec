@@ -1,4 +1,4 @@
-%define version    1.1.3
+%define version    1.1.4
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -75,6 +75,12 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Tue Feb 28 2023 cuixucui <cuixucui1@h-partner.com> - 1.1.4-0
+1. Add board information in the test report
+2. Add spdk test case
+3. Add dpdk test case
+4. Bugfix
+
 * Mon Oct 24 2022 meitingli <bubble_mt@outlook.com> - 1.1.3-0
 1. Add support for openEuler 22.03LTS SP1
 2. Add AMD GPU testcase
