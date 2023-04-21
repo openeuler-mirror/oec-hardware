@@ -409,12 +409,13 @@ def test_server(act):
     """
     valid_commands = ['rping', 'rcopy', 'ib_read_bw',
                       'ib_write_bw', 'ib_send_bw', 'qperf', 'dpdk-testpmd']
+    pci_num = ""
+    dpdk_driver = "uio_pci_generic"
     cmd = request.values.get('cmd', '')
     cmd = cmd.split()
     if (not cmd) or (cmd[0] not in valid_commands + ['all']):
         sys.stdout.write("Invalid command: {0}.\n".format(cmd))
         abort(400)
-
     if act == 'start':
         if cmd[0] == 'rping':
             cmd = ['rping', '-s']
@@ -428,11 +429,13 @@ def test_server(act):
                 sys.stderr.write("No ibdev or ibport found.\n")
                 abort(400)
             cmd.extend(['-d', ibdev, '-i', ibport])
-        if cmd[0] == 'dpdk-testpmd':
+        if 'dpdk' in cmd[0]:
             result = subprocess.getstatusoutput("lspci | grep Mellanox")
             if result[0] == 0:
                 __setting_dpdk_env()
-            cmd = ['dpdk-testpmd', '-l', '8-15', '-n', '4', '--', '--forward-mode=rxonly']
+            pci_num = subprocess.getoutput("dpdk-devbind.py -s | grep 'drv=%s' | awk '{print $1}'" % dpdk_driver)
+            cmd = ['dpdk-testpmd', '-l', '0-1', '-n', '1', '-a', pci_num, '--', '--forward-mode=rxonly']
+            time.sleep(3)
         __execute_cmd(cmd)
 
     elif act == 'stop':
@@ -457,7 +460,8 @@ def __stop_process(process_name):
 
 
 def __execute_cmd(cmd):
-    pipe = subprocess.Popen(cmd)
+    pipe = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
     time.sleep(3)
     if pipe.poll():  # supposed to be 0(foreground) or None(background)
         abort(400)

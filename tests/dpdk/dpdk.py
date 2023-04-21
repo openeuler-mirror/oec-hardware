@@ -39,16 +39,19 @@ class DPDKTest(Test):
 
     def __init__(self):
         Test.__init__(self)
+        self.requirements = ["dpdk", "dpdk-tools", "dpdk-devel"]
         self.config_data = dict()
         self.interface = None
         self.server_ip = ""
         self.server_port = 80
         self.portmask = "0xffff"
         self.packet_size = 1514
-        self.support_driver = ['mlx4_core', 'mlx5_core', 'ixgbe', 'i40e', 'ice', 'hinic']
+        self.support_driver = ['mlx4_core', 'mlx5_core', 'ixgbe', 'i40e', 'ice', 'hinic', 'igc']
         self.dpdk_driver = 'uio_pci_generic'
         self.kernel_driver = None
         self.retries = 3
+        self.speed = 0   # Mb/s
+        self.target_bandwidth_percent = 0.8
         self.device = ""
         self.pci = ""
         self.card_id = None
@@ -77,6 +80,19 @@ class DPDKTest(Test):
         self.config_data = getattr(args, "config_data", None)
         self.server_ip = CertDocument(CertEnv.certificationfile, self.logger).get_server()
         self.test_prepare()
+
+    def get_interface_speed(self):
+        """
+        Get speed on the interface
+        :return:
+        """
+        speed = self.command.run_cmd(
+            "ethtool %s | grep Speed | awk '{print $2}'" % self.interface)
+        if speed[2] != 0:
+            self.logger.error("No speed found on the interface.")
+            return 0
+
+        return int(speed[0][:-5])
 
     def check_bind(self):
         """
@@ -217,19 +233,18 @@ class DPDKTest(Test):
         Test speed
         :return:
         """
-        self.logger.info("Running dpdk speed test...", terminal_print=False)
         command = [
             'dpdk-testpmd',
-            '-l', '8-15',
-            '-n', '4',
+            '-l', '0-1',
+            '-n', '1',
             '-a', self.pci,
             '--',
-            '--eth-peer=0,%s' % self.ethpeer,
             '--portmask=0x1',
             '--txpkts=%d' % self.packet_size,
-            '--rxq=2',
-            '--txq=2',
+            '--rxq=4',
+            '--txq=4',
             '--forward-mode=txonly',
+            '--eth-peer=1,%s' % self.ethpeer,
             '--stats-period=2'
             ]
         res = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -238,18 +253,24 @@ class DPDKTest(Test):
         res.terminate()
         with os.fdopen(os.open(self.test_dpdk_file, FILE_FLAGS, FILE_MODES), "w") as log:
             log.write(str(res.stdout.read(), 'UTF-8'))
-        time.sleep(3)
-        res = self.command.run_cmd("grep Tx-pps %s | awk '{print $2}'" % self.test_dpdk_file)[0]
-        res_list = res.split("\n")[1:-1]
+        time.sleep(30)
+        res = self.command.run_cmd("grep Tx-bps %s | awk '{print $4}'" % self.test_dpdk_file)
+        if res[2] != 0:
+            self.logger.error("The test data result is empty, Please check if the server is configured properly!")
+        res_list = res[0].split("\n")[-10:-1]
         int_list = [int(x) for x in res_list]
         number = len(int_list)
         if number != 0:
-            pps = sum(int_list) / number
-            self.logger.info("The average speed is around %f Mb/s" % (8 * self.packet_size * pps / 1e6))
+            bandwidth = float(sum(int_list) / number / 1e6)
             # 1e6 = 1000000.0
+            target_bandwidth = self.target_bandwidth_percent * self.speed
+            self.logger.info("Current bandwidth is around %.2f Mb/s, target is %.2fMb/s" %
+                    (bandwidth, target_bandwidth))
+            if bandwidth > target_bandwidth:
+                self.logger.info("Test dpdk bandwidth successfully.")
             return True
         else:
-            self.logger.error("Test data acquisition failed!")
+            self.logger.error("Test dpdk bandwidth failed!")
             return False
 
     def ifdown(self, interface):
@@ -293,6 +314,13 @@ class DPDKTest(Test):
         Test ICMP
         :return:
         """
+        self.speed = self.get_interface_speed()
+        if self.speed:
+            self.logger.info("The speed of %s is %sMb/s." %
+                             (self.interface, self.speed))
+        else:
+            self.logger.error("Set speed of %s failed." % self.interface)
+
         count = 500
         cmd = "ping -q -c %d -i 0 %s | grep 'packet loss' | awk '{print $6}'" % (
             count, self.server_ip)
@@ -323,7 +351,7 @@ class DPDKTest(Test):
         try:
             response = urlopen(request)
         except Exception:
-            self.logger.error("Call remote server url %s failed." % url)
+            self.logger.error("Call remote dpdk server url %s failed." % url)
             return False
         self.logger.info("Status: %u %s" % (response.code, response.msg))
         return int(response.code) == 200
