@@ -25,6 +25,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 from flask import Flask, render_template, redirect, url_for, abort, request, send_from_directory, flash
+from werkzeug import secure_filename
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -98,9 +99,9 @@ def get_job(host, oec_id, job):
         abort(404)
 
     try:
-        with open(json_info, 'r') as file_content:
+        with open(secure_filename(json_info), 'r') as file_content:
             info = json.load(file_content)
-        with open(json_results, 'r') as file_content:
+        with open(secure_filename(json_results), 'r') as file_content:
             results = json.load(file_content)
     except json.decoder.JSONDecodeError as error:
         sys.stderr.write("The file %s is not json file.\n")
@@ -125,7 +126,7 @@ def get_device(host, oec_id, job, interface):
         abort(404)
 
     try:
-        with open(json_results, 'r') as file_content:
+        with open(secure_filename(json_results), 'r') as file_content:
             results = json.load(file_content)
     except json.decoder.JSONDecodeError as error:
         sys.stderr.write("The file %s is not json file.\n")
@@ -154,7 +155,7 @@ def get_devices(host, oec_id, job):
         abort(404)
 
     try:
-        with open(json_devices, 'r') as file_content:
+        with open(secure_filename(json_devices), 'r') as file_content:
             devices = json.load(file_content)
     except json.decoder.JSONDecodeError as error:
         sys.stderr.write("The file %s is not json file.\n")
@@ -194,7 +195,7 @@ def get_log(host, oec_id, job, name):
     if not os.path.exists(logpath):
         logpath = os.path.join(dir_job, 'job.log')
 
-    with open(logpath, 'r') as file_content:
+    with open(secure_filename(logpath), 'r') as file_content:
         log = file_content.read().split('\n')
 
     return render_template('log.html', host=host, id=oec_id, job=job, name=name, log=log)
@@ -217,14 +218,14 @@ def submit(host, oec_id, job):
 
     cert = ""
     try:
-        with open(json_cert, 'r') as file_content:
+        with open(secure_filename(json_cert), 'r') as file_content:
             cert = json.load(file_content)
     except json.decoder.JSONDecodeError:
         sys.stderr.write("The file %s is not json file.\n")
         return False
 
     attachment = ""
-    with open(tar_job, 'rb') as file_content:
+    with open(secure_filename(tar_job), 'rb') as file_content:
         attachment = base64.b64encode(file_content.read())
 
     form = {}
@@ -279,7 +280,7 @@ def upload_job():
         os.makedirs(dir_job)
 
     tar_job = dir_job + '.tar'
-    with open(tar_job, 'wb') as file_content:
+    with open(secure_filename(tar_job), 'wb') as file_content:
         file_content.write(ori_file)
     result = subprocess.getstatusoutput(
         "tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
@@ -322,7 +323,7 @@ def upload_file():
     if not os.path.exists(dir_files):
         os.makedirs(dir_files)
 
-    with open(filepath, 'wb') as file_content:
+    with open(secure_filename(filepath), 'wb') as file_content:
         file_content.write(base64.b64decode(filetext))
 
     return render_template('upload.html', filename=filename, filetext=filetext,
