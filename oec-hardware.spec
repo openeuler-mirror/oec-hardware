@@ -25,7 +25,7 @@ Provides:       libswsds.so()(64bit)
 Summary:        openEuler Hardware Compatibility Test Server
 Group:          Development/Tools
 Requires:       python3, python3-devel, python3-flask, python3-uWSGI
-Requires:       nginx, tar, qperf, psmisc
+Requires:       nginx, tar, qperf, psmisc, dpdk, dpdk-tools, dpdk-devel
 
 %description
 openEuler Hardware Compatibility Test Suite
