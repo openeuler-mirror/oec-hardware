@@ -518,6 +518,17 @@ class EulerCertification():
                     self.test_factory.append(test)
                     self.logger.info("add %s test %s" % (test["name"],
                                                          test["device"].get_name()))
+        for index, test in enumerate(self.test_factory):
+            for test_new in test_factory:
+                if test["name"] != test_new["name"]:
+                    continue
+                self_test_path = test["device"].path
+                new_test_path = test_new["device"].path
+                if not self_test_path and not new_test_path:
+                    continue
+                if self_test_path == new_test_path:
+                    self.test_factory[index]['device'] = test_new['device']
+
         self.test_factory.sort(key=lambda k: k["name"])
         FactoryDocument(CertEnv.factoryfile, self.logger, self.test_factory).save()
 
