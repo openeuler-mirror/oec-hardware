@@ -30,7 +30,6 @@ class KabiTest(Test):
         self.kernel_version = getoutput("uname -r")
         self.requirements = ["gzip", "rpm-build"]
         self.symvers = None
-        self.white_list = None
         self.wl_logpath = ""
         self.miss_logpath = ""
         self.changed_logpath = ""
@@ -72,11 +71,6 @@ class KabiTest(Test):
             self.command.run_cmd("gzip -d %s/%s" %
                                  (CertEnv.datadirectory, symvers_gz))
 
-        arch = getoutput("uname -m")
-        self.white_list = self._get_white_list(os_version, arch)
-        if not self.white_list:
-            self.logger.error("Get kernel white list failed.")
-
         standard_symvers = self._get_kernel_source_rpm(arch)
 
         with open(standard_symvers, "r") as f:
@@ -86,7 +80,7 @@ class KabiTest(Test):
                     continue
 
                 hsdp = line.split()
-                if len(hsdp) < 4 or hsdp[1] in self.white_list:
+                if len(hsdp) < 4 :
                     continue
 
                 result = self.command.run_cmd("grep %s %s" % (
@@ -113,21 +107,6 @@ class KabiTest(Test):
             self.logger.error("Test kabi failed.")
 
         return result
-
-    def _get_white_list(self, os_version, arch):
-        url = "https://gitee.com/src-openeuler/kernel/raw/%s/kabi_whitelist_%s" % (
-            os_version, arch)
-        white_list = os.path.join(
-            CertEnv.datadirectory, "kabi_whitelist_" + arch)
-        if not os.path.exists(white_list):
-            self.command.run_cmd("wget %s -P %s" %
-                                 (url, CertEnv.datadirectory))
-
-        # Check download file
-        if not os.path.exists(white_list):
-            return False
-
-        return white_list
 
     def _get_kernel_source_rpm(self, arch):
         standard_kernel_version = getoutput(
