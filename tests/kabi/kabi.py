@@ -95,7 +95,7 @@ class KabiTest(Test):
                 if data and hsdp[0] in data:
                     continue
                 elif data and hsdp[0] not in data:
-                    if not self.changed_logpath.exists():
+                    if not os.path.exists(self.changed_logpath):
                         self.command.run_cmd("echo 'standard_symvers     cur_symvers' | tee %s" % (
                             self.changed_logpath), log_print=False)
 
