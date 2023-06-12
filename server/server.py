@@ -33,6 +33,7 @@ app.secret_key = os.urandom(24)
 dir_server = os.path.dirname(os.path.realpath(__file__))
 dir_results = os.path.join(dir_server, 'results')
 dir_files = os.path.join(dir_server, 'files')
+DPDK_DRIVER = "uio_pci_generic"
 
 
 @app.errorhandler(400)
@@ -357,31 +358,36 @@ def config_ip():
     return render_template('index.html')
 
 
+@app.route('/api/get/ethpeer', methods=['GET', 'POST'])
+def get_ethpeer():
+    """
+    get ethpeer
+    """
+    dic = {}
+    card_id = request.values.get('cardid', '')
+    __setting_dpdk_env()
+    interface = __get_server_port(card_id)
+    ethpeer = subprocess.getoutput("ip link show dev %s | grep 'link/ether' | awk '{print $2}'" % interface)
+    dic = {'ethpeer': ethpeer}
+
+    return dic
+
+
 @app.route('/api/bind/server', methods=['GET', 'POST'])
 def bind_server_card():
     """
     Bind server card
     """
-    __setting_dpdk_env()
+    interface = ""
     card_id = request.values.get('cardid', '')
-    dpdk_driver = "uio_pci_generic"
-    ports = []
-    dic = {}
-    ports = subprocess.getoutput("ip link show up | grep 'state UP' | awk -F ': ' '{print $2}'").split('\n')
-    for pt in ports:
-        pci_num = subprocess.getoutput("ethtool -i %s | grep 'bus-info' | awk '{print $2}'" % pt)
-        quad = __get_quad(pci_num)
-        if operator.eq(quad, eval(card_id)):
-            ethpeer = subprocess.getoutput("cat /sys/class/net/%s/address" % pt)
-            subprocess.getoutput("ip link set down %s" % pt)
-            dic = {'ethpeer': ethpeer}
-            cmd = subprocess.getstatusoutput("dpdk-devbind.py -b %s %s" % (dpdk_driver, pci_num))
-            if cmd[0] != 0:
-                sys.stderr.write("Bind server card failed.\n")
-                return False
-            break
+    interface = __get_server_port(card_id)
+    pci_num = subprocess.getoutput("ethtool -i %s | grep 'bus-info' | awk '{print $2}'" % interface) 
+    subprocess.getoutput("ip link set down %s" % interface)
+    cmd = subprocess.getstatusoutput("dpdk-devbind -b %s %s" % (DPDK_DRIVER, pci_num))
+    if cmd[0] != 0:
+        sys.stderr.write("Bind server card failed.\n")
 
-    return dic
+    return render_template('index.html')
 
 
 @app.route('/api/unbind/server', methods=['GET', 'POST'])
@@ -389,14 +395,13 @@ def unbind_server_card():
     """
     Unbind server card
     """
-    dpdk_driver = "uio_pci_generic"
     card_id = request.values.get('cardid', '')
-    pci_num = subprocess.getoutput("dpdk-devbind.py  -s | grep 'drv=%s' | awk '{print $1}'" % dpdk_driver)
+    pci_num = subprocess.getoutput("dpdk-devbind  -s | grep 'drv=%s' | awk '{print $1}'" % DPDK_DRIVER)
     quad = __get_quad(pci_num)
     kernel_driver = subprocess.getoutput("lspci -s %s -v | grep 'Kernel modules' | awk '{print $3}'" % pci_num)
     if operator.eq(quad, eval(card_id)):
-        subprocess.getoutput("dpdk-devbind.py -b %s %s" % (kernel_driver, pci_num))
-        result = subprocess.getoutput(("dpdk-devbind.py -s | grep {0}").format(pci_num))
+        subprocess.getoutput("dpdk-devbind -b %s %s" % (kernel_driver, pci_num))
+        result = subprocess.getoutput(("dpdk-devbind -s | grep {0}").format(pci_num))
         interface = re.search(r'if=(\S*)', result).group(1)
         subprocess.getoutput("ip link set up %s") % interface
 
@@ -410,9 +415,10 @@ def test_server(act):
     """
     valid_commands = ['rping', 'rcopy', 'ib_read_bw',
                       'ib_write_bw', 'ib_send_bw', 'qperf', 'dpdk-testpmd']
-    pci_num = ""
-    dpdk_driver = "uio_pci_generic"
     cmd = request.values.get('cmd', '')
+    pci_num = ""
+    interface = ""
+    card_id = request.values.get('cardid', '')
     cmd = cmd.split()
     if (not cmd) or (cmd[0] not in valid_commands + ['all']):
         sys.stdout.write("Invalid command: {0}.\n".format(cmd))
@@ -431,10 +437,14 @@ def test_server(act):
                 abort(400)
             cmd.extend(['-d', ibdev, '-i', ibport])
         if 'dpdk' in cmd[0]:
-            result = subprocess.getstatusoutput("lspci | grep Mellanox")
+            result = subprocess.getstatusoutput("dpdk-devbind -s | grep 'drv=%s'" % DPDK_DRIVER)
             if result[0] == 0:
+                pci_num = subprocess.getoutput("dpdk-devbind -s | grep 'drv=%s' | awk '{print $1}'" % DPDK_DRIVER)
+            else:
                 __setting_dpdk_env()
-            pci_num = subprocess.getoutput("dpdk-devbind.py -s | grep 'drv=%s' | awk '{print $1}'" % dpdk_driver)
+                interface = __get_server_port(card_id)
+                pci_num =  subprocess.getoutput("ethtool -i %s | grep 'bus-info' | awk '{print $2}'"
+                        % interface)
             cmd = ['dpdk-testpmd', '-l', '0-1', '-n', '1', '-a', pci_num, '--', '--forward-mode=rxonly']
             time.sleep(3)
         __execute_cmd(cmd)
@@ -449,6 +459,24 @@ def test_server(act):
         abort(404)
 
     return render_template('index.html')
+
+
+def __get_server_port(card_id):
+    """
+    get server interface
+    """
+    ports = []
+    interface = ""
+    ports = subprocess.getoutput("ip link show up | grep 'state UP' | awk -F ': ' '{print $2}'").split('\n')
+    for pt in ports:
+        pci_num = subprocess.getoutput("ethtool -i %s | grep 'bus-info' | awk '{print $2}'" % pt)
+        quad = __get_quad(pci_num)
+        if operator.eq(quad, eval(card_id)):
+            result = subprocess.getoutput(("dpdk-devbind -s | grep {0}").format(pci_num))
+            interface = re.search(r'if=(\S*)', result).group(1)
+            break
+
+    return interface
 
 
 def __stop_process(process_name):
@@ -516,9 +544,8 @@ def __setting_dpdk_env():
     """
     Dpdk server environment setting
     """
-    dpdk_driver = "uio_pci_generic"
-    subprocess.getoutput("modprobe uio; modprobe %s" % dpdk_driver)
-    if subprocess.getstatusoutput("lsmod | grep uio_pci_generic")[0] != 0:
+    subprocess.getoutput("modprobe uio; modprobe %s" % DPDK_DRIVER)
+    if subprocess.getstatusoutput("lsmod | grep %s" % DPDK_DRIVER)[0] != 0:
         sys.stderr.write("Dpdk driver moprobe failed.\n")
         return False
     subprocess.getoutput("dpdk-hugepages.py -u")

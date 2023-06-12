@@ -46,7 +46,7 @@ class DPDKTest(Test):
         self.server_port = 80
         self.portmask = "0xffff"
         self.packet_size = 1514
-        self.support_driver = ['mlx4_core', 'mlx5_core', 'ixgbe', 'i40e', 'ice', 'hinic', 'igc']
+        self.support_driver = ['mlx4_core', 'mlx5_core', 'ixgbe', 'ice', 'hinic', 'igc']
         self.dpdk_driver = 'uio_pci_generic'
         self.kernel_driver = None
         self.retries = 3
@@ -106,17 +106,17 @@ class DPDKTest(Test):
             return False
         else:
             self.logger.info("DPDK driver is loading...")
-            subprocess.getoutput("modprobe uio; modprobe uio_pci_generic")
-            if self.command.run_cmd("lsmod | grep uio_pci_generic", terminal_print=True)[2] != 0:
+            subprocess.getoutput("modprobe uio; modprobe %s" % self.dpdk_driver)
+            if self.command.run_cmd("lsmod | grep %s" % self.dpdk_driver, terminal_print=True)[2] != 0:
                 self.logger.error("DPDK driver is loaded failed!")
                 return False
             else:
+                self.logger.info("Get server card's ethpeer...")
+                if not self.get_ethpeer():
+                    return False
                 if self.kernel_driver == "mlx4_core" or self.kernel_driver == "mlx5_core":
                     self.logger.info("The mellanox network card does not need to be bound.")
                     self.command.run_cmd("modprobe -a ib_uverbs mlx5_core mlx5_ib mlx4_core", terminal_print=True)
-                    self.ethpeer = self.command.run_cmd("grep %s /proc/net/arp | awk '{print $4}'" %
-                            self.interface)[0].strip('\n')
-                    self.logger.info("The mac of the server card is %s" % self.ethpeer)
                 else:
                     self.logger.info("Server dpdk is binding...")
                     if not self.server_dpdk_bind():
@@ -125,6 +125,32 @@ class DPDKTest(Test):
                     if not self.client_dpdk_bind():
                         return False
                 return True
+
+    def get_ethpeer(self):
+        """
+        Get ethpeer.
+        :return:
+        """
+        form = {'serverip': self.server_ip, 'cardid': self.card_id}
+        url = 'http://{}:%s/api/get/ethpeer'.format(self.server_ip) % self.server_port
+        data = urlencode(form).encode('utf8')
+        headers = {
+            'Content-type': 'application/x-www-form-urlencoded',
+            'Accept': 'text/plain'
+        }
+        request = Request(url, data=data, headers=headers)
+        try:
+            response = urlopen(request)
+        except Exception:
+            self.logger.error("Call remote server url %s failed." % url)
+            return False
+        self.logger.info(str(response.headers), terminal_print=False)
+        self.ethpeer = json.loads(response.read())['ethpeer']
+        self.logger.info("The mac of the server card is %s" % self.ethpeer)
+        self.logger.info("Status: %u %s" % (response.code, response.msg))
+        if response.code != 200:
+            return False
+        return True
 
     def client_dpdk_bind(self):
         """
@@ -165,8 +191,6 @@ class DPDKTest(Test):
             self.logger.error("Call remote server url %s failed." % url)
             return False
         self.logger.info(str(response.headers), terminal_print=False)
-        self.ethpeer = json.loads(response.read())['ethpeer']
-        self.logger.info("The mac of the server card is %s" % self.ethpeer)
         self.logger.info("Status: %u %s" % (response.code, response.msg))
         if response.code != 200:
             return False
@@ -244,7 +268,7 @@ class DPDKTest(Test):
             '--rxq=4',
             '--txq=4',
             '--forward-mode=txonly',
-            '--eth-peer=1,%s' % self.ethpeer,
+            '--eth-peer=0,%s' % self.ethpeer,
             '--stats-period=2'
             ]
         res = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -268,9 +292,11 @@ class DPDKTest(Test):
                     (bandwidth, target_bandwidth))
             if bandwidth > target_bandwidth:
                 self.logger.info("Test dpdk bandwidth successfully.")
-            return True
-        else:
+                return True
             self.logger.error("Test dpdk bandwidth failed!")
+            return False
+        else:
+            self.logger.error("No data obtained for testing dpdk, Please manually check!")
             return False
 
     def ifdown(self, interface):
@@ -280,7 +306,7 @@ class DPDKTest(Test):
         :return:
         """
         self.command.run_cmd("ip link set down %s" % interface)
-        for _ in range(5):
+        for _ in range(10):
             result = self.command.run_cmd(
                 "ip link show %s | grep 'state DOWN'" % interface, ignore_errors=True)
             if result[2] == 0:
@@ -298,7 +324,7 @@ class DPDKTest(Test):
         :return:
         """
         self.command.run_cmd("ip link set up %s" % interface)
-        for _ in range(5):
+        for _ in range(10):
             result = self.command.run_cmd(
                 "ip link show %s | grep 'state UP'" % interface, ignore_errors=True)
             if result[2] == 0:
@@ -340,7 +366,7 @@ class DPDKTest(Test):
         :return:
         """
         form = dict()
-        form['cmd'] = cmd
+        form = {'cmd': cmd, 'serverip': self.server_ip, 'cardid': self.card_id}
         url = 'http://%s/api/%s' % (self.server_ip, act)
         data = urlencode(form).encode('utf8')
         headers = {
