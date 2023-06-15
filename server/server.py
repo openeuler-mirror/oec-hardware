@@ -25,7 +25,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 from flask import Flask, render_template, redirect, url_for, abort, request, send_from_directory, flash
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
