@@ -50,7 +50,10 @@ class FCTest(Test):
         """
         Start test
         """
-        self.disks = get_disk(self.logger, self.command, self.config_data, self.pci_num)
+        pci_num = self.check_link_state()
+        if not pci_num:
+            return False
+        self.disks = get_disk(self.logger, self.command, self.config_data, pci_num)
         if len(self.disks) == 0:
             self.logger.error("No suite disk found to test.")
             return False
@@ -72,3 +75,22 @@ class FCTest(Test):
             if not vfs_test(self.logger, self.command, disk, self.filesystems):
                 return_code = False
         return return_code
+    
+    def check_link_state(self):
+        """
+        check HBA link state
+        """
+        host_name = self.command.run_cmd("ls -l /sys/class/fc_host | grep %s | awk '{print $9}'"
+                % self.pci_num)[0].strip('\n')
+        port_state = self.command.run_cmd("cat /sys/class/fc_host/%s/port_state" % host_name)[0].strip('\n')
+        if port_state == "Linkdown":
+            self.logger.error("The HBA's port_state is linkdown, Please check the connection state!")
+            return ""
+        elif port_state == "Online":
+            pci_num = self.pci_num
+            self.logger.info("The HBA's port_state is Online, start testing...")
+            return pci_num
+        else:
+            self.logger.info("The HBA's port_state can't be viewed")
+            return False
+
