@@ -66,7 +66,7 @@ class NvidiaGpuTest():
         if pci_key in output.keys():
             id_num = str(re.findall("\d+", output[pci_key])).strip("['']")
             os.environ['CUDA_VISIBLE_DEVICES'] = id_num
-        
+
         self.logger.info("Set default test gpu as %s." % id_num)
 
     def test_pressure(self):
@@ -95,10 +95,14 @@ class NvidiaGpuTest():
             return False
         self.logger.info("Execute gpu_burn succeed.")
 
-        for _ in range(10):
+        time_start = time.time()
+        while 1:
             cmd = self.command.run_cmd(
                 "ps -ef | grep 'gpu_burn' | grep -v grep", ignore_errors=True)
             if cmd[2] != 0:
+                break
+            time_delta = time.time() - time_start
+            if time_delta >= 500:
                 break
             self.command.run_cmd(self.smi_name)
             time.sleep(5)
