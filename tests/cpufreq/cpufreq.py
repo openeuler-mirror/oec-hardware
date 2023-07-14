@@ -83,7 +83,7 @@ class CPU:
         """
         cmd = self.command.run_cmd(
             "cpupower -c %s frequency-info -w | grep 'frequency' | cut -d ' ' -f 6" % cpu)
-        if cmd[2] != 0:
+        if cmd[2] != 0 or not cmd[0].isdigit():
             self.logger.error("Get cpu frequency failed.")
             return False
         self.logger.info("Get cpu frequency succeed.")
