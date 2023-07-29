@@ -17,7 +17,7 @@ Buildroot:      %{_tmppath}/%{name}-%{version}-root
 BuildRequires:  gcc
 Requires:       kernel-devel, kernel-headers, dmidecode, tar
 Requires:       kernel >= 4
-Requires:       python3, python3-pyyaml, python3-concurrent-log-handler
+Requires:       python3, python3-pyyaml, python3-concurrent-log-handler, net-tools
 Provides:       libswsds.so()(64bit)
 
 # server subpackage
@@ -25,7 +25,7 @@ Provides:       libswsds.so()(64bit)
 Summary:        openEuler Hardware Compatibility Test Server
 Group:          Development/Tools
 Requires:       python3, python3-devel, python3-flask, python3-uWSGI, python3-werkzeug
-Requires:       nginx, tar, qperf, psmisc, dpdk, dpdk-tools, dpdk-devel
+Requires:       nginx, tar, qperf, psmisc, dpdk, dpdk-tools, dpdk-devel, net-tools
 
 %description
 openEuler Hardware Compatibility Test Suite

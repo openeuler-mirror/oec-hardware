@@ -92,7 +92,9 @@ def get_job(host, oec_id, job):
     :param job:
     :return:
     """
-
+    host = secure_filename(host)
+    oec_id = secure_filename(oec_id)
+    job = secure_filename(job)
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_info = os.path.join(dir_job, 'compatibility.json')
     json_results = os.path.join(dir_job, 'factory.json')
@@ -100,9 +102,9 @@ def get_job(host, oec_id, job):
         abort(404)
 
     try:
-        with open(secure_filename(json_info), 'r') as file_content:
+        with open(json_info, 'r') as file_content:
             info = json.load(file_content)
-        with open(secure_filename(json_results), 'r') as file_content:
+        with open(json_results, 'r') as file_content:
             results = json.load(file_content)
     except json.decoder.JSONDecodeError as error:
         sys.stderr.write("The file %s is not json file.\n")
@@ -121,13 +123,16 @@ def get_device(host, oec_id, job, interface):
     :param interface:
     :return:
     """
+    host = secure_filename(host)
+    oec_id = secure_filename(oec_id)
+    job = secure_filename(job)
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_results = os.path.join(dir_job, 'factory.json')
     if not os.path.exists(json_results):
         abort(404)
 
     try:
-        with open(secure_filename(json_results), 'r') as file_content:
+        with open(json_results, 'r') as file_content:
             results = json.load(file_content)
     except json.decoder.JSONDecodeError as error:
         sys.stderr.write("The file %s is not json file.\n")
@@ -150,13 +155,16 @@ def get_devices(host, oec_id, job):
     :param job:
     :return:
     """
+    host = secure_filename(host)
+    oec_id = secure_filename(oec_id)
+    job = secure_filename(job)
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_devices = os.path.join(dir_job, 'device.json')
     if not os.path.exists(json_devices):
         abort(404)
 
     try:
-        with open(secure_filename(json_devices), 'r') as file_content:
+        with open(json_devices, 'r') as file_content:
             devices = json.load(file_content)
     except json.decoder.JSONDecodeError as error:
         sys.stderr.write("The file %s is not json file.\n")
@@ -191,12 +199,15 @@ def get_log(host, oec_id, job, name):
     :param name:
     :return:
     """
+    host = secure_filename(host)
+    oec_id = secure_filename(oec_id)
+    job = secure_filename(job)
     dir_job = os.path.join(dir_results, host, oec_id, job)
     logpath = os.path.join(dir_job, name + '.log')
     if not os.path.exists(logpath):
         logpath = os.path.join(dir_job, 'job.log')
 
-    with open(secure_filename(logpath), 'r') as file_content:
+    with open(logpath, 'r') as file_content:
         log = file_content.read().split('\n')
 
     return render_template('log.html', host=host, id=oec_id, job=job, name=name, log=log)
@@ -260,9 +271,9 @@ def upload_job():
     Upload job
     :return:
     """
-    host = request.values.get('host', '').strip().replace(' ', '-')
-    oec_id = request.values.get('id', '').strip().replace(' ', '-')
-    job = request.values.get('job', '').strip().replace(' ', '-')
+    host = secure_filename(request.values.get('host', '').strip().replace(' ', '-'))
+    oec_id = secure_filename(request.values.get('id', '').strip().replace(' ', '-'))
+    job = secure_filename(request.values.get('job', '').strip().replace(' ', '-'))
     filetext = request.values.get('filetext', '')
     if not (all([host, oec_id, job, filetext])):
         return render_template('upload.html', host=host, id=id, job=job,
@@ -281,7 +292,7 @@ def upload_job():
         os.makedirs(dir_job)
 
     tar_job = dir_job + '.tar'
-    with open(secure_filename(tar_job), 'wb') as file_content:
+    with open(tar_job, 'wb') as file_content:
         file_content.write(ori_file)
     result = subprocess.getstatusoutput(
         "tar xf '%s' -C '%s'" % (tar_job, os.path.dirname(dir_job)))
@@ -314,7 +325,7 @@ def upload_file():
     """
     Upload_file
     """
-    filename = request.values.get('filename', '')
+    filename = secure_filename(request.values.get('filename', ''))
     filetext = request.values.get('filetext', '')
     if not (all([filename, filetext])):
         return render_template('upload.html', filename=filename, filetext=filetext,
@@ -324,7 +335,7 @@ def upload_file():
     if not os.path.exists(dir_files):
         os.makedirs(dir_files)
 
-    with open(secure_filename(filepath), 'wb') as file_content:
+    with open(filepath, 'wb') as file_content:
         file_content.write(base64.b64decode(filetext))
 
     return render_template('upload.html', filename=filename, filetext=filetext,
@@ -354,6 +365,9 @@ def config_ip():
                     subprocess.getoutput(
                         "ifconfig %s:0 %s/24" % (pt, sever_ip))
                     break
+        else:
+            continue
+        break
 
     return render_template('index.html')
 
