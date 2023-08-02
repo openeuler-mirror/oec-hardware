@@ -66,7 +66,7 @@ class NvmeTest(Test):
 
         nvme_info = json.loads(self.command.run_cmd("nvme list -o json")[0], strict=False)["Devices"]
         for nvme in nvme_info:
-            if nvme["DevicePath"] == "/dev/" + disk:
+            if nvme["DevicePath"] == os.path.join("/dev/", disk):
                 size_per_block = int(nvme["SectorSize"])
                 break
 
