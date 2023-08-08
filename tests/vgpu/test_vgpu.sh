@@ -13,6 +13,7 @@
 
 arch=$(uname -m)
 vmfile="test_vm_"${arch}".xml"
+kernel_version=$(uname -r)
 
 
 # Desc: Create virtual machine
@@ -90,7 +91,7 @@ function test_vgpu_client() {
     scpfile ${vm_driver} "root@${vm_ip}:/root" $passwd
  
     echo "Install dependency rpms."
-    dep_cmd="dnf install -y pciutils tar kernel-source rpm-build openssl-devel bc rsync gcc gcc-c++ flex bison m4 elfutils-libelf-devel"
+    dep_cmd="dnf install -y pciutils tar kernel-source-${kernel-version} rpm-build openssl-devel bc rsync gcc gcc-c++ flex bison m4 elfutils-libelf-devel kernel-devel-${kernel-version} make"
     sshcmd $vm_ip $passwd "${dep_cmd}"
 
     echo "Check vgpu device in vm."
