@@ -28,16 +28,23 @@ class KdumpTest(Test):
         Test.__init__(self)
         self.pri = 9
         self.reboot = True
+        self.kernel_version = getoutput("uname -r")
         self.rebootup = "verify_vmcore"
         self.kdump_conf = "/etc/kdump.conf"
         self.vmcore_path = "/var/crash"
-        self.requirements = ["crash", "kernel-debuginfo", "kexec-tools"]
+        self.requirements = ["crash", "kexec-tools"]
 
     def test(self):
         """
         Test case
         :return:
         """
+        cmd_result = self.command.run_cmd("yum install -y kernel-debuginfo-%s" % self.kernel_version)
+        if len(cmd_result[1]) != 0 and cmd_result[2] != 0:
+            self.logger.error(
+                "Fail to install required packages.\n %s" % cmd_result[1])
+            return False
+
         cmd_result = self.command.run_cmd("grep crashkernel /proc/cmdline")
         if cmd_result[2] != 0:
             self.logger.error(
@@ -103,9 +110,8 @@ class KdumpTest(Test):
         vmcore_dirs.sort()
         vmcore_file = os.path.join(self.vmcore_path, vmcore_dirs[-1], "vmcore")
         command = Command(logger)
-        arch = getoutput("uname -r")
         cmd = command.run_cmd(
-            "echo 'sys\nq'| crash -s %s /usr/lib/debug/lib/modules/%s/vmlinux" % (vmcore_file, arch))
+            "echo 'sys\nq'| crash -s %s /usr/lib/debug/lib/modules/%s/vmlinux" % (vmcore_file, self.kernel_version))
         if cmd[2] == 0:
             logger.info("Verify kdump image %s succeed." % vmcore_file)
             return True
