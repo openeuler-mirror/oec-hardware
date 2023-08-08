@@ -91,7 +91,7 @@ function test_vgpu_client() {
     scpfile ${vm_driver} "root@${vm_ip}:/root" $passwd
  
     echo "Install dependency rpms."
-    dep_cmd="dnf install -y pciutils tar kernel-source-${kernel-version} rpm-build openssl-devel bc rsync gcc gcc-c++ flex bison m4 elfutils-libelf-devel kernel-devel-${kernel-version} make"
+    dep_cmd="dnf install -y pciutils tar kernel-source-${kernel_version} rpm-build openssl-devel bc rsync gcc gcc-c++ flex bison m4 elfutils-libelf-devel kernel-devel-${kernel_version} make"
     sshcmd $vm_ip $passwd "${dep_cmd}"
 
     echo "Check vgpu device in vm."
@@ -130,9 +130,7 @@ function scpfile() {
         expect {
             "Are you sure you want to continue connecting*"
             {
-                send "yes\r"
-                "*\[P|p]assword:"
-                send "${passwd}\r"
+                send "yes\r";exp_continue
             }
             "*\[P|p]assword:"
             {
@@ -184,9 +182,7 @@ function sshcmd() {
             expect {
                 "Are you sure you want to continue connecting*"
                 {
-                    send "yes\r"
-                    expect "*\[P|p]assword:"
-                    send "${passwd}\r"
+                    send "yes\r";exp_continue
                 }
                 "*\[P|p]assword:"
                 {
