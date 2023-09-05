@@ -58,7 +58,7 @@ class MemoryTest(Test):
 
         if not self.eat_memory():
             self.logger.error(
-                "Eat memory test failed, please check the space of SWAP.")
+                "Eat memory test failed.")
             return False
         self.logger.info("Eat memory test succeed.")
 
@@ -127,7 +127,7 @@ class MemoryTest(Test):
             self.logger.error("Get system memory failed.")
             return False
         if self.swap_memory < 512:
-            self.logger.error("Swap memory of %s MB is too small."
+            self.logger.error("Swap memory of %s MB is too small. Suggest configuring to 4G."
                               % self.swap_memory)
             return False
 
