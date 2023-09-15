@@ -175,11 +175,15 @@ class ConfigIP:
             'Content-type': 'application/x-www-form-urlencoded',
             'Accept': 'text/plain'
         }
-        req = Request(url, data=data, headers=headers)
-        res = urlopen(req)
-        if res.code != 200:
+        try:
+            req = Request(url, data=data, headers=headers)
+            res = urlopen(req)
+            if res.code != 200:
+                return False
+            return True
+         except Exception as e:
+            self.logger.error("Upload file to server failed.")
             return False
-        return True
 
     def ping_ip(self, ip):
         """
