@@ -35,7 +35,7 @@ unsigned long thread_mem = 0;
 unsigned done = 0;
 unsigned mmap_done = 0;
 unsigned init_thread = 0;
-unsigned long test_time = 120;
+unsigned long test_time = 1200;
 pthread_mutex_t thread_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t run_mutex = PTHREAD_MUTEX_INITIALIZER;
 char **mmap_zone = NULL;
@@ -45,7 +45,7 @@ void usage(void)
 	printf("Usage: eatmem_test [-h] [-m size] [-t time]\n");
 	printf("  -h: show this help\n");
 	printf("  -m: memory size,unit MB. default: 1024MB\n");
-	printf("  -t: test time,in seconds. default: 120\n");
+	printf("  -t: test time,in seconds. default: 1200\n");
 }
 
 

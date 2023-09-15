@@ -43,7 +43,7 @@ class CPU:
         :return:
         """
         cmd_result = self.command.run_cmd(
-            "lscpu | grep '^CPU(s)' | awk '{print $2}'")
+                "lscpu | grep '^CPU(s):' | awk '{print $2}'")
         self.logger.info("Get the CPU(s) succeed.")
         self.nums = int(cmd_result[0])
         self.list = range(self.nums)
@@ -82,11 +82,14 @@ class CPU:
         :return:
         """
         cmd = self.command.run_cmd(
-            "cpupower -c %s frequency-info -w | grep 'frequency' | cut -d ' ' -f 6" % cpu)
-        if cmd[2] != 0 or not cmd[0].isdigit():
-            self.logger.error("Get cpu frequency failed.")
+                "cpupower -c %s frequency-info -w | grep 'frequency' | cut -d ' ' -f 6" % cpu)
+        try:
+            if int(cmd[0]) and cmd[2] == 0:
+                self.logger.info("Get cpu frequency succeed.")
+        except ValueError as e:
+            self.logger.error("Get cpu frequency failed, %s" % e)
+            self.logger.info("Please use 'cpupower frequency-info' to check current frequency manually.")
             return False
-        self.logger.info("Get cpu frequency succeed.")
         return int(cmd[0])
 
     def set_governor(self, governor, cpu='all'):

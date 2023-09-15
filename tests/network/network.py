@@ -154,7 +154,7 @@ class NetworkTest(Test):
         :return:
         """
         self.command.run_cmd("ip link set up %s" % interface)
-        for _ in range(10):
+        for _ in range(20):
             result = self.command.run_cmd(
                 "ip link show %s | grep 'state UP'" % interface, ignore_errors=False)
             if result[2] == 0:

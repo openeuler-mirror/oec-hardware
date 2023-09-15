@@ -49,6 +49,7 @@ class Job():
         self.config_info = {}
         self.logger = Logger("job.log", self.job_id, sys.stdout, sys.stderr)
         self.command = Command(self.logger)
+        self.yaml_file = CertEnv.configfile
         self.total_count = 0
         self.current_num = 0
         self.config_flag = 0
@@ -160,17 +161,16 @@ class Job():
         """
         get configuration file
         """
-        yaml_file = CertEnv.configfile
-        if not os.path.exists(yaml_file):
+        if not os.path.exists(self.yaml_file):
             self.logger.error("Failed to get configuration file information.")
             return False
         try:
-            with open(yaml_file, 'r', encoding="utf-8") as file:
+            with open(self.yaml_file, 'r', encoding="utf-8") as file:
                 file_data = file.read()
                 self.config_info = yaml.safe_load(file_data)
         except yaml.scanner.ScannerError:
             self.logger.error(
-                "The yaml file %s format is error." % yaml_file)
+                "The yaml file %s format is error." % self.yaml_file)
             return False
 
         return True
@@ -218,7 +218,8 @@ class Job():
                                  (self.current_num, self.total_count, name))
 
                 if device_name and self.config_flag == 0 and testcase["name"] not in NO_CONFIG_DEVICES:
-                    self.logger.error("Please configure the board information in the configuration file.")
+                    self.logger.error("Failed to check configuration file!"
+                            "\nPlease configure the board information in file '%s'." % self.yaml_file)
                     return False
 
                 if testcase['name'] in ('ethernet', 'infiniband'):
