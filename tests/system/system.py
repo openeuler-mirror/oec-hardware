@@ -14,6 +14,7 @@
 # Desc: System Test
 
 import re
+from subprocess import getoutput
 from hwcompatible.test import Test
 from hwcompatible.sysinfo import SysInfo
 from hwcompatible.env import CertEnv
@@ -79,13 +80,19 @@ class SystemTest(Test):
         Check kernel
         :return:
         """
+        kernel_release = ""
         self.logger.info("Checking kernel...")
+        product = self.sysinfo.product.split(" ")[0]
         kernel_rpm = self.sysinfo.kernel_rpm
-        os_version = self.sysinfo.product + " " + self.sysinfo.get_version()
         self.logger.info("Kernel RPM: %s" % kernel_rpm, terminal_print=False)
+        if product == "openEuler":
+            os_version = self.sysinfo.product + " " + self.sysinfo.get_version()
+        elif product == "KylinSec":
+            os_version = getoutput("cat /etc/dnf/vars/osversion | sed 's/[^0-9]//g'")
+        else:
+            self.logger.error("Failed to get os version info.")
         self.logger.info("OS Version: %s" % os_version, terminal_print=False)
         self.command.run_cmd("cat /proc/cmdline")
-
         return_code = True
         if self.sysinfo.debug_kernel:
             self.logger.error("This is debug kernel.")
@@ -95,9 +102,12 @@ class SystemTest(Test):
         if not kernel_dict.load():
             self.logger.error("Failed to get kernel info.")
             return False
-
+        if product == "openEuler":
+            kernel_release = kernel_dict.document[product][os_version]
+        elif product == "KylinSec":
+            kernel_release = kernel_dict.document[product][os_version].split('/')[1].split('-')[0]
         try:
-            if kernel_dict.document[os_version] != self.sysinfo.kernel_version:
+            if kernel_release != self.sysinfo.kernel_version:
                 self.logger.error("Failed to check kernel %s GA status." %
                                   self.sysinfo.kernel_version)
                 return_code = False
