@@ -65,7 +65,7 @@ class SysInfo:
             text = file_content.read()
 
         if text:
-            pattern = re.compile(r'NAME="(\w+)"')
+            pattern = re.compile(r'NAME="(.+)"')
             results = pattern.findall(text)
             self.product = results[0].strip() if results else ""
 
