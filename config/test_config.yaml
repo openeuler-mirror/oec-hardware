@@ -1,4 +1,15 @@
-#device: fc\raid\ethernet\infiniband testcase need configuration, It is obtained from the OECH command line interface and
+# Copyright (c) 2023 Huawei Technologies Co., Ltd.
+# # oec-hardware is licensed under the Mulan PSL v2.gica's
+# # You can use this software according to the terms and conditions of the Mulan PSL v2.
+# # You may obtain a copy of Mulan PSL v2 at:
+# #     http://license.coscl.org.cn/MulanPSL2
+# # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+# # IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+# # PURPOSE.
+# # See the Mulan PSL v2 for more details.
+# # Author: 
+# # # Create: 2023-09-11
+# #device: fc\raid\ethernet\infiniband testcase need configuration, It is obtained from the OECH command line interface and
 #        needs to be enclosed in single quotation marks
 #disk: fc\raid\disk testcase need configuration, The disk to be tested, such as sda; Or all, test all qualified disks.
 #if_rdma: ethernet testcase need configuration, N means to test according to ordinary network card, y means to test according to RDMA card
@@ -55,5 +66,10 @@ infiniband:
     device: ibp1s0
     client_ip:
     server_ip:
-    
-
+kabiwhitelist:
+  ko1:
+    ko_name: ''
+  ko2:
+    ko_name: ''
+  rpm:
+    rpm_name: ''

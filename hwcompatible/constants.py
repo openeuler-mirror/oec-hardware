@@ -25,7 +25,7 @@ CHIP = "chipModel"
 DRIVER = "driverName"
 VERSION = "driverVersion"
 NODEVICE = ("cpufreq", "memory", "clock", "profiler", "system",
-            "stress", "kdump", "perf", "acpi", "watchdog", "kabi")
+            "stress", "kdump", "perf", "acpi", "watchdog", "kabi", "kabiwhitelist")
 TEST_KABI_ARCH = ("aarch64", "x86_64")
 CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD")
