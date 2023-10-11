@@ -181,7 +181,7 @@ class ConfigIP:
             if res.code != 200:
                 return False
             return True
-         except Exception as e:
+        except Exception as e:
             self.logger.error("Upload file to server failed.")
             return False
 

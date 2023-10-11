@@ -143,7 +143,6 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
    | 测试项 | 文件名 | 路径 |
    | ---- | ----- | ----- |
-   | kabi | 下载对应版本和架构的内核白名单，此处以openEuler 22.03LTS、aarch64为例：https://gitee.com/src-openeuler/kernel/blob/openEuler-22.03-LTS/kabi_whitelist_aarch64 | `/var/oech` |
    | GPU  | https://github.com/wilicc/gpu-burn | `/opt` |
    |      | https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip | `/opt` |
    | VGPU | NVIDIA vgpu client驱动软件包 | /root |

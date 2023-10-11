@@ -81,6 +81,7 @@ class SystemTest(Test):
         :return:
         """
         kernel_release = ""
+        os_version = ""
         self.logger.info("Checking kernel...")
         product = self.sysinfo.product.split(" ")[0]
         kernel_rpm = self.sysinfo.kernel_rpm
@@ -150,15 +151,13 @@ class SystemTest(Test):
         if kernel_verfiy[2] == 0:
             return return_code
 
-        except_list = ["modules.dep", "modules.symbols", "modules.dep.bin",
-                       "modules.symbols.bin"]
+        except_list = ["modules.dep", "modules.symbols", "modules.dep.bin", "modules.symbols.bin"]
         for line in kernel_verfiy[0].strip().split("\n"):
             if line.split("/")[-1] in except_list:
                 continue
             else:
-                self.logger.error("Files in %s were modified.\n" % kernel_rpm)
-                self.logger.error(
-                    "The tampered files are as follows:\n%s" % kernel_verfiy[0], terminal_print=False)
+                self.logger.info("Files in %s were modified.\n" % kernel_rpm)
+                self.logger.error("The tampered files are as follows:\n%s" % line, terminal_print=False)
                 return_code = False
                 break
 

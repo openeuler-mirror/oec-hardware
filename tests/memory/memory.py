@@ -126,7 +126,7 @@ class MemoryTest(Test):
         if not self.system_memory:
             self.logger.error("Get system memory failed.")
             return False
-        if self.swap_memory < 512:
+        if self.swap_memory < 4096:
             self.logger.error("Swap memory of %s MB is too small. Suggest configuring to 4G."
                               % self.swap_memory)
             return False
