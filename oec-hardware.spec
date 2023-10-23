@@ -1,4 +1,4 @@
-%define version    1.1.4
+%define version    1.1.5
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -37,7 +37,9 @@ openEuler Hardware Compatibility Test Server
 %setup -q -c
 
 %build
+%ifarch x86_64 aarch64
 strip tests/keycard/libswsds_%{_arch}.so
+%endif
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
 DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
 
