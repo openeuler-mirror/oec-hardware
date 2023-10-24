@@ -1,4 +1,4 @@
-%define version    1.1.4
+%define version    1.1.5
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -37,7 +37,9 @@ openEuler Hardware Compatibility Test Server
 %setup -q -c
 
 %build
+%ifarch x86_64 aarch64
 strip tests/keycard/libswsds_%{_arch}.so
+%endif
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
 DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
 
@@ -75,6 +77,12 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Mon Oct 23 2023 liuyanze <liuyanze1@huawei.com> - 1.1.5-0
+1. Add support for openEuler 20.03 LTS SP4, openEuler 22.03 LTS SP2, openEuler 22.03 LTS SP3
+2. Add modifications to Kylinsec with oec-hardware
+3. Add support for Loongson and SW architectures
+4. Bugfix
+
 * Tue Feb 28 2023 cuixucui <cuixucui1@h-partner.com> - 1.1.4-0
 1. Add board information in the test report
 2. Add spdk test case
