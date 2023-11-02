@@ -109,16 +109,20 @@ class KabiTest(Test):
         return result
 
     def _get_kernel_source_rpm(self, arch):
-        kernel_release = ""
+        """
+        get the path of kernel source rpm 
+        """
         rpmpath = "/root/rpmbuild/SOURCES"
-        self.command.run_cmd("mkdir -p %s" % rpmpath)
+        standard_symvers = os.path.join(rpmpath, "Module.kabi_" + arch)
+        if os.path.exists(standard_symvers):
+            return standard_symvers
+
         product = self.sysinfo.product.split(" ")[0]
-        standard_kernel_version = ""
         if product == "openEuler":
             standard_kernel_version = getoutput(
-                    "dnf list --repo=source | grep '^kernel.src' | awk '{print $2}'")
+                "dnf list --repo=source | grep '^kernel.src' | awk '{print $2}'")
             self.command.run_cmd("dnf download --source kernel-%s"
-                    % standard_kernel_version)
+                                 % standard_kernel_version)
         elif product == "KylinSec":
             kylinsec_version = getoutput("cat /etc/dnf/vars/osversion | sed 's/[^0-9]//g'")
             kernel_dict = Document(CertEnv.kernelinfo, self.logger)
@@ -133,10 +137,8 @@ class KabiTest(Test):
         else:
             self.logger.info("Currently, this system is not supported to test kabi,"
                              " Please add the corresponding system in kernelrelease.json.")
-        standard_symvers = os.path.join(rpmpath, "Module.kabi_" + arch)
-        if os.path.exists(standard_symvers):
-            os.remove(standard_symvers)
-        rpm = os.path.join(rpmpath, "kernel-" + standard_kernel_version + ".src.rpm")
+
+        rpm = os.path.join("kernel-" + standard_kernel_version + ".src.rpm")
         getoutput("rpm -ivh %s" % rpm)
         os.remove(rpm)
         return standard_symvers
