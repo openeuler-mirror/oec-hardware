@@ -28,16 +28,17 @@ class CertInfo:
         self.logger = logger
         self.command = command
 
-    def create_json(self, device):
+    def create_json(self, device_name, device):
         """
         Create hardware information json
         Args:
+            device_name: device name
             device: hardware device
         Returns: True/False
         """
         if not device or not device.quad:
             self.logger.warning(
-                "The %s doesn't have quadruple information, couldn't get hardware." % device.name)
+                "The %s doesn't have quadruple information, couldn't get hardware." % device_name)
             return False
 
         if device.quad in self.cert_quads:
@@ -49,7 +50,7 @@ class CertInfo:
 
         self.logger.info(
             "Please input sha256, driverSize, downloadLink for %s manually "
-            "if you use outbox driver." % device.name)
+            "if you use outbox driver." % device_name)
 
         oec_json["vendorID"] = device.quad[0]
         oec_json["deviceID"] = device.quad[1]
@@ -62,7 +63,7 @@ class CertInfo:
         oec_json["chipVendor"] = chip_vendor[0].strip("\n")
         oec_json["boardModel"] = device.board
         oec_json["chipModel"] = device.chip
-        oec_json["type"] = device.name.upper()
+        oec_json["type"] = device_name.upper()
         arch = self.command.run_cmd("uname -m", log_print=False)
         oec_json["architecture"] = arch[0].strip("\n")
         os_cmd = self.command.run_cmd(
