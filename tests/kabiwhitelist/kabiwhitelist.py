@@ -17,7 +17,6 @@ import os
 import shutil
 import argparse
 from subprocess import getoutput
-from hwcompatible.env import CertEnv
 from hwcompatible.command import Command
 from hwcompatible.test import Test
 
