@@ -101,7 +101,7 @@ class Job():
                                  testcase["name"], terminal_print=False)
 
                 if testcase["name"] not in NODEVICE:
-                    cert_infos.create_json(testcase["device"])
+                    cert_infos.create_json(testcase["name"], testcase["device"])
             else:
                 testcase["status"] = "FAIL"
                 self.logger.error("Test %s failed." %
