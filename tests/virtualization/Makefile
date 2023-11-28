@@ -12,7 +12,7 @@
 
 .PHONY: all clean install
 
-HWCERT_TEST_LIB := $(DESTDIR)/usr/share/oech/lib/tests/
+HWCERT_TEST_LIB := $(DESTDIR)/usr/share/oech/lib/tests/virtualization
 SUBDIRS := $(shell ls | grep -v Makefile)
 
 all:
@@ -24,4 +24,6 @@ clean:
 
 install:
 	mkdir -p $(HWCERT_TEST_LIB)
+	cp -a *.xml $(HWCERT_TEST_LIB)
+	cp -a *.sh $(HWCERT_TEST_LIB)
 	for i in $(SUBDIRS); do $(MAKE) -C $$i DEST=$(HWCERT_TEST_LIB)/$$i install; done

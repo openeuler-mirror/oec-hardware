@@ -41,6 +41,7 @@
           <th>
             <p>Testcase</p>
           </th>
+          {% if json_results == "factory.json" %}
           <th>
             <p>Device</p>
           </th>
@@ -56,6 +57,7 @@
           <th>
             <p>boardModel</p>
           </th>
+          {% endif %}
           <th>
             <p>Result</p>
           </th>
@@ -78,6 +80,7 @@
               {% endif %}
 
               <td>{{ testcase }}</td>
+              {% if json_results == "factory.json" %}
               <td>
                 <a href="/results/{{ host }}/{{ id }}/{{ job }}/devices/{{ int }}">{{ int }}</a>
               </td>
@@ -85,6 +88,7 @@
               <td>{{ d.get('driverVersion', '') }}</td>
               <td>{{ d.get('chipModel', '') }}</td>
               <td>{{ d.get('boardModel', '') }}</td>
+              {% endif %}
               <td>
                 <a href="/results/{{ host }}/{{ id }}/{{ job }}/logs/{{ testcase }}">{{ result }}</a>
               </td>

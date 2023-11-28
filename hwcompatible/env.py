@@ -26,6 +26,7 @@ class CertEnv:
     certificationfile = os.path.join(datadirectory, "compatibility.json")
     devicefile = os.path.join(datadirectory, "device.json")
     factoryfile = os.path.join(datadirectory, "factory.json")
+    virtfactoryfile = os.path.join(datadirectory, "virtfactory.json")
     rebootfile = os.path.join(datadirectory, "reboot.json")
     testdirectoy = "/usr/share/oech/lib/tests"
     logdirectoy = "/usr/share/oech/logs"

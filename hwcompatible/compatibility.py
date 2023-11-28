@@ -30,7 +30,7 @@ from .reboot import Reboot
 from .client import Client
 from .common import create_test_suite, copy_pci, search_factory
 from .constants import NODEVICE, GPU_DRIVER, IB, CDTYPES, KEYCARD_VENDORS, \
-    BOARD, VERSION, DRIVER, CHIP, DEVICE_INFO
+    BOARD, VERSION, DRIVER, CHIP, DEVICE_INFO, TEST_CATEGORY
 
 
 class EulerCertification():
@@ -47,17 +47,24 @@ class EulerCertification():
         self.dir_name = None
         self.logger = logger
         self.command = Command(logger)
+        self.category = ''
 
     def run(self):
         """
         Openeuler compatibility verification
         :return:
         """
-        self.logger.info(
-            "The openEuler Hardware Compatibility Test Suite", log_print=False)
-        copy_pci()
+        self._select_category()
+        if self.category == "virtualization":
+            self.logger.info(
+                "The openEuler Virtualization Test Suite")
+        elif self.category == "compatible":
+            self.logger.info(
+                "The openEuler Hardware Compatibility Test Suite")
+            copy_pci()
+            certdevice = CertDevice(self.logger)
+
         self.load()
-        certdevice = CertDevice(self.logger)
 
         while True:
             self.submit()
@@ -66,15 +73,17 @@ class EulerCertification():
                 self.logger.info("All cases are passed, test end.")
                 return True
 
-            oec_devices = certdevice.get_devices()
-            self.devices = DeviceDocument(CertEnv.devicefile, self.logger, oec_devices)
-            self.devices.save()
+            oec_devices = list()
+            if self.category == "compatible":
+                oec_devices = certdevice.get_devices()
+                self.devices = DeviceDocument(CertEnv.devicefile, self.logger, oec_devices)
+                self.devices.save()
             test_factory = self.get_tests(oec_devices)
             self.update_factory(test_factory)
             if not self.choose_tests():
                 return True
 
-            test_suite = create_test_suite(self.test_factory, self.logger)
+            test_suite = create_test_suite(self.test_factory, self.logger, self.category)
             args = argparse.Namespace(
                 test_factory=self.test_factory, test_suite=test_suite)
             job = Job(args)
@@ -116,6 +125,8 @@ class EulerCertification():
                 os.remove(CertEnv.certificationfile)
             if os.path.exists(CertEnv.factoryfile):
                 os.remove(CertEnv.factoryfile)
+            if os.path.exists(CertEnv.virtfactoryfile):
+                os.remove(CertEnv.virtfactoryfile)
             if os.path.exists(CertEnv.devicefile):
                 os.remove(CertEnv.devicefile)
         self.logger.info("Clean compatibility test data succeed.")
@@ -134,7 +145,10 @@ class EulerCertification():
                 self.certification.new()
                 self.certification.save()
         if not self.test_factory:
-            factory_doc = FactoryDocument(CertEnv.factoryfile, self.logger)
+            if self.category == "virtualization":
+                factory_doc = FactoryDocument(CertEnv.virtfactoryfile, self.logger)
+            elif self.category == "compatible":
+                factory_doc = FactoryDocument(CertEnv.factoryfile, self.logger)
             self.test_factory = factory_doc.get_factory()
 
         oec_id = self.certification.get_certify()
@@ -145,12 +159,15 @@ class EulerCertification():
         self.certification.save()
 
         display_message = "    %s: ".ljust(20) % name + version + "\n" \
-            "    Compatibility Test ID: ".ljust(30) + oec_id + "\n" \
-            "    Hardware Info: ".ljust(30) + hardware_info + "\n" \
-            "    Product URL: ".ljust(30) + self.certification.get_url() + "\n" \
-            "    OS Info: ".ljust(30) + self.certification.get_os() + "\n" \
-            "    Kernel Info: ".ljust(30) + self.certification.get_kernel() + "\n" \
-            "    Test Server: ".ljust(30) + self.certification.get_server()
+                                                                  "    Compatibility Test ID: ".ljust(
+            30) + oec_id + "\n" \
+                           "    Hardware Info: ".ljust(30) + hardware_info + "\n" \
+                                                                             "    Product URL: ".ljust(
+            30) + self.certification.get_url() + "\n" \
+                                                 "    OS Info: ".ljust(30) + self.certification.get_os() + "\n" \
+                                                                                                           "    Kernel Info: ".ljust(
+            30) + self.certification.get_kernel() + "\n" \
+                                                    "    Test Server: ".ljust(30) + self.certification.get_server()
         self.logger.info(display_message, log_print=False)
 
     def save(self, job):
@@ -162,10 +179,14 @@ class EulerCertification():
         doc_dir = os.path.join(CertEnv.logdirectoy, job.job_id)
         if not os.path.exists(doc_dir):
             return
-        FactoryDocument(CertEnv.factoryfile, self.logger, self.test_factory).save()
+        if self.category == "virtualization":
+            FactoryDocument(CertEnv.virtfactoryfile, self.logger, self.test_factory).save()
+            shutil.copy(CertEnv.virtfactoryfile, doc_dir)
+        else:
+            FactoryDocument(CertEnv.factoryfile, self.logger, self.test_factory).save()
+            shutil.copy(CertEnv.factoryfile, doc_dir)
+            shutil.copy(CertEnv.devicefile, doc_dir)
         shutil.copy(CertEnv.certificationfile, doc_dir)
-        shutil.copy(CertEnv.devicefile, doc_dir)
-        shutil.copy(CertEnv.factoryfile, doc_dir)
 
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
@@ -173,13 +194,13 @@ class EulerCertification():
                         + "-" + job.job_id
         pack_name = self.dir_name + ".tar"
         os.rename(job.job_id, self.dir_name)
-        
+
         cmd_result = self.command.run_cmd(
             "tar -cf %s --exclude '*.lock' %s" % (pack_name, self.dir_name), log_print=False)
         if cmd_result[2] != 0:
             self.logger.error("Collect job log failed.")
             return
-        
+
         self.logger.info("Log saved to file: %s succeed." %
                          os.path.join(os.getcwd(), pack_name))
         shutil.copy(pack_name, CertEnv.datadirectory)
@@ -234,7 +255,7 @@ class EulerCertification():
             self.client = Client(hardware_info, oec_id, self.logger)
         return self.client.upload(path, server)
 
-    def get_tests(self, devices):
+    def get_tests(self, devices=list()):
         """
         get test items
         :param devices:
@@ -244,35 +265,46 @@ class EulerCertification():
         empty_device = Device(logger=self.logger)
         test_factory = list()
         casenames = []
-        for (_, dirs, filenames) in os.walk(CertEnv.testdirectoy):
+        test_path = os.path.join(CertEnv.testdirectoy, self.category)
+        for (_, dirs, filenames) in os.walk(test_path):
             dirs.sort()
             for filename in filenames:
                 if filename.endswith(".py") and \
                         not filename.startswith("__init__"):
                     casenames.append(filename.split(".")[0])
 
-        with open(CertEnv.pcifile) as file:
+        if self.category == "virtualization":
             for testname in casenames:
-                if sort_devices.get(testname):
-                    for device in sort_devices[testname]:
+                test = dict()
+                test["name"] = testname
+                test["device"] = empty_device
+                test["run"] = True
+                test["status"] = "NotRun"
+                test["reboot"] = False
+                test_factory.append(test)
+        else:
+            with open(CertEnv.pcifile) as file:
+                for testname in casenames:
+                    if sort_devices.get(testname):
+                        for device in sort_devices[testname]:
+                            test = dict()
+                            test["name"] = testname
+                            test["device"] = device
+                            test["run"] = True
+                            test["status"] = "NotRun"
+                            test["reboot"] = False
+                            test["driverName"] = test.get("device", "").get_driver()
+                            test["driverVersion"] = test.get("device", "").get_driver_version()
+                            test["boardModel"], test["chipModel"] = test.get("device", "").get_model(testname, file)
+                            test_factory.append(test)
+                    elif testname in NODEVICE:
                         test = dict()
                         test["name"] = testname
-                        test["device"] = device
+                        test["device"] = empty_device
                         test["run"] = True
                         test["status"] = "NotRun"
                         test["reboot"] = False
-                        test["driverName"] = test.get("device", "").get_driver()
-                        test["driverVersion"] = test.get("device", "").get_driver_version()
-                        test["boardModel"], test["chipModel"] = test.get("device", "").get_model(testname, file)
                         test_factory.append(test)
-                elif testname in NODEVICE:
-                    test = dict()
-                    test["name"] = testname
-                    test["device"] = empty_device
-                    test["run"] = True
-                    test["status"] = "NotRun"
-                    test["reboot"] = False
-                    test_factory.append(test)
         return test_factory
 
     def sort_tests(self, devices):
@@ -370,7 +402,7 @@ class EulerCertification():
             if any([k in id_vendor for k in KEYCARD_VENDORS]):
                 sort_devices["keycard"] = [device]
                 continue
-            
+
         cmd_result = self.command.run_cmd("dmidecode | grep 'IPMI Device Information'")
         if cmd_result[2] == 0:
             sort_devices["ipmi"] = [empty_device]
@@ -391,7 +423,10 @@ class EulerCertification():
 
             self.logger.info('\033c', log_print=False)
             self.logger.info("Select tests to run:", log_print=False)
-            self.show_tests()
+            if self.category == "virtualization":
+                self.show_virt_tests()
+            else:
+                self.show_tests()
             reply = self.ui.prompt("Selection (<number>|all|none|quit|run): ")
             reply = reply.lower()
             if reply in ["r", "run"]:
@@ -461,6 +496,33 @@ class EulerCertification():
                                  device, driver, version, chip, board)
             self._print_tests(device)
 
+    def show_virt_tests(self):
+        """
+        show virtualization test items
+        :return:
+        """
+        self.logger.info("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10)
+                         + "status".ljust(10) + "%s\033[0m" % "Class".ljust(14), log_print=False)
+        num = 0
+        for test in self.test_factory:
+            name = test["name"]
+            status = test["status"]
+            run = "no"
+            if test["run"] is True:
+                run = "yes"
+            num = num + 1
+            if status == "PASS":
+                color = "2"
+            elif status == "FAIL":
+                color = "1"
+            elif status == "Force":
+                color = "3"
+            else:
+                color = "4"
+            self.logger.info("%-6d" % num + run.ljust(8)
+                             + "\033[0;3%sm%s  \033[0m" % (color, status.ljust(8))
+                             + name.ljust(14), log_print=False)
+
     def choose_tests(self):
         """
         choose test behavior
@@ -473,8 +535,11 @@ class EulerCertification():
                 test["run"] = True
         self.logger.info('\033c', log_print=False)
         self.logger.info("These tests are recommended to "
-                         "complete the compatibility test: ", log_print=False)
-        self.show_tests()
+                         "complete the %s test: " % self.category, log_print=False)
+        if self.category == "virtualization":
+            self.show_virt_tests()
+        else:
+            self.show_tests()
         action = self.ui.prompt("Ready to begin testing?",
                                 ["run", "edit", "quit"])
         action = action.lower()
@@ -508,29 +573,33 @@ class EulerCertification():
         if not self.test_factory:
             self.test_factory = test_factory
         else:
-            for test in self.test_factory:
-                if not search_factory(test, test_factory):
-                    self.test_factory.remove(test)
-                    self.logger.info("delete %s test %s" % (test["name"],
-                                                            test["device"].get_name()))
-            for test in test_factory:
-                if not search_factory(test, self.test_factory):
-                    self.test_factory.append(test)
-                    self.logger.info("add %s test %s" % (test["name"],
-                                                         test["device"].get_name()))
-        for index, test in enumerate(self.test_factory):
-            for test_new in test_factory:
-                if test["name"] != test_new["name"]:
-                    continue
-                self_test_path = test["device"].path
-                new_test_path = test_new["device"].path
-                if not self_test_path and not new_test_path:
-                    continue
-                if self_test_path == new_test_path:
-                    self.test_factory[index]['device'] = test_new['device']
-
+            if self.category == 'compatible':
+                for test in self.test_factory:
+                    if not search_factory(test, test_factory):
+                        self.test_factory.remove(test)
+                        self.logger.info("delete %s test %s" % (test["name"],
+                                                                test["device"].get_name()))
+                for test in test_factory:
+                    if not search_factory(test, self.test_factory):
+                        self.test_factory.append(test)
+                        self.logger.info("add %s test %s" % (test["name"],
+                                                             test["device"].get_name()))
+                for index, test in enumerate(self.test_factory):
+                    for test_new in test_factory:
+                        if test["name"] != test_new["name"]:
+                            continue
+                        self_test_path = test["device"].path
+                        new_test_path = test_new["device"].path
+                        if not self_test_path and not new_test_path:
+                            continue
+                        if self_test_path == new_test_path:
+                            self.test_factory[index]['device'] = test_new['device']
+        if self.category == "virtualization":
+            factoryfile_path = CertEnv.virtfactoryfile
+        else:
+            factoryfile_path = CertEnv.factoryfile
         self.test_factory.sort(key=lambda k: k["name"])
-        FactoryDocument(CertEnv.factoryfile, self.logger, self.test_factory).save()
+        FactoryDocument(factoryfile_path, self.logger, self.test_factory).save()
 
     def _print_tests(self, device):
         """
@@ -540,3 +609,17 @@ class EulerCertification():
                          + "\033[0;3%sm%s  \033[0m" % (device.color, device.status.ljust(8))
                          + device.name.ljust(14) + device.device.ljust(15) + device.driver.ljust(15)
                          + device.version.ljust(18) + device.chip.ljust(20) + device.board, log_print=False)
+
+    def _select_category(self):
+        self.logger.info("Please select test category.", log_print=False)
+        self.logger.info("\033[1;35m" + "No.".ljust(6) + "category".ljust(35) + "\033[0m", log_print=False)
+        categories = dict(enumerate(TEST_CATEGORY))
+        for num, category in categories.items():
+            self.logger.info("%-6d" % (num + 1) + category.ljust(4))
+        no = self.ui.prompt("Please select test category No:")
+        if no.isdigit():
+            no = int(no)
+            if 1 <= no <= len(categories):
+                self.category = categories[no - 1]
+                return
+        self._select_category()
