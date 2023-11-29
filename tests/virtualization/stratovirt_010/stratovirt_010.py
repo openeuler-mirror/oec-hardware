@@ -38,19 +38,22 @@ class Stratovirt010(Test):
         ssh_client.connect(IP, username='root', password=PASSWORD)
 
         stdin, stdout, stderr = ssh_client.exec_command(
-            'dd if=/dev/zero of=/tmp/test.disk bs=8k count=10000 2>&1|awk -F ", " \'NR==3{printf "Write time: %s\\tWrite speed: %s\\n",$3,$4}\''
+            'dd if=/dev/zero of=/tmp/test.disk bs=8k count=10000 2>&1|'
+            'awk -F ", " \'NR==3{printf "Write time: %s\\tWrite speed: %s\\n",$3,$4}\''
         )
         io_write_info = stdout.read().decode('utf-8').strip()
         self.logger.info(io_write_info)
 
         stdin, stdout, stderr = ssh_client.exec_command(
-            'dd if=/tmp/test.disk of=/dev/null bs=8 2>&1|awk -F ", " \'NR==3{printf "Read time: %s\\tRead speed: %s\\n",$3,$4}\''
+            'dd if=/tmp/test.disk of=/dev/null bs=8 2>&1|'
+            'awk -F ", " \'NR==3{printf "Read time: %s\\tRead speed: %s\\n",$3,$4}\''
         )
         io_read_info = stdout.read().decode('utf-8').strip()
         self.logger.info(io_read_info)
 
         stdin, stdout, stderr = ssh_client.exec_command(
-            'dd if=/tmp/test.disk of=/tmp/test.disk2 bs=8 2>&1|awk -F ", " \'NR==3{printf "Read/Write time: %s\\tRead/Write speed: %s\\n",$3,$4}\''
+            'dd if=/tmp/test.disk of=/tmp/test.disk2 bs=8 2>&1|'
+            'awk -F ", " \'NR==3{printf "Read/Write time: %s\\tRead/Write speed: %s\\n",$3,$4}\''
         )
         io_read_info = stdout.read().decode('utf-8').strip()
         self.logger.info(io_read_info)
