@@ -113,7 +113,8 @@ def get_job(host, oec_id, job):
         sys.stderr.write("The file %s is not json file.\n")
         return False
 
-    return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results, json_results=json_results)
+    return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results,
+                           json_results=json_results)
 
 
 @app.route('/results/<host>/<oec_id>/<job>/devices/<interface>')

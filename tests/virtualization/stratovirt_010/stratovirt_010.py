@@ -3,6 +3,7 @@ import time
 
 import paramiko
 
+from hwcompatible.constants import FILE_FLAGS, FILE_MODES
 from hwcompatible.test import Test
 
 NAME = 'stratovirt_010'
@@ -69,7 +70,7 @@ class Stratovirt010(Test):
             content = f.read()
         content = content.replace('#VM_NAME#', name)
         content = content.replace('#VCPU_NUM#', vcpu_num)
-        with open('/tmp/test.xml', 'w') as f:
+        with os.fdopen(os.open('/tmp/test.xml', FILE_FLAGS, FILE_MODES), "w") as f:
             f.write(content)
         r = self.command.run_cmd('virsh create /tmp/test.xml')
         if r[2]:

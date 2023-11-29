@@ -1,6 +1,7 @@
 import os
 import time
 
+from hwcompatible.constants import FILE_FLAGS, FILE_MODES
 from hwcompatible.test import Test
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -36,7 +37,7 @@ class Qemu008(Test):
         self.command.run_cmd(f'qemu-img create -f qcow2 {DISK_FILE} {DISK_SIZE}G')
 
         # 挂载磁盘
-        with open(DISK_XML, 'w') as f:
+        with os.fdopen(os.open(DISK_XML, FILE_FLAGS, FILE_MODES), "w") as f:
             f.write(DISK_CONTENT)
         r = self.command.run_cmd(f'virsh attach-device {NAME} {DISK_XML}')
         r1 = self.command.run_cmd(f'virsh domblklist {NAME}')
@@ -69,7 +70,7 @@ class Qemu008(Test):
             content = f.read()
         content = content.replace('#VM_NAME#', name)
         content = content.replace('#VCPU_NUM#', vcpu_num)
-        with open('/tmp/test.xml', 'w') as f:
+        with os.fdopen(os.open('/tmp/test.xml', FILE_FLAGS, FILE_MODES), "w") as f:
             f.write(content)
         r = self.command.run_cmd('virsh create /tmp/test.xml')
         if r[2]:

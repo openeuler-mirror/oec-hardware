@@ -159,15 +159,12 @@ class EulerCertification():
         self.certification.save()
 
         display_message = "    %s: ".ljust(20) % name + version + "\n" \
-                                                                  "    Compatibility Test ID: ".ljust(
-            30) + oec_id + "\n" \
-                           "    Hardware Info: ".ljust(30) + hardware_info + "\n" \
-                                                                             "    Product URL: ".ljust(
-            30) + self.certification.get_url() + "\n" \
-                                                 "    OS Info: ".ljust(30) + self.certification.get_os() + "\n" \
-                                                                                                           "    Kernel Info: ".ljust(
-            30) + self.certification.get_kernel() + "\n" \
-                                                    "    Test Server: ".ljust(30) + self.certification.get_server()
+                          "    Compatibility Test ID: ".ljust(30) + oec_id + "\n" \
+                          "    Hardware Info: ".ljust(30) + hardware_info + "\n" \
+                          "    Product URL: ".ljust(30) + self.certification.get_url() + "\n" \
+                          "    OS Info: ".ljust(30) + self.certification.get_os() + "\n" \
+                          "    Kernel Info: ".ljust(30) + self.certification.get_kernel() + "\n" \
+                          "    Test Server: ".ljust(30) + self.certification.get_server()
         self.logger.info(display_message, log_print=False)
 
     def save(self, job):
@@ -255,12 +252,14 @@ class EulerCertification():
             self.client = Client(hardware_info, oec_id, self.logger)
         return self.client.upload(path, server)
 
-    def get_tests(self, devices=list()):
+    def get_tests(self, devices=None):
         """
         get test items
         :param devices:
         :return:
         """
+        if devices is None:
+            devices = list()
         sort_devices = self.sort_tests(devices)
         empty_device = Device(logger=self.logger)
         test_factory = list()
