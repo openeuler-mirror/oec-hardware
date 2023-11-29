@@ -25,12 +25,13 @@ from .constants import NODEVICE, TEST_KABI_ARCH
 from .command import Command
 
 
-def create_test_suite(test_factory, logger, subtests_filter=None):
+def create_test_suite(test_factory, logger, category="compatible", subtests_filter=None):
     """
     Create test suites for job testing
     Args:
         test_factory (list): total test factory
         logger (Logger): logger object to record
+        category (str): test category
         subtests_filter (list, optional): filter object. Defaults to None.
 
     Returns:
@@ -47,7 +48,7 @@ def create_test_suite(test_factory, logger, subtests_filter=None):
                 test_suite.append(testcase)
                 test_name.append(test["name"])
 
-            if test["name"] not in NODEVICE:
+            if category == "compatible" and test["name"] not in NODEVICE:
                 kabi_select = 1
             if "kabi" in test_name:
                 kabi_select = 0

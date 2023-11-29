@@ -12,7 +12,7 @@
 
 .PHONY: all clean install
 
-HWCERT_TEST_LIB := $(DESTDIR)/usr/share/oech/lib/tests/
+HWCERT_TEST_LIB := $(DESTDIR)/usr/share/oech/lib/tests/compatible
 SUBDIRS := $(shell ls | grep -v Makefile)
 
 all:

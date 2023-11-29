@@ -24,7 +24,7 @@ Provides:       libswsds.so()(64bit)
 %package server
 Summary:        openEuler Hardware Compatibility Test Server
 Group:          Development/Tools
-Requires:       python3, python3-devel, python3-flask, python3-uWSGI, python3-werkzeug
+Requires:       python3, python3-devel, python3-flask, python3-uWSGI, python3-werkzeug, paramiko
 Requires:       nginx, tar, qperf, psmisc, dpdk, dpdk-tools, dpdk-devel, net-tools, perftest
 
 %description
@@ -38,7 +38,7 @@ openEuler Hardware Compatibility Test Server
 
 %build
 %ifarch x86_64 aarch64
-strip tests/keycard/libswsds_%{_arch}.so
+strip tests/compatible/keycard/libswsds_%{_arch}.so
 %endif
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
 DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make

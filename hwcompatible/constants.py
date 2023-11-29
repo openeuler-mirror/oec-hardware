@@ -25,7 +25,7 @@ CHIP = "chipModel"
 DRIVER = "driverName"
 VERSION = "driverVersion"
 NODEVICE = ("cpufreq", "memory", "clock", "profiler", "system",
-            "stress", "kdump", "perf", "acpi", "watchdog", "kabi", "kabiwhitelist")
+            "stress", "kdump", "perf", "acpi", "watchdog", "kabi", "kabiwhitelist", "longtermstability")
 TEST_KABI_ARCH = ("aarch64", "x86_64")
 CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD")
@@ -35,6 +35,7 @@ IB = "infiniband"
 DEVICE_INFO = ('color', 'status', 'num', 'run', 'name',
                'device', 'driver', 'version', 'chip', 'board')
 NO_CONFIG_DEVICES = ("gpu", "vgpu", "nvme", "dpdk", "cdrom", "keycard", "spdk")
+TEST_CATEGORY = ("compatible", "virtualization")
 
 # File access control
 FILE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC

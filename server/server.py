@@ -97,7 +97,10 @@ def get_job(host, oec_id, job):
     job = secure_filename(job)
     dir_job = os.path.join(dir_results, host, oec_id, job)
     json_info = os.path.join(dir_job, 'compatibility.json')
-    json_results = os.path.join(dir_job, 'factory.json')
+    files = os.listdir(dir_job)
+    for file in files:
+        if "factory.json" in file:
+            json_results = os.path.join(dir_job, file)
     if not os.path.exists(json_info) or not os.path.exists(json_results):
         abort(404)
 
@@ -110,7 +113,8 @@ def get_job(host, oec_id, job):
         sys.stderr.write("The file %s is not json file.\n")
         return False
 
-    return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results)
+    return render_template('job.html', host=host, id=oec_id, job=job, info=info, results=results,
+                           json_results=json_results)
 
 
 @app.route('/results/<host>/<oec_id>/<job>/devices/<interface>')
@@ -127,7 +131,10 @@ def get_device(host, oec_id, job, interface):
     oec_id = secure_filename(oec_id)
     job = secure_filename(job)
     dir_job = os.path.join(dir_results, host, oec_id, job)
-    json_results = os.path.join(dir_job, 'factory.json')
+    files = os.listdir(dir_job)
+    for file in files:
+        if "factory.json" in file:
+            json_results = os.path.join(dir_job, file)
     if not os.path.exists(json_results):
         abort(404)
 
@@ -159,7 +166,10 @@ def get_devices(host, oec_id, job):
     oec_id = secure_filename(oec_id)
     job = secure_filename(job)
     dir_job = os.path.join(dir_results, host, oec_id, job)
-    json_devices = os.path.join(dir_job, 'device.json')
+    files = os.listdir(dir_job)
+    for file in files:
+        if "factory.json" in file:
+            json_devices = os.path.join(dir_job, file)
     if not os.path.exists(json_devices):
         abort(404)
 
