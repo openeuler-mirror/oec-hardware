@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import time
 
@@ -24,8 +26,8 @@ class Qemu001(Test):
 
         # 获取CPU数量
         cmd = '"lscpu|grep \'^CPU(s)\'|awk \'{print\\\\\\$2}\'"'
-        r = self.command.run_cmd(f'bash ../console_cmd.sh {NAME} {PASSWORD} {cmd}')
-        vcpu_num = r[0].split('\n')[-2]
+        r = os.popen(f'bash ../console_cmd.sh {NAME} {PASSWORD} {cmd}')
+        vcpu_num = r.read().split('\n')[-2]
         if vcpu_num != VCPU_NUM:
             self.logger.error('The number of vCPUs is incorrect.')
             return False

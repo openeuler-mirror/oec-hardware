@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (c) 2020 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
