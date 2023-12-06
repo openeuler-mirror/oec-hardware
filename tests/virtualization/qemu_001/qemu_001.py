@@ -1,3 +1,17 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+# Copyright (c) 2023 Huawei Technologies Co., Ltd.
+# oec-hardware is licensed under the Mulan PSL v2.
+# You can use this software according to the terms and conditions of the Mulan PSL v2.
+# You may obtain a copy of Mulan PSL v2 at:
+#     http://license.coscl.org.cn/MulanPSL2
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+# PURPOSE.
+# See the Mulan PSL v2 for more details.
+# Create: 2023-11-28
+
 import os
 import time
 
@@ -24,8 +38,8 @@ class Qemu001(Test):
 
         # 获取CPU数量
         cmd = '"lscpu|grep \'^CPU(s)\'|awk \'{print\\\\\\$2}\'"'
-        r = self.command.run_cmd(f'bash ../console_cmd.sh {NAME} {PASSWORD} {cmd}')
-        vcpu_num = r[0].split('\n')[-2]
+        r = os.popen(f'bash ../console_cmd.sh {NAME} {PASSWORD} {cmd}')
+        vcpu_num = r.read().split('\n')[-2]
         if vcpu_num != VCPU_NUM:
             self.logger.error('The number of vCPUs is incorrect.')
             return False

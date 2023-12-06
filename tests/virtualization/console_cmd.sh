@@ -14,4 +14,3 @@ expect <<-SSHEOF
         send "$cmd\r"
         expect "*]#"
 SSHEOF
-return $?
