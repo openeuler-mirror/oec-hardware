@@ -24,7 +24,8 @@ class CertInfo:
         self.cert_devices = []
         self.cert_quads = []
         self.infos = ["vendorID", "deviceID", "svID", "ssID", "architecture", "os", "driverName", "version",
-                      "type", "date", "sha256", "driverSize", "chipVendor", "boardModel", "chipModel", "downloadLink"]
+                      "type", "date", "sha256", "driverSize", "chipVendor", "boardModel", "chipModel", "item",
+                      "downloadLink"]
         self.logger = logger
         self.command = command
 
@@ -64,6 +65,8 @@ class CertInfo:
         oec_json["boardModel"] = device.board
         oec_json["chipModel"] = device.chip
         oec_json["type"] = device_name.upper()
+        if oec_json["type"] == "ETHERNET":
+            oec_json["type"] = "NIC"
         arch = self.command.run_cmd("uname -m", log_print=False)
         oec_json["architecture"] = arch[0].strip("\n")
         os_cmd = self.command.run_cmd(
@@ -80,6 +83,7 @@ class CertInfo:
         driver_size = self.command.run_cmd(
             "ls -lh %s | awk '{print $5}'" % filename[0].strip("\n"), log_print=False)
         oec_json["driverSize"] = driver_size[0].strip("\n")
+        oec_json["item"] = ""
         oec_json["downloadLink"] = "inbox"
 
         self.cert_quads.append(device.quad)
