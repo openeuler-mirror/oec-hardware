@@ -74,10 +74,16 @@ function test_nvidia_case() {
     logfile=$2
     res_code=0
     cd /opt/${cuda_name}
-    path=$(find ./ -name $casename -type d)
-    cd $path
     make &>/dev/null
-    ./$casename &>>$logfile
+
+    if [[ $casename == 'cuda_maketest' ]];then
+        make test &>>$logfile
+    else
+        path=$(find ./ -name $casename -type d)
+        cd $path
+        ./$casename &>>$logfile
+    fi
+
     if [[ $? -eq 0 ]]; then
         echo "Test $casename succeed." >>$logfile
     else

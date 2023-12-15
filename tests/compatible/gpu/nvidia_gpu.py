@@ -152,7 +152,7 @@ class NvidiaGpuTest():
 
             self.logger.info("Start to test cuda samples.")
             self.set_default_gpu()
-            sample_case = "simpleOccupancy,bandwidthTest,p2pBandwidthLatencyTest,deviceQuery,clock"
+            sample_case = "simpleOccupancy,bandwidthTest,p2pBandwidthLatencyTest,deviceQuery,clock,cuda_maketest"
             code = self.command.run_cmd(
                 "bash %s/test_nvidia_gpu.sh test_cuda_samples '%s %s'" % (gpu_dir, self.cuda_samples_log, sample_case))
             if code[2] == 0:
