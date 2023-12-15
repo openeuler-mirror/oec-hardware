@@ -15,6 +15,7 @@
 import os
 import re
 import time
+import platform
 from subprocess import getstatusoutput
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -27,6 +28,7 @@ class NvidiaGpuTest():
         self.cuda_samples_log = os.path.join(
             self.logger.logdir, 'cuda_samples.log')
         self.gpu_burn = os.path.join(self.logger.logdir, 'gpu_burn.log')
+        self.gpu_clpeak_log = os.path.join(self.logger.logdir, 'gpu_clpeak.log')
         self.smi_name = "nvidia-smi"
 
     def get_driver_info(self):
@@ -135,6 +137,18 @@ class NvidiaGpuTest():
             else:
                 self.logger.error("Test gpu pressure failed.")
                 result = False
+
+            machine = platform.machine()
+            if machine == 'x86_64':
+                self.logger.info("Start to test clpeak.")
+                self.set_default_gpu()
+                code = self.command.run_cmd(
+                    "bash %s/test_nvidia_gpu.sh test_clpeak '%s'" % (gpu_dir, self.gpu_clpeak_log))
+                if code[2] == 0:
+                    self.logger.info("Test clpeak succeed.")
+                else:
+                    result = False
+                    self.logger.error("Test clpeak failed.")
 
             self.logger.info("Start to test cuda samples.")
             self.set_default_gpu()
