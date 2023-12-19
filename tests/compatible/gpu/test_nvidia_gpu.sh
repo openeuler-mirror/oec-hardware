@@ -161,6 +161,49 @@ function test_clpeak() {
     return $res_code
 }
 
+sm_clock=`nvidia-smi -q|grep "SM "|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
+memory_clock=`nvidia-smi -q -d SUPPORTED_CLOCKS|grep Memory|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
+min_power_limit=`nvidia-smi -q|grep "Min Power Limit"|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
+max_power_limit=`nvidia-smi -q|grep "Max Power Limit"|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
+
+allcases="nvidia-smi; \
+         nvidia-smi -L; \
+         nvidia-smi -q; \
+         nvidia-smi -q -d SUPPORTED_CLOCKS; \
+         nvidia-smi topo --matrix; \
+         nvidia-smi -pm 0; \
+         nvidia-smi -pm 1; \
+         nvidia-smi -e 0; \
+         nvidia-smi -e 1; \
+         nvidia-smi -p 0; \
+         nvidia-smi -p 1; \
+         nvidia-smi -c 0; \
+         nvidia-smi -c 2; \
+         nvidia-smi -c 3; \
+         nvidia-smi -pl $min_power_limit; \
+         nvidia-smi -pl $max_power_limit; \
+         nvidia-smi -ac $memory_clock,$sm_clock; \
+         nvidia-smi -am 1; \
+         nvidia-smi -am 0; \
+         nvidia-smi -caa; \
+         nvidia-smi -r; \
+"
+
+function test_nvidia_smi() {
+    logfile=$1
+    IFS_OLD=$IFS
+    IFS=$';'
+    res_code=0
+    for casename in ${allcases[@]}; do
+        eval $casename
+        if [[ $? -eq 1 ]]; then
+            res_code=1
+        fi
+    done
+    IFS=${IFS_OLD}
+    return $res_code
+}
+
 function main() {
     func_name=$1
     param_list=$2
@@ -173,6 +216,8 @@ function main() {
         test_cuda_samples $param_list
     elif [[ $func_name == "test_clpeak" ]]; then
         test_clpeak $param_list
+    elif [[ $func_name == "test_nvidia_smi" ]]; then
+        test_nvidia_smi $param_list
     else
         echo "The function doesn't exist, please check!"
         return 1

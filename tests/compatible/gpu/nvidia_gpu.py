@@ -29,6 +29,7 @@ class NvidiaGpuTest():
             self.logger.logdir, 'cuda_samples.log')
         self.gpu_burn = os.path.join(self.logger.logdir, 'gpu_burn.log')
         self.gpu_clpeak_log = os.path.join(self.logger.logdir, 'gpu_clpeak.log')
+        self.gpu_nvidia_smi_log = os.path.join(self.logger.logdir, 'gpu_nvidia_smi.log')
         self.smi_name = "nvidia-smi"
 
     def get_driver_info(self):
@@ -160,6 +161,17 @@ class NvidiaGpuTest():
             else:
                 result = False
                 self.logger.error("Test cuda samples failed.")
+
+            self.logger.info("Start to test nvidia driver using nvidia-smi tool.")
+            self.set_default_gpu()
+            code = self.command.run_cmd(
+                "bash %s/test_nvidia_gpu.sh test_nvidia_smi '%s'" % (gpu_dir, self.gpu_nvidia_smi_log))
+            if code[2] == 0:
+                self.logger.info("Using nvidia-smi to test Drvier succeed.")
+            else:
+                result = False
+                self.logger.error("Using nvidia-smi to test Drvier failed.")
+
         except Exception as e:
             self.logger.error(
                 "Failed to run the script because compiling or setting variables: %s" % e)
