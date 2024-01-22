@@ -136,7 +136,7 @@ class Load(Thread):
         :return:
         """
         self.process = self.command.run_cmd(
-            "taskset -c %s python -u %s/cpufreq/cal.py" % (self.cpu, CertEnv.testdirectoy), log_print=False)
+            "taskset -c %s python -u %s/compatible/cpufreq/cal.py" % (self.cpu, CertEnv.testdirectoy), log_print=False)
 
     def get_runtime(self):
         """
