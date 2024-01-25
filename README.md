@@ -485,7 +485,7 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
 ## 新增测试项
 
-1. 在 `tests/` 目录下添加测试项模板，通过继承框架 `Test` 实现自己的测试类。
+1. `tests/` 目录下如果已有测试项所在的类别，直接在类别下添加测试项，测试项的目录名称需和下面入口函数名称相同，比如acpi测试项的入口文件是acpi.py文件，并继承框架 `Test` 实现自己的测试类。否则先添加类别目录，在类别下面再添加测试项。
 
 2. 测试类中的重要成员变量或函数介绍：
 
@@ -499,7 +499,7 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 
    - 变量 `reboot` 和 `rebootup` - 若 `reboot = True` 表示该测试套/测试用例会重启系统，且在重启后继续执行 `rebootup` 指定的函数，可以参考 kdump 测试。
 
-3. 在 `hwcompatible/compatibility.py` 文件中添加对应测试项的识别显示。
+3. 在 `hwcompatible/compatibility.py` 文件中添加对应测试项的识别显示，板卡识别方法可参考https://gitee.com/openeuler/oec-hardware/blob/master/docs/develop_doc/get_board.md 文档。
 
 # FAQ
 
