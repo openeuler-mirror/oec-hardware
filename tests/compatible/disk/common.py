@@ -106,17 +106,27 @@ def raw_test(logger, command, disk):
         size = 1048576
 
     logger.info("Starting sequential raw IO test...")
-    opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -group_reporting -name=file -runtime=300"
-    if not do_fio(logger, command, device, size, opts):
-        logger.error("%s sequential raw IO test failed." % device)
-        return False
+    # opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -group_reporting -name=file -runtime=300"
+    opts_list = ["-direct=1 -iodepth 32 -rw=write -group_reporting -name=file",
+                 "-direct=1 -iodepth 32 -rw=read -group_reporting -name=file -runtime=300",
+                 "-direct=1 -iodepth 32 -rw=write -group_reporting -name=file -runtime=300",
+                 "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -group_reporting -name=file -runtime=300",
+                 ]
+    for opts in opts_list:
+        if not do_fio(logger, command, device, size, opts):
+            logger.error("%s sequential raw IO test failed." % device)
+            return False
 
     logger.info("Starting rand raw IO test...")
-    opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 " \
-           "-group_reporting -name=file -runtime=300"
-    if not do_fio(logger, command, device, size, opts):
-        logger.error("%s rand raw IO test failed." % device)
-        return False
+    # opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 " \
+    #        "-group_reporting -name=file -runtime=300"
+    opts_list = ["-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -group_reporting -name=file -runtime=300",
+                 "-direct=1 -iodepth 32 -rw=randread -group_reporting -name=file -runtime=300",
+                 "-direct=1 -iodepth 32 -rw=randwrite -group_reporting -name=file -runtime=300"]
+    for opts in opts_list:
+        if not do_fio(logger, command, device, size, opts):
+            logger.error("%s rand raw IO test failed." % device)
+            return False
 
     return True
 
