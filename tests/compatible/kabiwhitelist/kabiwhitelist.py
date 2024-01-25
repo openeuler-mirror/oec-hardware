@@ -58,7 +58,7 @@ class KabiWhiteListTest(Test):
         """
         Clear temporary files
         """
-        file_name = "/usr/share/oech/lib/tests/kabiwhitelist/test_log"
+        file_name = "/usr/share/oech/lib/tests/compatible/kabiwhitelist/test_log"
         if os.path.exists(file_name):
             shutil.rmtree(file_name)
         self.logger.info("Clearing temporary files is complete")

@@ -11,8 +11,8 @@
 # Author: @liqiang1118
 # Create: 2023-05-15
 
-mkdir /usr/share/oech/lib/tests/kabiwhitelist/test_log
-testdir="/usr/share/oech/lib/tests/kabiwhitelist/test_log"
+mkdir /usr/share/oech/lib/tests/compatible/kabiwhitelist/test_log
+testdir="/usr/share/oech/lib/tests/compatible/kabiwhitelist/test_log"
 cd $testdir
 
 os_version=`cat /etc/openEuler-latest|grep openeulerversion |awk -F = '{print $2}'`
@@ -21,8 +21,8 @@ url="https://gitee.com/src-openeuler/kernel/raw/$os_version/kabi_whitelist_$arch
 wget $url
 kernel_version=`uname -r`
 symvers_gz="symvers-"$kernel_version".gz"
-cp /boot/$symvers_gz   /usr/share/oech/lib/tests/kabiwhitelist/test_log
-gunzip /usr/share/oech/lib/tests/kabiwhitelist/test_log/$symvers_gz
+cp /boot/$symvers_gz   /usr/share/oech/lib/tests/compatible/kabiwhitelist/test_log
+gunzip /usr/share/oech/lib/tests/compatible/kabiwhitelist/test_log/$symvers_gz
 
 # Desc: Test kabi
 # Input: xxx.ko or xxx.rpm
