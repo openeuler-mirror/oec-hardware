@@ -17,8 +17,8 @@ all: ;
 
 install:
 	mkdir -p $(DEST)
-	cp -a $(SUBDIR)/build *.py $(DEST)
-	cp -a $(SUBDIR)/build *.sh $(DEST)
+	cp -a  *.py $(DEST)
+	cp -a  *.sh $(DEST)
 	chmod a+x $(DEST)/*.py
 	chmod a+x $(DEST)/*.sh
 

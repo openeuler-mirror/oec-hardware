@@ -17,7 +17,7 @@ all: ;
 
 install:
 	mkdir -p $(DEST)
-	cp -a $(SUBDIR)/build *.py $(DEST)
+	cp -a *.py $(DEST)
 	chmod a+x $(DEST)/*.py
 
 clean:
