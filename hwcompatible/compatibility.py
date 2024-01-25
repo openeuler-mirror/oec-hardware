@@ -147,7 +147,7 @@ class EulerCertification():
         if not self.test_factory:
             if self.category == "virtualization":
                 factory_doc = FactoryDocument(CertEnv.virtfactoryfile, self.logger)
-            elif self.category == "compatible":
+            elif self.category == "compatible" or not self.category:
                 factory_doc = FactoryDocument(CertEnv.factoryfile, self.logger)
             self.test_factory = factory_doc.get_factory()
 
