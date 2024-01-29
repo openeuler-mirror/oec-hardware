@@ -348,7 +348,7 @@ class DPDKTest(Test):
             self.logger.error("Set speed of %s failed." % self.interface)
 
         count = 500
-        cmd = "ping -q -c %d -i 0 %s | grep 'packet loss' | awk '{print $6}'" % (
+        cmd = "ping -q -c %d -i 0.001 %s | grep 'packet loss' | awk '{print $6}'" % (
             count, self.server_ip)
         for _ in range(self.retries):
             result = self.command.run_cmd(cmd, ignore_errors=True)
