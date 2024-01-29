@@ -19,6 +19,7 @@ import json
 from subprocess import getoutput
 from hwcompatible.test import Test
 from hwcompatible.command import Command
+from tests.compatible.disk.common import raw_test
 
 
 class NvmeTest(Test):
@@ -95,6 +96,11 @@ class NvmeTest(Test):
                 return_code = False
 
         self.command.run_cmd("nvme list", ignore_errors=True)
+
+        # run fio
+        if not raw_test(self.logger, self.command, disk):
+            return_code = False
+
         if return_code:
             self.logger.info("Test nvme succeed.")
         else:
