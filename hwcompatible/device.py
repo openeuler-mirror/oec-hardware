@@ -209,11 +209,11 @@ class Device:
                 if re.match("\t" + self.quad[1], ln):
                     flag += 1
                     if self.quad[0] == "8086":
-                        self.chip = self._search_info(r'\[(.*)\]', ln)
+                        self.chip = self._search_info(r'\[(.*)\]', ln).strip()
                     elif self.quad[0] == "19e5":
-                        self.chip = re.sub(ln[0:7], "", ln).split(" ")[0]
+                        self.chip = re.sub(ln[0:7], "", ln).split(" ")[0].strip()
                     else:
-                        self.chip = ln.split(" ")[-1]
+                        self.chip = ln.split(" ")[-1].strip()
             elif flag == 2:
                 if re.match("\t\t" + self.quad[2] + " " + self.quad[3], ln):
                     flag += 1
