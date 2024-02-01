@@ -13,7 +13,7 @@
 .PHONY: all clean install
 
 HWCERT_TEST_LIB := $(DESTDIR)/usr/share/oech/lib/tests/virtualization
-SUBDIRS := $(shell ls | grep -v Makefile)
+SUBDIRS := $(shell ls | grep -v "Makefile\|stratovirt.xml\|__init__.py\|console_cmd.sh\|qemu.xml")
 
 all:
 	for i in $(SUBDIRS); do $(MAKE) -C $$i; done
