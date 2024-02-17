@@ -15,6 +15,7 @@
 import os
 import re
 import time
+import platform
 from subprocess import getstatusoutput
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -27,6 +28,8 @@ class NvidiaGpuTest():
         self.cuda_samples_log = os.path.join(
             self.logger.logdir, 'cuda_samples.log')
         self.gpu_burn = os.path.join(self.logger.logdir, 'gpu_burn.log')
+        self.gpu_clpeak_log = os.path.join(self.logger.logdir, 'gpu_clpeak.log')
+        self.gpu_nvidia_smi_log = os.path.join(self.logger.logdir, 'gpu_nvidia_smi.log')
         self.smi_name = "nvidia-smi"
 
     def get_driver_info(self):
@@ -136,9 +139,21 @@ class NvidiaGpuTest():
                 self.logger.error("Test gpu pressure failed.")
                 result = False
 
+            machine = platform.machine()
+            if machine == 'x86_64':
+                self.logger.info("Start to test clpeak.")
+                self.set_default_gpu()
+                code = self.command.run_cmd(
+                    "bash %s/test_nvidia_gpu.sh test_clpeak '%s'" % (gpu_dir, self.gpu_clpeak_log))
+                if code[2] == 0:
+                    self.logger.info("Test clpeak succeed.")
+                else:
+                    result = False
+                    self.logger.error("Test clpeak failed.")
+
             self.logger.info("Start to test cuda samples.")
             self.set_default_gpu()
-            sample_case = "simpleOccupancy,bandwidthTest,p2pBandwidthLatencyTest,deviceQuery,clock"
+            sample_case = "simpleOccupancy,bandwidthTest,p2pBandwidthLatencyTest,deviceQuery,clock,cuda_maketest"
             code = self.command.run_cmd(
                 "bash %s/test_nvidia_gpu.sh test_cuda_samples '%s %s'" % (gpu_dir, self.cuda_samples_log, sample_case))
             if code[2] == 0:
@@ -146,6 +161,17 @@ class NvidiaGpuTest():
             else:
                 result = False
                 self.logger.error("Test cuda samples failed.")
+
+            self.logger.info("Start to test nvidia driver using nvidia-smi tool.")
+            self.set_default_gpu()
+            code = self.command.run_cmd(
+                "bash %s/test_nvidia_gpu.sh test_nvidia_smi '%s'" % (gpu_dir, self.gpu_nvidia_smi_log))
+            if code[2] == 0:
+                self.logger.info("Using nvidia-smi to test Drvier succeed.")
+            else:
+                result = False
+                self.logger.error("Using nvidia-smi to test Drvier failed.")
+
         except Exception as e:
             self.logger.error(
                 "Failed to run the script because compiling or setting variables: %s" % e)
