@@ -69,6 +69,25 @@ function install_cuda_samples() {
     return 0
 }
 
+function install_VulkanSamples() {
+    cd /opt
+    res_code=0
+    if [ ! -d VulkanSamples ]; then
+        git clone https://github.com/LunarG/VulkanSamples.git
+    fi
+    cd VulkanSamples
+    if [ ! -d build ]; then
+	mkdir build
+	cd build
+	sed -i 's/python/python3/g' ../scripts/update_deps.py
+	chmod +x ../scripts/update_deps.py
+	../scripts/update_deps.py &>/dev/null || res_code=1
+	cmake -C helper.cmake .. &>/dev/null || res_code=1
+	cmake --build . &>/dev/null || res_code=1
+    fi
+    return $res_code
+}
+
 function test_nvidia_case() {
     casename=$1
     logfile=$2
@@ -204,6 +223,35 @@ function test_nvidia_smi() {
     return $res_code
 }
 
+function test_VulkanSamples() {
+    logfile=$1
+    res_code=0
+    install_VulkanSamples
+    if [[ $? -eq 1 ]]; then
+        echo "Install VulkanSamples failed."
+        res_code=1
+        return $res_code
+    fi
+    source  ~/.bash_profile
+    if [ -n "$DISPLAY" ]; then
+        timeout 5s /opt/VulkanSamples/build/Sample-Programs/Hologram/Hologram &> $logfile
+        cd /opt/VulkanSamples/build/API-Samples/
+        ./run_all_samples.sh &>> $logfile
+        if [[ $? -eq 0 ]]; then
+            echo "Test VulkanSamples succeed."
+            res_code=0
+        else
+            echo "Test VulkanSamples failed."
+            res_code=1
+        fi
+    else
+        echo "Please set the DISPLAY environment variables!"
+        res_code=1
+    fi
+    return $res_code
+
+}
+
 function main() {
     func_name=$1
     param_list=$2
@@ -218,6 +266,8 @@ function main() {
         test_clpeak $param_list
     elif [[ $func_name == "test_nvidia_smi" ]]; then
         test_nvidia_smi $param_list
+    elif [[ $func_name == "test_VulkanSamples" ]]; then
+        test_VulkanSamples $param_list
     else
         echo "The function doesn't exist, please check!"
         return 1
