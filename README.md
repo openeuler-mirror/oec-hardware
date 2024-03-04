@@ -204,18 +204,26 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 * `/usr/share/oech/lib/config/test_config.yaml ` 是硬件测试项配置文件模板，`fc`、`raid`、`disk`、`ethernet`、`infiniband`硬件测试前需先根据实际环境进行配置，其它硬件测试不需要配置。对于网卡测试，如果是工具自动添加的IP地址，测试完成后，为了安全，服务端的IP需手动删除。
 
 ## 使用步骤
+1. 在客户端启动测试框架。客户端启动 `oech`，选择测试类别，`compatible`表示兼容性，`virtualization`表示虚拟化，填写类别序号，即输入`1`表示选择的兼容性类别。
+   ```   
+   # oech
+   Please select test category.
+   No.   category
+   1     compatible
+   2     virtualization
+   Please select test category No:1
+   ```
 
-1. 在客户端启动测试框架。在客户端启动 `oech`，填写`ID`、`URL`、`Server`配置项，`ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。服务端`nginx`默认端口号是`80`，如果服务端安装完成后没有修改该端口，`Compatibility Test Server` 的值只需要输入服务端的业务IP地址；否则需要带上端口号，比如：`172.167.145.2:90`。
+2. 填写`ID`、`URL`、`Server`配置项，`ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。服务端`nginx`默认端口号是`80`，如果服务端安装完成后没有修改该端口，`Compatibility Test Server` 的值只需要输入服务端的业务IP地址；否则需要带上端口号，比如：`172.167.145.2:90`。
 
    ```
-   # oech
    The openEuler Hardware Compatibility Test Suite
    Please provide your Compatibility Test ID:
    Please provide your Product URL:
    Please provide the Compatibility Test Server (Hostname or Ipaddr):
    ```
 
-2. 进入测试套选择界面。在用例选择界面，框架将自动扫描硬件并选取当前环境可供测试的测试套，输入 `edit` 可以进入测试套选择界面。
+3. 进入测试套选择界面。在用例选择界面，框架将自动扫描硬件并选取当前环境可供测试的测试套，输入 `edit` 可以进入测试套选择界面。
 
    ```
    These tests are recommended to complete the compatibility test: 
@@ -228,18 +236,20 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
    6     yes     NotRun    ethernet      enp4s0         hinic          2.3.2.17          Hi1822              SP580
    7     yes     NotRun    ethernet      enp125s0f0     hns3                             HNS GE/10GE/25GE    TM210/TM280
    8     yes     NotRun    ethernet      enp125s0f1     hns3                             HNS GE/10GE/25GE    TM210/TM280
-   9     yes     NotRun    ipmi                                                                              
-   10    yes     NotRun    kabi                                                                              
-   11    yes     NotRun    kdump                                                                             
-   12    yes     NotRun    memory                                                                            
-   13    yes     NotRun    perf                                                                              
-   14    yes     NotRun    system                                                                            
-   15    yes     NotRun    usb                                                                               
-   16    yes     NotRun    watchdog                                                      
+   9     yes     NotRun    raid          0000:04:00.0   megaraid_sas   07.714.04.00-rc1  SAS3408             SR150-M
+   10    yes     NotRun    gpu           0000:03:00.0   amdgpu                           Navi                Radeon PRO W6800
+   11    yes     NotRun    ipmi                                                                              
+   12    yes     NotRun    kabi                                                                              
+   13    yes     NotRun    kdump                                                                             
+   14    yes     NotRun    memory                                                                            
+   15    yes     NotRun    perf                                                                              
+   16    yes     NotRun    system                                                                            
+   17    yes     NotRun    usb                                                                               
+   18    yes     NotRun    watchdog                                                      
    Ready to begin testing? (run|edit|quit)
    ```
 
-3. 选择测试套。`all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消，多次执行成功后 `system` 的状态会变为`Force`）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
+4. 选择测试套。`all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消，多次执行成功后 `system` 的状态会变为`Force`）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
 
    ```
    Select tests to run:
@@ -252,20 +262,22 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
    6     no      NotRun    ethernet      enp4s0         hinic          2.3.2.17          Hi1822              SP580
    7     no      NotRun    ethernet      enp125s0f0     hns3                             HNS GE/10GE/25GE    TM210/TM280
    8     no      NotRun    ethernet      enp125s0f1     hns3                             HNS GE/10GE/25GE    TM210/TM280
-   9     no      NotRun    ipmi                                                                              
-   10    no      NotRun    kabi                                                                              
-   11    no      NotRun    kdump                                                                             
-   12    no      NotRun    memory                                                                            
-   13    no      NotRun    perf                                                                              
-   14    yes     NotRun    system                                                                            
-   15    no      NotRun    usb                                                                               
-   16    no      NotRun    watchdog     
+   9     yes     NotRun    raid          0000:04:00.0   megaraid_sas   07.714.04.00-rc1  SAS3408             SR150-M
+   10    yes     NotRun    gpu           0000:03:00.0   amdgpu                           Navi                Radeon PRO W6800
+   11    yes     NotRun    ipmi                                                                              
+   12    yes     NotRun    kabi                                                                              
+   13    yes     NotRun    kdump                                                                             
+   14    yes     NotRun    memory                                                                            
+   15    yes     NotRun    perf                                                                              
+   16    yes     NotRun    system                                                                            
+   17    yes     NotRun    usb                                                                               
+   18    yes     NotRun    watchdog     
    Selection (<number>|all|none|quit|run):
    ```
 
-4. 开始测试。选择完成后输入 `run` 开始测试。
+5. 开始测试。选择完成后输入 `run` 开始测试。
 
-5. 上传测试结果。测试完成后可以上传测试结果到服务器，便于结果展示和日志分析。如果上传失败，请检查网络配置，然后重新上传测试结果。
+6. 上传测试结果。测试完成后可以上传测试结果到服务器，便于结果展示和日志分析。如果上传失败，请检查网络配置，然后重新上传测试结果。
 
    ```
    ...
@@ -322,6 +334,7 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
 # 测试项介绍
 
 ## 已有测试项
+### compatible
 
 1. **system**
    
@@ -452,6 +465,10 @@ oec-hardware-1.1.1 版本将不再进行更新维护，请获取最新版本的 
     - 使用dpdk-testpmd把两个以太网端口连成环回模式，在没有外部流量发生器的情况下，
     客户端使用发包模式(Tx-only mode)作为数据包源，服务端使用收包模式(Rx-only mode)
     作为数据包接收器, 测试端口传输速率功能。
+
+### virtualization
+
+    虚拟化已有用例待更新
 
 # 社区开发者参与介绍
 
