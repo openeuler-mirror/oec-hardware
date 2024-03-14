@@ -30,6 +30,7 @@ class NvidiaGpuTest():
         self.gpu_burn = os.path.join(self.logger.logdir, 'gpu_burn.log')
         self.gpu_clpeak_log = os.path.join(self.logger.logdir, 'gpu_clpeak.log')
         self.gpu_nvidia_smi_log = os.path.join(self.logger.logdir, 'gpu_nvidia_smi.log')
+        self.gpu_vulkan_log = os.path.join(self.logger.logdir, 'gpu_vulkan.log')
         self.smi_name = "nvidia-smi"
 
     def get_driver_info(self):
@@ -171,6 +172,18 @@ class NvidiaGpuTest():
             else:
                 result = False
                 self.logger.error("Using nvidia-smi to test Drvier failed.")
+
+            env_display = os.getenv('DISPLAY')
+            if env_display != '':
+                self.logger.info("Start to test Vulkan.")
+                self.set_default_gpu()
+                code = self.command.run_cmd(
+                    "bash %s/test_nvidia_gpu.sh test_VulkanSamples '%s'" % (gpu_dir, self.gpu_vulkan_log))
+                if code[2] == 0:
+                    self.logger.info("Test Vulkan succeed.")
+                else:
+                    result = False
+                    self.logger.error("Test Vulkan failed.")
 
         except Exception as e:
             self.logger.error(
