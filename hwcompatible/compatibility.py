@@ -350,6 +350,12 @@ class EulerCertification():
                     sort_devices["fc"] = [device]
                 continue
             driver = device.get_property("DRIVER")
+            if driver == "tsse":
+                if "keycard" in sort_devices.keys():
+                    sort_devices["keycard"].extend([device])
+                else:
+                    sort_devices["keycard"] = [device]
+                continue
             if any([d in driver for d in GPU_DRIVER]):
                 if "gpu" in sort_devices.keys():
                     sort_devices["gpu"].extend([device])

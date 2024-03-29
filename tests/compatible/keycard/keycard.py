@@ -13,58 +13,40 @@
 # Create: 2022-03-28
 # Desc: Public key card test
 
-import os
-import shutil
+import argparse
+from sds_keycard import SDSKeyCardTest
+from tsse_keycard import TSSEKeyCardTest
 from hwcompatible.test import Test
-from hwcompatible.command_ui import CommandUI
-
-keycard_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class KeyCardTest(Test):
     def __init__(self):
         Test.__init__(self)
-        self.com_ui = CommandUI()
-        self.target_file = "/usr/lib64/libswsds.so"
+        self.device = None
+        self.keycard_test = None
+
+    def setup(self, args=None):
+        """
+        Initialization before test
+        """
+        self.args = args or argparse.Namespace()
+        self.device = getattr(args, 'device', None)
+        if self.device.driver == "tsse":
+            self.keycard_test = TSSEKeyCardTest()
+        else:
+            self.keycard_test = SDSKeyCardTest()
+        self.keycard_test.setup(args)
 
     def test(self):
         """
         Run key card test case
         return: result
         """
-        result = True
-        original_file = os.path.join(keycard_dir, "libswsds.so")
-        shutil.copy(original_file, self.target_file)
-        ui_message_list = [
-            "Which test suite would you like to test: ",
-            "1|基本函数测试",
-            "2|RSA非对称密码运算函数测试",
-            "3|ECC非对称密码运算函数测试",
-            "4|对称密码运算函数测试",
-            "5|杂凑运算函数测试",
-            "6|用户文件操作函数测试",
-            "Enter space to split(ex: 1 2 3)\n"
-        ]
-        ui_message = "\n".join(ui_message_list)
-        execnum = self.com_ui.prompt(ui_message)
-        self.logger.info("Start to test, please wait.")
-        execnum = execnum.split(" ")
-        for num in execnum:
-            result = self.command.run_cmd(
-                "echo %s | %s/TestSDS" % (num, keycard_dir))
-            if result[2] != 0:
-                result = False
+        return self.keycard_test.test()
 
-        if result:
-            self.logger.info("Test key card succeed.")
-        else:
-            self.logger.error("Test key card failed.")
-        return result
-    
     def teardown(self):
         """
         Environment recovery after test
         :return:
         """
-        if os.path.exists(self.target_file):
-            os.remove(self.target_file)
+        self.keycard_test.teardown()
