@@ -15,3 +15,8 @@ dir_nginx=/etc/nginx/default.d
 dir_cert=/usr/share/oech/lib/server
 
 test -f ${dir_nginx}/uwsgi.conf || cp -af ${dir_cert}/uwsgi.conf ${dir_nginx}
+
+if [ ! -f /usr/bin/uwsgi ];
+then
+        ln -s /usr/sbin/uwsgi /usr/bin/uwsgi
+fi
