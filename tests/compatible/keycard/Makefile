@@ -27,6 +27,8 @@ install:
 	cp -a *.py $(DEST)
 	cp $(APPS) $(DEST)
 	chmod a+x $(DEST)/*.py
+	cp -a *.sh $(DEST)
+	chmod a+x $(DEST)/*.sh
 
 %.o:%.c
 	$(CC) -O2 -c $(CFLAGS)  $< -o $@
