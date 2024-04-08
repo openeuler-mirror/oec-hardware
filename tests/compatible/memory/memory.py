@@ -131,7 +131,7 @@ class MemoryTest(Test):
             self.command.run_cmd("sysctl -w vm.panic_on_oom=1")
             self.logger.info("set the system not to restart.")
         if self.swap_memory < 4096:
-            self.logger.error("Swap memory of %s MB is too small. Suggest configuring to 4G."
+            self.logger.error("Swap memory of %s MB is too small. Suggest configuring to 10G."
                               % self.swap_memory)
             return False
         extra_mem = self.free_memory/100
