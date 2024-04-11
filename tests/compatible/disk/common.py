@@ -116,6 +116,7 @@ def raw_test(logger, command, disk):
         if not do_fio(logger, command, device, size, opts):
             logger.error("%s sequential raw IO test failed." % device)
             return False
+    logger.info("%s sequential raw IO test succeed." % device)
 
     logger.info("Starting rand raw IO test...")
     # opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 " \
@@ -127,6 +128,7 @@ def raw_test(logger, command, disk):
         if not do_fio(logger, command, device, size, opts):
             logger.error("%s rand raw IO test failed." % device)
             return False
+    logger.info("%s sequential rand raw IO test succeed." % device)
 
     return True
 
@@ -199,7 +201,6 @@ def do_fio(logger, command, filepath, size, option):
             logger.error("%s fio failed." % filepath)
             return False
         a_bs = a_bs * 2
-    logger.info("%s fio succeed." % filepath)
     return True
 
 
