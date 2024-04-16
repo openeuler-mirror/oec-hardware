@@ -90,6 +90,10 @@ class SystemTest(Test):
             os_version = self.sysinfo.product + " " + self.sysinfo.get_version()
         elif product == "KylinSec":
             os_version = getoutput("cat /etc/dnf/vars/osversion | sed 's/[^0-9]//g'")
+        elif product == "Kylin":
+            os_version = getoutput("cat /etc/os-release | grep -i version_id | awk -F = '{print $2}' | sed 's/[\"]//g'")
+        elif product == "UOS":
+            os_version = getoutput("cat /etc/os-release | grep -i version_id | awk -F = '{print $2}' | sed 's/[\"]//g'")
         else:
             self.logger.error("Failed to get os version info.")
         self.logger.info("OS Version: %s" % os_version, terminal_print=False)
@@ -106,6 +110,10 @@ class SystemTest(Test):
         if product == "openEuler":
             kernel_release = kernel_dict.document[product][os_version]
         elif product == "KylinSec":
+            kernel_release = kernel_dict.document[product][os_version].split('/')[1].split('-')[0]
+        elif product == "Kylin":
+            kernel_release = kernel_dict.document[product][os_version].split('/')[1].split('-')[0]
+        elif product == "UOS":
             kernel_release = kernel_dict.document[product][os_version].split('/')[1].split('-')[0]
         try:
             if kernel_release != self.sysinfo.kernel_version:
