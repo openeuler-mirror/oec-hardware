@@ -25,7 +25,7 @@ CHIP = "chipModel"
 DRIVER = "driverName"
 VERSION = "driverVersion"
 NODEVICE = ("cpufreq", "memory", "clock", "profiler", "system",
-            "stress", "kdump", "perf", "acpi", "watchdog", "kabi", "kabiwhitelist", "longtermstability")
+            "stress", "kdump", "perf", "acpi", "watchdog", "kabi", "kabiwhitelist", "longtermstability", "srpm")
 TEST_KABI_ARCH = ("aarch64", "x86_64")
 CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD")
@@ -50,3 +50,7 @@ SHELL_ENV = {
 # Log rotate settings
 MAX_BYTES = 31457280
 MAX_COUNT = 30
+
+# COMPARE RESULT
+CMP_RESULT_LESS = "less"
+CMP_RESULT_DIFF = "diff"
