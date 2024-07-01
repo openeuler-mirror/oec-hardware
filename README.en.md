@@ -1,192 +1,188 @@
-<!-- TOC -->
-
-- [Overview](#Overview)
-  - [tool describes](#tool describes)
-  - [Compatibility Conclusion Inheritance Description](#Compatibility Conclusion Inheritance Description)
-    - [Overall compatibility Conclusion Inheritance strategy](#Overall compatibility Conclusion Inheritance strategy)
-    - [Board Compatibility Conclusion Inheritance Strategy](#Board Compatibility Conclusion Inheritance Strategy)
-  - [version release](#version release)
-    - [Version Maintenance Statement](#Version Maintenance Statement)
-  - [tool uses](#tool uses)
-  - [use process](#use process)
-    - [User Usage Process](#User Usage Process)
-  - [operating environment](#operating environment)
-    - [environmental requirements](#environmental requirements)
-    - [Operating environment networking](#Operating environment networking)
-- [tool mounting](#tool mounting)
-  - [prerequisite](#prerequisite)
-  - [Get the installation package](#Get the installation package)
-  - [installation process](#installation process)
-    - [Client](#Client)
-    - [Server](#Server)
-- [use guidance](#use guidance)
-  - [prerequisite](#prerequisite-1)
-  - [using step](#using step)
-- [result acquisition](#result acquisition)
-  - [view results](#view results)
-  - [results show](#results show)
-  - [Review of test results](#Review of test results)
-- [Test item introduction](#Test item introduction)
-  - [Existing test items](#Existing test items)
-- [Community Developer Involvement Presentations](#Community Developer Involvement Presentations)
-  - [environment deployment](#environment deployment)
-  - [New test item](#New test item)
-- [FAQ](#FAQ)
-
-<!-- /TOC -->
+- [Overview](#overview)
+  - [**Tool Introduction**](#tool-introduction)
+- [Compatibility Conclusion Inheritance](#compatibility-conclusion-inheritance)
+  - [Server](#server)
+  - [Board](#board)
+- [Version Release](#version-release)
+  - [Maintenance Statement](#maintenance-statement)
+- [Tool Usage](#tool-usage)
+  - [Usage Process](#usage-process)
+  - [Operating Environment](#operating-environment)
+    - [Environment Requirements](#environment-requirements)
+      - [Server Test Environment Requirements](#server-test-environment-requirements)
+      - [Board Test Environment Requirements](#board-test-environment-requirements)
+    - [Operating Environment Networking](#operating-environment-networking)
+- [Deployment Requirements for an Offline Installation Environment](#deployment-requirements-for-an-offline-installation-environment)
+- [Tool Installation](#tool-installation)
+  - [Prerequisites](#prerequisites)
+  - [Obtaining the Installation Package](#obtaining-the-installation-package)
+  - [Installation Procedure](#installation-procedure)
+    - [Client](#client)
+    - [Server](#server-1)
+- [How to Use](#how-to-use)
+  - [Prerequisites](#prerequisites-1)
+  - [Procedure](#procedure)
+- [Result Acquisition](#result-acquisition)
+  - [Result Viewing](#result-viewing)
+  - [Result Description](#result-description)
+  - [Test Result Review](#test-result-review)
+- [Introduction to Tests](#introduction-to-tests)
+  - [Existing Tests](#existing-tests)
+    - [compatible](#compatible)
+    - [virtualization](#virtualization)
+- [Community Developer Participation](#community-developer-participation)
+  - [Deploying the Environment](#deploying-the-environment)
+  - [Adding Tests](#adding-tests)
+- [FAQs](#faqs)
 
 # Overview
 
-## tool describes
+## **Tool Introduction**
 
-oec-hardware tool is a hardware compatibility test tool provided by openEuler community. oec-hardware provides compatibility verification test of server whole machine, board and openEuler. Verification is limited to basic function verification, excluding performance test and other tests. 
+oec-hardware is a hardware compatibility test tool provided by the openEuler community. It verifies the compatibility between servers, cards, and openEuler. The verification covers only basic functions.
 
-Hardware manufacturers can use oec-hardware when they need to verify the compatibility of hardware products with openEuler. The community provides a hardware compatibility test process, and hardware manufacturers can refer to the community compatibility adaptation process to adapt to openEuler.
+Hardware vendors can use oec-hardware to verify the compatibility between hardware products and openEuler. The community provides the hardware compatibility test process. Hardware vendors can refer to the [compatibility test process](https://www.openeuler.org/en/compatibility/hardware/) to adapt their products to openEuler.
 
-For hardware products tested by oec-hardware tools, openEuler will publish compatibility lists on the community website, and hardware manufacturers will publish corresponding compatibility information on the manufacturer's website.
+For hardware products tested by the oec-hardware tool, openEuler will release the [compatibility list](https://www.openeuler.org/en/compatibility/) on its official website, and hardware vendors will release the compatibility information on their official websites.
 
-# Compatibility Conclusion Inheritance Description
+# Compatibility Conclusion Inheritance
 
-## Overall compatibility Conclusion Inheritance strategy
+## Server
 
-If the verification adapter has the same motherboard and CPU generation, the compatibility conclusion can be inherited. 
+If the servers to be verified use the same motherboard and are in the same CPU generation, the compatibility conclusion can be inherited.
 
-## Board Compatibility Conclusion Inheritance Strategy
+## Board
 
-The card type is generally confirmed by quadruples. 
+Generally, the board model is determined based on a quadruple.
 
-```
-Quadruple tuple information:
-    - vendorID: Chip manufacturer ID
-    - deviceID: Chip model ID
-    - svID: Board manufacturer ID
-    - ssID: Board model ID
+    Quadruple information:
+        vendorID: chip vendor ID.
+        deviceID: chip model ID.
+        svID: card vendor ID.
+        ssID: card model ID.
+    
+    How to view the quadruple
+        - View on the iBMC.
+        - Run the **lspci -nvv** command in the system.
 
-Ways to view the quadruple tuple:
-    - View it through iBMC
-    - Run the command "lspci -nvv" in the system
-```
+Whether the board compatibility conclusion can be inherited is determined by the following points:
 
-The board compatibility conclusion inherits the following three points: 
+1. The values of **vendorID** and **deviceID** are different.
 
-1. vendorID and deviceID are different 
+    The compatibility conclusion cannot be inherited.
 
-   Unable to inherit compatibility conclusions. 
+2. The values of **vendor ID** and **deviceID** are the same, but those of **svID** are different.
 
-2. vendorID and deviceID, svID are different 
+    The compatibility conclusion cannot be inherited because the chip models are the same but the card vendors are different.
 
-   The chip model is the same but the board manufacturer is different, and the compatibility conclusion cannot be inherited. 
+3. The values of **vendorID**, **deviceID**, and **svID** are the same.
 
-3. Same vendorID, deviceID, svID 
+    Different boards made of the same chip from the same vendor can inherit the compatibility conclusion.
 
-   Different boards made of the same chip can inherit the compatibility conclusion on behalf of the same board manufacturer. 
+4. The values of **vendorID**, **deviceID**, **svID**, and **ssID** are the same.
 
-4. Same vendorID, deviceID, svID, ssID 
+    Boards of the same series made of the same chip from the same vendor can inherit the compatibility conclusion. The vendor can assess typical boards of the series.
 
-   Represents the same board manufacturer, the same series of boards made of the same chip, the same quadruple information, and can inherit the compatibility conclusion. The manufacturer evaluates this series of boards by himself, and can write representative board names. 
+Board vendors can refer to the compatibility list of the community and the boards that are being adapted. If the compatibility conclusion can be inherited, describe it in the adaptation issue. The compatibility SIG will manually review such issue and update the compatibility list accordingly after the review is passed.
 
-The board manufacturer refers to the compatibility list of the community and the board being adapted. If the compatibility conclusion can be inherited, it needs to be explained in the corresponding adaptation issue. The compatibility sig group will conduct manual review, and the corresponding compatibility list will be issued after the review is passed. 
+# Version Release
 
-# version release
+For details about the release policy and management, see `docs/design_docs/oech_rpm_version_design.md`.
 
-Detailed release strategy and release plan see `docs/design_docs/oech_rpm_version_design.md` 
+## Maintenance Statement
 
-## Version Maintenance Statement
+oec-hardware-1.1.1 is no longer updated or maintained. Obtain the latest oec-hardware for installation.
 
-oec-hardware-version 1.1.1 will no longer be updated and maintained. Please obtain the latest version of oec-hardware for installation and use. 
+# Tool Usage
 
-# tool uses
+## Usage Process
 
-## use process
+![user-flow](docs/pictures/user-flow-en.png)
 
-### User Usage Process
+## Operating Environment
 
-![user-flow](docs/pictures/user-flow.png)
+### Environment Requirements
 
-## operating environment
+#### Server Test Environment Requirements
 
-### environmental requirements
+|   Item    |                       Requirement                    |
+|-----------|---------------------------------------------|
+|    Server quantity   | Two servers are required, and the service network ports can communicate with each other.   |
+|    Hardware   | At least one RAID controller card and one NIC (including the hardware integrated on the mainboard) are required.   |
+|    Memory   | Full configuration is recommended.   |
 
-#### Environmental requirements for complete machine test
+#### Board Test Environment Requirements
 
-| Project            | Requirements                                                 |
-| ------------------ | ------------------------------------------------------------ |
-| Number of machines | Two complete machines are required, and the service network interface is interconnected. |
-| Hardware           | At least one RAID card and one NIC (including integrated motherboard hardware) |
-| Memory内存         | Recommended full                                             |
+|   Item    |                       Requirement                    |
+|-----------|---------------------------------------------|
+|    Server model   | TaiShan 200 (Model 2280), 2288H V5, or servers of the same type (for details, see the [compatibility list](https://www.openeuler.org/en/compatibility/)). For x86_64 servers, you can use Ice Lake (preferred), Cooper Lake, or Cascade.  |
+|    RAID controller card   | At least RAID 0 is required.  |
+|    NIC/IB card   | Insert a board of the same type into the server and the test machine respectively, and configure IP addresses on the same network segment to ensure direct communication.  |
+|    FC card   | The disk array needs to be connected, and at least two LUNs need to be created.  |
 
-#### Board test environment requirements
+**Notice** 
 
-| Project       | Requirements                                                 |
-| ------------- | ------------------------------------------------------------ |
-| server models | Taishan200(Model 2280), 2288H V5 or equivalent servers (see the community compatibility list for details). For x86_64 servers, you can choose one of icelake/cooperlake/cascade, preferably icelake. |
-| RAID Card     | group raid is required, at least group raid 0                |
-| NIC/IB Card   | The server and the test end need to insert a board of the same type respectively, configure the IP of the same network segment, and ensure direct connection and intercommunication. |
-| FC Card       | Magnetic array needs to be connected, at least two luns      |
+   To test an external driver, install the driver and configure the test environment in advance.
 
-**Note**
+   External drivers must be installed in advance for GPU, vGPU, and keycard tests. Then, use this tool to perform the tests.
 
-If you want to test external drivers, install the drivers in advance and configure the test environment. 
+### Operating Environment Networking
 
-GPU, VGPU, keycard and other test items need to install external drivers in advance to ensure that the environment deployment is completed, and then use this tool for testing. 
+![test-network](docs/pictures/test-network-en.png)
 
-### Operating environment networking
+# Deployment Requirements for an Offline Installation Environment
 
-![test-network](docs/pictures/test-network.png)
+1. Download the official **everything** ISO file of openEuler and mount a local repository.
 
-# Offline Installation Environment Deployment Requirements
+   If the dependent software package cannot be found in the **everything** ISO file, manually download it from the [openEuler official repository](https://repo.openeuler.org/) and upload it to the test machine for installation.
 
-1. Download openEuler's official everything iso and mount the local repo source. 
+2. Configure offline test dependencies for different tests.
 
-   If you cannot find a dependent package in everything iso, download the package manually from the openEuler repo and upload it to the tester for installation.
+   | Test | File Name | Path |
+   | ---- | ----- | ----- |
+   | GPU  | https://github.com/wilicc/gpu-burn | `/opt` |
+   |      | https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip | `/opt` |
+   | VGPU | NVIDIA vGPU client driver | `/root` |
+   |      | Download the VM image file of the corresponding version and architecture. The following uses openEuler 22.03 LTS in x86_64 as an example: https://repo.openeuler.org/openEuler-22.03-LTS/virtual_machine_img/x86_64/openEuler-22.03-LTS-x86_64.qcow2.xz | `/opt` |
 
-2. Root different test items, configure offline test dependencies 
+# Tool Installation
 
-   | Test item | filename                                                     | path   |
-   | --------- | ------------------------------------------------------------ | ------ |
-   | GPU       | [https://github.com/wilicc/gpu-burn](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fwilicc%2Fgpu-burn) | `/opt` |
-   |           | [https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2FNVIDIA%2Fcuda-samples%2Farchive%2Frefs%2Fheads%2Fmaster.zip) | `/opt` |
-   | VGPU      | NVIDIA vgpu client driver package                            | /root  |
-   |           | Download the virtual machine image file with the corresponding version and architecture, taking openEuler 22.03LTS and x86_64 as an example：[https://repo.openeuler.org/openEuler-22.03-LTS/virtual_machine_img/x86_64/openEuler-22.03-LTS-x86_64.qcow2.xz](https://gitee.com/link?target=https%3A%2F%2Frepo.openeuler.org%2FopenEuler-22.03-LTS%2Fvirtual_machine_img%2Fx86_64%2FopenEuler-22.03-LTS-x86_64.qcow2.xz) | `/opt` |
+## Prerequisites
 
-# tool mounting
+This tool can run on openEuler 20.03 LTS or later. For details about the supported OS versions, see the `oec-hardware/scripts/kernelrelease.json` file.
 
-## prerequisite
+## Obtaining the Installation Package
 
-This tool supports openEuler 20.03 (LTS) or higher. For details of supported operating system versions, please see file `oec-hardware/scripts/kernelrelease.json` .
+Configure the **everything** and **update** repositories of the corresponding version in the [openEuler official repository](https://repo.openeuler.org/) and use DNF to obtain the software package for installation.
 
-## Get the installation package
+## Installation Procedure
 
-Configure the everything and update repo sources of the corresponding versions in the openEuler official repo, and use `dnf` to get the package for installation.
+### Client
 
-## installation process
-
-### client
-
-1. Install client oec-hardware using `dnf` .
+1. Run `dnf` to install the oec-hardware client.
 
    ```
    dnf install oec-hardware
    ```
 
-2. Enter `oech` command, it can run normally, it means that the installation is successful.
+2. Run **oech**. If the command runs properly, the installation is successful.
 
-### server
+### Server
 
-1. Install server-side oec-hardware-server using `dnf` .
+1. Run `dnf` to install oec-hardware-server.
 
    ```
    dnf install oec-hardware-server
    ```
 
-2. Start the service. This service provides web services through nginx service. By default, port 80 is used. External ports can be modified through nginx service configuration files. Please ensure that these ports are not occupied before starting. 
+2. Starts services. This service works with the Nginx service to provide web services. By default, port 80 is used. You can change the external ports in the Nginx service configuration file. Before starting services, ensure that these ports are not occupied.
 
    ```
    systemctl start oech-server.service
    systemctl start nginx.service
    ```
 
-3. Turn off firewall and SElinux. 
+3. Disable the firewall and SElinux.
 
    ```
    systemctl stop firewalld
@@ -194,19 +190,19 @@ Configure the everything and update repo sources of the corresponding versions i
    setenforce 0
    ```
 
-# use guidance
+# How to Use
 
-## prerequisite
+## Prerequisites
 
-- The `/usr/share/oech/kernelrelease.json` file lists all currently supported system versions. Use the `uname -a` command to confirm whether the current system kernel version belongs to the supported version of the framework.
-- By default, the framework scans all network cards. Before testing the network cards, please filter the tested network cards by yourself. The test port is required to be connected and the status is up. It is recommended not to use the service network interface for network card testing. 
--  `/usr/share/oech/lib/config/test_config.yaml ` is the configuration file template of hardware test items. `fc` , `raid` , `disk` , `ethernet` and `infiniband` need to be configured according to the actual environment before hardware test. Other hardware tests do not need to be configured. For network card test, if the IP address is automatically added by the tool, after the test is completed, for security reasons, the IP of the server needs to be manually deleted.
+* The `/usr/share/oech/kernelrelease.json` file lists all supported system versions. Run `uname -a` to check whether the current system kernel version is supported by the framework.
 
-## using step
+* By default, the framework scans all NICs. Before testing NICs, filter out the NICs to be tested. The test port must be connected and in the up state. You are advised not to use the service network port to perform the NIC test.
 
-1. Launch the test framework on the client side. The client starts `oech` , selects the test category, `compatible` indicates compatibility, `virtualization` indicates virtualization, and fills in the category number, i.e., enter `1` to indicate the selected compatibility category.
+* `/usr/share/oech/lib/config/test_config.yaml ` is the configuration file template for hardware tests. Before performing `fc`, `raid`, `disk`, `ethernet`, and `infiniband` tests, configure them based on the actual environment. For other hardware tests, you do not need to configure them. For the NIC test, if the IP address is automatically added by the tool, you need to manually delete the IP address of the server for security after the test is complete.
 
-   ```
+## Procedure
+1. Start the test framework on the client. Run `oech` on the client and select a test category, which can be `compatible` or `virtualization`. Enter the category number, that is, enter `1` to select the compatibility category.
+   ```   
    # oech
    Please select test category.
    No.   category
@@ -215,7 +211,7 @@ Configure the everything and update repo sources of the corresponding versions i
    Please select test category No:1
    ```
 
-2. Fill in configuration items `ID` , `URL` and `Server` ; `ID` is recommended to fill in the issue ID on gitee (note: `ID` cannot contain special characters); `URL` is recommended to fill in the product link; `Server` must be filled in as the server domain name or ip that the client can directly access, which is used to display the test report and the server for network testing. The default port number of server `nginx` is `80` . If the port is not modified after the server is installed, you only need to enter the service IP address of the server for the value `Compatibility Test Server` ; otherwise, you need to bring the port number, such as `172.167.145.2:90` .
+2. Set `Compatibility Test ID`, `Product URL`, and `Compatibility Test Server`. You are advised to set `Compatibility Test ID` to the issue ID on the Gitee (note that the ID cannot contain special characters), `Product URL` to the product URL, and `Compatibility Test Server` to the domain name or IP address of the server that can be directly accessed by the client (the server is used to display test reports and perform network tests). The default Nginx port number on the server is 80. If the port number is not changed after the server is installed, set `Compatibility Test Server` to the service IP address of the server. Otherwise, set it to the IP address and port number, for example, `172.167.145.2:90`.
 
    ```
    The openEuler Hardware Compatibility Test Suite
@@ -224,7 +220,7 @@ Configure the everything and update repo sources of the corresponding versions i
    Please provide the Compatibility Test Server (Hostname or Ipaddr):
    ```
 
-3. Enter the test kit selection interface. In the case selection interface, the framework will automatically scan the hardware and select the test suite available for testing in the current environment. Enter `edit` to enter the test suite selection interface.
+3. The test suite selection page is displayed. On the test selection page, the framework automatically scans hardware and selects the test suite that can be tested in the current environment. You can enter `edit` to go to the test selection page.
 
    ```
    These tests are recommended to complete the compatibility test: 
@@ -250,7 +246,7 @@ Configure the everything and update repo sources of the corresponding versions i
    Ready to begin testing? (run|edit|quit)
    ```
 
-4. Select the test kit. `all|none` is used for `全选|全取消` respectively (the mandatory test item `system` cannot be cancelled, and the status of `system` will change to `Force` after repeated successful execution); the number number can be selected as the test set, and only one number can be selected at a time. After pressing the enter character, `no` changes to `yes` , indicating that the test set has been selected.
+4. Select a test suite. The options `all` and `none` are used to select all and cancel all respectively. The mandatory test `system` cannot be canceled. After the test is executed successfully for multiple times, the status of `system` changes to `Force`. Enter a number to select a test suite. Only one number can be entered at a time. After you press **Enter**, `no` changes to `yes`, indicating that the test suite is selected.
 
    ```
    Select tests to run:
@@ -276,9 +272,9 @@ Configure the everything and update repo sources of the corresponding versions i
    Selection (<number>|all|none|quit|run):
    ```
 
-5. Start testing. Enter `run` to start the test.
+5. Start tests. After selecting a test suite, enter `run` to start tests.
 
-6. Upload test results. After the test is completed, you can upload the test results to the server for easy result display and log analysis. If the upload fails, check the network configuration and re-upload the test results. 
+6. Upload the test result. After a test is complete, you can upload the test result to the server for result display and log analysis. If the upload fails, check the network configuration and upload the test result again.
 
    ```
    ...
@@ -291,236 +287,238 @@ Configure the everything and update repo sources of the corresponding versions i
    Successfully uploaded result to server X.X.X.X.
    ```
 
-# result acquisition
+# Result Acquisition
 
-## view results
+## Result Viewing
 
-1. Open the server IP address in the browser, click the navigation bar `Results` interface, and find the corresponding test id to enter.
+1. Open the browser, enter the server IP address, click **Results**, and find the corresponding test IDs.
 
    ![results](docs/pictures/results.png)
 
-2. Enter a single task page to see specific test results, including environmental information and execution results. 
+2. View the detailed test results on each page, including the environment information and execution results.
 
-   - `Summary` View all test results.
+   - **Summary**: View all test results.
 
-   -  `Devices` View all hardware device information.
+   - **Devices**: View information about all hardware devices.
 
-   -  `Runtime` View test run times and total task execution logs.
+   - **Runtime**: View the test running time and general task execution logs.
 
-   - `Attachment` Download Test Log Attachment.
+   - **Attachment**: Download the test log attachment.
 
-   -  `Submit` means upload the results to Euler's official authentication server (currently not open).
+   - **Submit**: Upload the test results to the openEuler official authentication server (**not available currently**).
 
-      ![result-qemu](docs/pictures/result-qemu.png)
+     ![result-qemu](docs/pictures/result-qemu.png)
 
-## results show
 
-The Result column displays the test results, which can be either PASS or FAIL. If the result is FAIL, you can click the result directly to view the execution log, and check the case code according to the error report.
+## Result Description
 
-## Review of test results
+The **Result** column displays the test result, which can be **PASS** or **FAIL**. If the result is **FAIL**, click the result to view the execution log and rectify the fault based on the case code.
 
-If the tested hardware and complete machine need to be published to the openEuler compatibility list, please upload all the following test results to the relevant adaptation issue: 
+## Test Result Review
 
-- oec-hardware test log 
+If the tested hardware and servers need to be released to the openEuler compatibility list, upload the following test results to the related adaptation issues:
 
-- html test report generated by oec-hardware-server 
+   - oec-hardware test logs
 
-- Compatibility manifest file 
+   - HTML test report generated by oec-hardware-server
 
-  After oec-hardware is executed, compatibility information file `hw_compatibility.json` will be automatically generated for the hardware passing the test. Please refer to this file to fill in templates under templates directory, and then upload the filled template file.
+   - Compatibility list file
 
-  The whole machine adaptation needs to test at least one RAID card and one network card, and provide corresponding information. 
+      After the test suite has been executed, oec-hardware automatically generates a compatibility information file **hw_compatibility.json** for the hardware that passes the test suite. Fill in the template in the **templates** directory and upload the template file.
 
-# Test item introduction
+      At least one RAID controller card and one NIC need to be tested for server adaptation, and corresponding information needs to be provided.
 
-## Existing test items
+# Introduction to Tests
 
+## Existing Tests
 ### compatible
 
 1. **system**
-
-   - Check if this tool has been modified. 
-   - Check if OS version and kernel version match. 
-   - Check if the kernel is modified/infected. 
-   - Check if selinux is enabled properly. 
-   - Use the dmidecode tool to read hardware information. 
+   
+   - Checks whether this tool is modified.
+   - Checks whether the OS version matches the kernel version.
+   - Checks whether the kernel is modified or infected.
+   - Checks whether SELinux is properly enabled.
+   - Uses the dmidecode tool to read hardware information.
 
 2. **cpufreq**
 
-   - Test whether cpu runs at the same frequency as expected under different fm strategies. 
-   - Test whether the time required for cpu to calculate exactly the same specification at different frequencies is inversely related to the frequency value. 
+   - Tests whether the CPU running frequency is the same as expected when different frequency control policies are used.
+   - Tests whether the time required for the CPU to complete the same calculation workload is inversely correlated with the frequency.
 
 3. **clock**
 
-   - Test time vectoricity, no backtracking. 
-   - Test basic stability of RTC hardware clock. 
+   - Tests the clock direction, that is, whether the clock goes backwards.
+   - Tests the basic stability of the RTC (hardware clock).
 
 4. **memory**
 
-   - Use the memtester tool for memory read and write testing. 
-   - mmap all available system memory, trigger swap, 120s read and write test. 
-   - Test hugetlb. 
-   - Memory hot plug test. 
+   - Uses the memtester tool to perform the memory read/write test.
+   - Uses mmap to check all available memory, trigger memory swapping, and perform the read/write test for 120s.
+   - Tests the HugeTLB.
+   - Tests memory hot swap.
 
 5. **network**
 
-   - Use ethtool to get network card information and ifconfig to perform down/up tests on the network card. 
+   - Uses ethtool to obtain the NIC information and uses ifconfig to perform the down/up test on the NIC.
+   - Uses qperf to test the TCP/UDP latency and bandwidth, as well as HTTP upload and download rates of the Ethernet NIC.
+   - Uses perftest to test the latency and bandwidth of the InfiniBand (IB) or RoCE network.
 
-   - Use qperf to test ethernet tcp/udp latency and bandwidth, as well as http upload and download rates. 
-
-   - Use perftest to test latency and bandwidth of infiniband(IB) or RoCE network protocols. 
-
-     **Note**
-
-     When testing the network bandwidth, please confirm in advance that the network card speed of the server is not lower than that of the client, and ensure that there is no other traffic interference on the test network. 
+      **Notice** 
+   
+      Before performing a network bandwidth test, ensure that the rate of the server NIC is greater than or equal to that of the client NIC and that the test network is not interfered by other traffic.
 
 6. **disk**
 
-   Sequential/random read-write testing of bare disks/file systems using fio tools. 
+   Uses Flexible I/O Tester (FIO) to perform sequential/random read/write tests on raw disks or file systems.
 
 7. **kdump**
 
-   Trigger kdump to test whether the vmcore file can be generated and parsed normally. 
+   Triggers kdump to check whether vmcore files can be properly generated and parsed.
 
 8. **watchdog**
 
-   Trigger watchdog to test whether the system can be reset normally. 
+   Triggers the watchdog to check whether the system can be reset properly.
 
 9. **perf**
 
-   - Collect events generated by hardware in the system. 
-   - Collect sampling information and view statistical results. 
+   - Collects events generated by hardware in the system.
+   - Collects sampling information and displays the statistics.
 
 10. **cdrom**
 
-    Burn and read optical drives using mkisofs and cdrecord. 
+    Uses mkisofs and cdrecord to burn and read the optical disc drive.
 
 11. **ipmi**
 
-    Query IPMI information using ipmitool. 
+    Uses IPMItool to query IPMI information.
 
 12. **nvme**
 
-    Use nvme-cli tool to format, read and write, query and test the disk. 
+    Uses nvme-cli to format, read, write, and query drives.
 
 13. **usb**
 
-    Plug and unplug usb devices and test whether usb interfaces can be recognized normally. 
+    Removes and inserts the USB device to test whether the USB port can be identified properly.
 
 14. **acpi**
 
-    Use the acpidump tool to read the data. 
-
+    Uses acpidump to read data.
+    
 15. **FC**
 
-    Sequential/random read-write testing of FC storage servers using fio tools. 
+    Uses FIO to perform sequential/random read/write tests on the FC storage server.
 
 16. **RAID**
 
-    Use fio tool for sequential/random read/write test of hard disk under RAID. 
+    Uses FIO to perform sequential/random read/write tests on hard drives in a RAID array.
 
 17. **keycard**
 
-    Test whether the encryption card can be used normally. 
+    Tests whether the keycard can be used normally.
 
 18. **GPU**
 
-    - NVIDIA GPU
+    - NVIDIA GPUs
 
-      - Stress test GPU using gpu_burn tool. 
-      - Use cuda_samples to test basic GPU functionality. 
+      - Uses gpu_burn to perform a stress test on the GPU.
+      - Uses cuda_samples to test the basic functions of the GPU.
 
-    - AMD GPU
+    - AMD GPUs
 
-      - Use the radeontop tool to view GPU usage. 
+      - Uses radeontop to check the GPU usage.
+      - Uses glmark2 to view the GPU screen information.
+      - Uses glmark2 to perform a stress test on the GPU.
 
-      - Use the glmark2 tool to view GPU screen information. 
-
-      - Stress testing GPU using glmark2 tool. 
-
-        **Note**
-
-        AMD GPU testing relies on a graphical interface, which needs to be deployed and switched to before testing. 
+         **Notice** 
+      
+         The tests for AMD GPUs depend on the GUI. Before the tests, deploy and switch to the GUI.
 
 19. **infiniband**
 
-    - Use ethtool to get network card information. 
-
-    - Use perftest to test the latency and bandwidth of the infiniband(IB) network protocol. 
-
-      **Note**
-
-      When testing the network bandwidth, please confirm in advance that the network card speed of the server is not lower than that of the client, and ensure that there is no other traffic interference on the test network. 
+    - Uses ethtool to obtain NIC information.
+    - Uses perftest to test the latency and bandwidth of the IB network.
+    
+      **Notice** 
+      
+      Before performing a network bandwidth test, ensure that the rate of the server NIC is greater than or equal to that of the client NIC and that the test network is not interfered by other traffic.
 
 20. **kabi**
 
-    - Test whether the kernel kabi has changed compared to the standard system. 
+    - Checks whether the Kernel Application Binary Interface (kABI) changes compared with the standard system.
 
 21. **VGPU**
 
-    - Test NVIDIA VGPU server-side basics. 
-    - Deploy NVIDIA VGPU client virtual machines, test driver installation, test client VGPU functionality. 
-    - The VGPU server monitors the operation of the client. 
-
+    - Tests the basic functions of the NVIDIA vGPU server.
+    - Deploys the NVIDIA vGPU client VM, and tests the driver installation and the vGPU functions of the client.
+    - Uses the vGPU server to monitor the running of the client.
+	
 22. **spdk**
 
-    - Sequential and random read and write testing of SSDs using the spdk tool. 
+    - Uses spdk to perform sequential/random read/write tests on SSDs.
 
 23. **dpdk**
 
-    - Use dpdk-testpmd to connect two Ethernet ports in loopback mode. In the absence of an external traffic generator, the client uses Tx-only mode as the packet source, and the server uses Rx-only mode as the packet receiver to test the port transmission rate function. 
+    - Uses dpdk-testpmd to connect two Ethernet ports in loopback mode. If no external traffic generator is available,
+    the client uses the Tx-only mode as the data packet source and the server uses the Rx-only mode
+    as the data packet receiver to test the transmission rate of the ports.
+
+24. **srpm**
+
+    - Checks whether the source RPM (SRPM) of the current OS version meets the minimum core package selection baseline requirements (versions later than 24.03 LTS are supported).
 
 ### virtualization
 
-```
-Virtualization has use cases waiting for updates.
-```
+    Existing virtualization test cases are to be updated.
 
-# Community Developer Involvement Presentations
+# Community Developer Participation
 
-## environment deployment
+## Deploying the Environment
 
-1. Fork oec-hardware source code repository to personal space; 
+1. Fork the oec-hardware source code repository to the personal space.
 
-2. clone repository source code; 
+2. Clone the source code.
 
-   ```
-   git clone https://gitee.com/${gitee_id}/oec-hardware.git
-   ```
+    ```
+    git clone https://gitee.com/${gitee_id}/oec-hardware.git
+    ```
 
-3. Enter the corresponding directory, compile and install; 
+3. Go to the corresponding directory and compile and install the software.
 
-   ```
-   cd oec-hardware
-   make && make install
-   ```
+    ```
+    cd oec-hardware
+    make && make install
+    ```
+    
+4. Package the software. Version 1.0.0 is used as an example. For details about the packaged version, see the spec file.
 
-4. Package verification, here take version 1.0.0 as an example for packaging, the specific packaging version please refer to the version in the spec file. 
+    ```
+    dnf install -y rpm-build 
+    cd oec-hardware
+    tar jcvf oec-hardware-1.0.0.tar.bz2 *
+    mkdir -p /root/rpmbuild/SOURCES
+    cp oec-hardware-1.0.0.tar.bz2 /root/rpmbuild/SOURCES/
+    rpmbuild -ba oec-hardware.spec
+    ```
 
-   ```
-   dnf install -y rpm-build 
-   cd oec-hardware
-   tar jcvf oec-hardware-1.0.0.tar.bz2 *
-   mkdir -p /root/rpmbuild/SOURCES
-   cp oec-hardware-1.0.0.tar.bz2 /root/rpmbuild/SOURCES/
-   rpmbuild -ba oec-hardware.spec
-   ```
+## Adding Tests
 
-## New test item
+1. If the category of the new test already exists in the `tests/` directory, add the test to the category. The directory name of the test must be the same as the name of the entry function. For example, the entry file of the acpi test is **acpi.py**, and the framework `Test` is inherited to implement the test class. Otherwise, add a category directory and then add the test to the category.
 
-1. If there is already a category of test items in the directory `tests/` , add test items directly under the category. The directory name of the test items should be the same as the name of the following entry function. For example, the entry file of acpi test items is acpi.py file, and inherit the framework `Test` to implement your own test class. Otherwise, add category catalog first, and then add test items under category.
-2. Important member variables or functions in the test class: 
-   -  Function `test` -Required to test the main flow.
-   - Function `setup` -environment preparation before test, mainly used to initialize the relevant information of the tested equipment, you can refer to network test.
-   - Function `teardown` -environment cleaning after test is completed, mainly used to ensure that the environment can be restored correctly regardless of test success or failure, you can refer to network test.
-   - Variable `requirements` -stores the rpm package names that the test depends on as an array, and the framework is automatically installed before the test starts.
-   - Variables `reboot` and `rebootup` -If `reboot = True` indicates that the test suite/test case will restart the system and continue to execute the function specified by `rebootup` after restart, refer to kdump test.
-3. Add identification display of corresponding test item in `hwcompatible/compatibility.py` file. Refer to https://gitee.com/openeuler/oec-hardware/blob/master/docs/develop_doc/get_board.md for card identification method.
+2. Important member variables or functions in the test class are described as follows:
 
-# FAQ
+   - `test` function: main test flow. It is **mandatory**.
 
- Kunpeng Xiaozhi provides solutions to problems that may be encountered during oec-hardware testing, and users can retrieve solutions to problems. In addition, the Kunpeng Forum provides complete oec-hardware installation and use questions, and users can obtain solutions according to scenarios.
+   - `setup` function: environment setup before the test. It is used to initialize the information about the tested device. The network test can be used as reference.
 
-If you encounter problems in the adaptation process, it is recommended that users first obtain support through Kunpeng Xiaozhi or Kunpeng Forum. 
+   - `teardown` function: environment cleanup after the test is complete. It ensures that the environment can be properly restored whether the test is successful or not. The network test can be used as reference.
 
-If Kunpeng Xiaozhi can't solve it, you can submit issue feedback under this repository or send an email to openEuler Community Compatibility SIG Group Email: oecompatibility@openeuler.org
+   - `requirements` variable: an array to store the names of the dependent RPM packages of the test. The RPM packages are automatically installed by the framework before the test starts.
+
+   - `reboot` and `rebootup` variables: If `reboot = True`, the test suite or test case will reboot the system and continue to execute the function specified by `rebootup` after the reboot. The kdump test can be used as reference.
+
+3. Add the identification result of the test to the **hwcompatible/compatibility.py** file. For details about how to identify boards, see https://gitee.com/openeuler/oec-hardware/blob/master/docs/develop_doc/get_board_en.md.
+
+# FAQs
+
+Submit issues to this repository or send an email to oecompatibility@openeuler.org.
