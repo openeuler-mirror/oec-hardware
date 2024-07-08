@@ -303,6 +303,10 @@ class EulerCertification():
                         test["run"] = True
                         test["status"] = "NotRun"
                         test["reboot"] = False
+                        cpu_vendor = empty_device.get_cpu_vendor()
+                        if testname == "intel" and cpu_vendor != "GenuineIntel":
+                            continue
+
                         test_factory.append(test)
         return test_factory
 
