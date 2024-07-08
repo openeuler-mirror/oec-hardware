@@ -79,7 +79,7 @@ def get_results():
         results[host] = {}
         for oec_id in next(os.walk(dir_host))[1]:
             dir_id = os.path.join(dir_host, oec_id)
-            results[host][oec_id] = next(os.walk(dir_id))[1]
+            results[host][oec_id] = sorted(next(os.walk(dir_id))[1])
     return render_template('results.html', results=results)
 
 
