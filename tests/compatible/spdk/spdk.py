@@ -26,7 +26,8 @@ class SpdkTest(Test):
         self.hugepage_size = 0
         self.device = None
         self.pci_num = ""
-        self.script = "/opt/spdk/scripts/setup.sh"
+        self.test_dir = os.path.dirname(os.path.realpath(__file__))
+        self.script = os.path.join(dir_server, 'setup.sh')
 
     def setup(self, args=None):
         """
