@@ -430,6 +430,12 @@ class Device:
                 self.quad.extend([tmp[-3] + tmp[-4], tmp[-1] + tmp[-2]])
         return self.quad
 
+    def get_cpu_vendor(self):
+        cmd_result = self.command.run_cmd(
+            "cat /proc/cpuinfo | grep vendor_id | head -1", log_print=False)
+        cpu_vendor_id = cmd_result[0].split(':')[1].strip()
+        return cpu_vendor_id
+
     def _is_null(self):
         """
         Judge whether the board model and chip signal are empty

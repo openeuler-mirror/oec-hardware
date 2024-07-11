@@ -24,7 +24,7 @@ BOARD = "boardModel"
 CHIP = "chipModel"
 DRIVER = "driverName"
 VERSION = "driverVersion"
-NODEVICE = ("cpufreq", "memory", "clock", "profiler", "system",
+NODEVICE = ("intel", "cpufreq", "memory", "clock", "profiler", "system",
             "stress", "kdump", "perf", "acpi", "watchdog", "kabi", "kabiwhitelist", "longtermstability", "srpm")
 TEST_KABI_ARCH = ("aarch64", "x86_64")
 CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
