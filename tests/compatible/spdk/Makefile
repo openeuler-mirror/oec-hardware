@@ -17,6 +17,8 @@ install:
 	mkdir -p $(DEST)
 	cp -a *.py $(DEST)
 	chmod a+x $(DEST)/*.py
+	cp -a *.sh $(DEST)
+	chmod a+x $(DEST)/*.sh
 
 clean:
 	rm -rf $(DEST)
