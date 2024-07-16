@@ -158,8 +158,16 @@ oec-hardware工具发布新版本后，社区成员将只针对最新版本进�
 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything  和 update repo源，使用 `dnf` 获取软件包进行安装。
 
 ### 离线安装
-手动使用`wget`从[openEuler 官方 repo](https://repo.openeuler.org/)中 everything 或 updata 目录下获取最新rpm包
-
+手动从[社区仓库](https://gitee.com/src-openeuler/oec-hardware/tree/master/)中获取最新版本的oech压缩包进行安装
+**oec-hardware工具依赖**
+```
+kernel-devel 
+net-tools 
+python3-concurrent-log-handler 
+python3-portalocker 
+python3-pyyaml 
+tar
+```
 
 ## 安装过程
 
@@ -217,9 +225,8 @@ oec-hardware工具发布新版本后，社区成员将只针对最新版本进�
    Please select test category No:1
    ```
 
-2. 填写`ID`、`URL`、`Server`配置项
-
-***tips：此处为选填项，推荐填写，若不需要通过浏览器展示测试报告及dpdk测试，可仅填写ID***
+1. 填写`ID`、`URL`、`Server`配置项
+***tips：此处为选填项，`Server`端仅需要通过浏览器展示测试报告及需要dpdk测试时填写***
 
 `ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。服务端`nginx`默认端口号是`80`，如果服务端安装完成后没有修改该端口，`Compatibility Test Server` 的值只需要输入服务端的业务IP地址；否则需要带上端口号，比如：`172.167.145.2:90`。
 
@@ -308,7 +315,6 @@ oec-hardware工具发布新版本后，社区成员将只针对最新版本进�
 测试完成后，测试日志会保存在`/usr/share/oech/logs/`目录下，将测试日志导出并解压即可查看测试日志
 
 ### 浏览器查看测试报告
-
 ***tips：浏览器查看测试报告，前提需要配置server端接收测试结果***
 
 1. 浏览器打开服务端 IP 地址，点击导航栏 `Results` 界面，找到对应的测试 id 进入。
