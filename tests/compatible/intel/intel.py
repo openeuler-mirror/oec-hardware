@@ -16,11 +16,16 @@ class IntelTest(Test):
     def __init__(self):
         Test.__init__(self)
         self.requirements = [
-            "gcc-c++", "make", "git", "automake", "make", "gcc", "m4", "libtool", "asciidoc",
+            "gcc-c++", "make", "git", "automake", "gcc", "m4", "libtool", "asciidoc",
             "xmlto", "uuid", "uuid-devel", "uuid-c++-devel", "libuuid-devel", "json-c-devel",
-            "zlib-devel", "openssl-devel"]
+            "zlib-devel", "openssl-devel", "perf", "stress-ng", "hwloc", "python3-pip",
+            "pciutils-devel", "libcap-devel"]
 
         self.device = None
+        self.env_check = {
+            'stdout':'',
+            'stderr':'',
+            'ret':0}
 
         self.tests = [
             ["amx/tmul", "tests-amx"],
@@ -45,13 +50,25 @@ class IntelTest(Test):
 
         os.chdir(intel_dir)
         ret = self.command.run_cmd("bash setup.sh")
+        self.env_check['stdout'] = ret[0]
+        self.env_check['stderr'] = ret[1]
+        self.env_check['ret'] = ret[2]
 
         for t in self.tests:
             os.chdir(f'{intel_dir}/lkvs/BM/{t[0]}')
-            if os.path.isfile("Makefile") and os.path.isfile("makefile"):
+            if os.path.isfile("Makefile") or os.path.isfile("makefile"):
                 result = self.command.run_cmd("make")
 
+        if self.env_check['ret'] != 0:
+            self.logger.info("[FAIL] Failed to setup environment!")
+            return False
+
+        return True
+
     def test(self):
+        if self.env_check['ret'] != 0:
+            return False
+
         ret = 0
         os.chdir(f'{intel_dir}/lkvs/BM')
 
@@ -59,9 +76,9 @@ class IntelTest(Test):
             result = self.command.run_cmd("python3 runtests.py -f %s -t %s/lkvs/scenario/emr-oe/%s"
                                           % (t[0], intel_dir, t[1]))
             if result[2] == 0:
-                self.logger.info("%s: %s test successfully!" % (t[0], t[1]))
+                self.logger.info("[PASS]%s: %s test successfully!" % (t[0], t[1]))
             else:
-                self.logger.info("%s: %s test failed!" % (t[0], t[1]))
+                self.logger.info("[FAIL]%s: %s test failed!" % (t[0], t[1]))
                 ret += 1
 
         if (ret != 0):
