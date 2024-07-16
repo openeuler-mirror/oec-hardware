@@ -1,34 +1,37 @@
 <!-- TOC -->
 
 - [概述](#概述)
-   - [工具介绍](#工具介绍)
+	- [工具介绍](#工具介绍)
 - [兼容性结论继承说明](#兼容性结论继承说明)
     - [整机兼容性结论继承策略](#整机兼容性结论继承策略)
     - [板卡兼容性结论继承策略](#板卡兼容性结论继承策略)
 - [版本发行说明](#版本发行说明)
 - [工具使用](#工具使用)
-   - [使用流程](#使用流程)
-      - [用户使用流程](#用户使用流程)
-   - [运行环境](#运行环境)
-      - [环境要求](#环境要求)
-      - [运行环境组网](#运行环境组网)
+	- [使用流程](#使用流程)
+	    - [用户使用流程](#用户使用流程)
+	- [运行环境](#运行环境)
+	    - [环境要求](#环境要求)
+	    - [运行环境组网](#运行环境组网)
 - [离线安装环境部署要求](#离线安装环境部署要求)
 - [工具安装](#工具安装)
-   - [前提条件](#前提条件)
-   - [获取安装包](#获取安装包)
+	- [前提条件](#前提条件)
+	- [获取安装包](#获取安装包)
         - [在线安装](#在线安装)
         - [离线安装](#离线安装)
-   - [安装过程](#安装过程)
-      - [客户端](#客户端)
-      - [服务端](#服务端)
+	- [安装过程](#安装过程)
+	    - [客户端](#客户端)
+	    - [服务端](#服务端)
+- [测试项](#测试项)
+	- [测试项介绍](#测试项介绍)
+    - [测试项策略](#测试项策略)
 - [使用指导](#使用指导)
-   - [前提条件](#前提条件)
-   - [使用步骤](#使用步骤)
+	- [前提条件](#前提条件)
+	- [使用步骤](#使用步骤)
 - [详细测试指导](#详细测试指导)
 - [结果获取](#结果获取)
-   - [查看结果](#查看结果)
-   - [结果说明](#结果说明)
-   - [测试结果审核](#测试结果审核)
+	- [查看结果](#查看结果)
+	- [结果说明](#结果说明)
+	- [测试结果审核](#测试结果审核)
 - [FAQ](#FAQ)
 
 <!-- /TOC -->
@@ -158,16 +161,8 @@ oec-hardware工具发布新版本后，社区成员将只针对最新版本进�
 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything  和 update repo源，使用 `dnf` 获取软件包进行安装。
 
 ### 离线安装
-手动从[社区仓库](https://gitee.com/src-openeuler/oec-hardware/tree/master/)中获取最新版本的oech压缩包进行安装
-**oec-hardware工具依赖**
-```
-kernel-devel 
-net-tools 
-python3-concurrent-log-handler 
-python3-portalocker 
-python3-pyyaml 
-tar
-```
+手动使用`wget`从[openEuler 官方 repo](https://repo.openeuler.org/)中 everything 或 updata 目录下获取最新rpm包
+
 
 ## 安装过程
 
@@ -203,6 +198,46 @@ tar
    iptables -F
    setenforce 0
    ```
+# 测试项
+
+## 测试项介绍
+
+请查看 [测试项介绍](https://gitee.com/openeuler/oec-hardware/tree/master/docs/test_case_doc/test_suite.md)
+
+## 测试项策略
+
+|测试项|整机必测项|板卡测试项|虚拟化测试项|
+|------|------|--------|--------|
+|system|√|√||
+|acpi|√||||
+|clock|√|||
+|cpufreq|√|||
+|cdrom||||
+|disk|√|||
+|dpdk||||
+|ethernet|√|√||
+|fc||√||
+|gpu||√||
+|ipmi|√|||
+|infiniband||√||
+|kabi|√|√||
+|kabiwhitelist||||
+|kdump|√|||
+|keycard||√||
+|memory|√|||
+|nvme||√||
+|perf|√|||
+|raid|√|√||
+|usb|√|||
+|watchdog|√|||
+|qemu_001|||√|
+|qemu_003|||√|
+|qemu_005|||√|
+|qemu_007|||√|
+|qemu_008|||√|
+|qemu_0010|||√|
+|stratovirt_004|||√|
+|stratovirt_010|||√|
 
 # 使用指导
 
@@ -225,8 +260,7 @@ tar
    Please select test category No:1
    ```
 
-1. 填写`ID`、`URL`、`Server`配置项
-***tips：此处为选填项，`Server`端仅需要通过浏览器展示测试报告及需要dpdk测试时填写***
+2. 填写`ID`、`URL`、`Server`配置项
 
 `ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。服务端`nginx`默认端口号是`80`，如果服务端安装完成后没有修改该端口，`Compatibility Test Server` 的值只需要输入服务端的业务IP地址；否则需要带上端口号，比如：`172.167.145.2:90`。
 
@@ -305,7 +339,7 @@ tar
    Successfully uploaded result to server X.X.X.X.
    ```
 # 详细测试指导
-使用oec-hardware进行测试的详细指导请查看 [oec-hardware测试使用指导](./docs/guide_doc/oec-hardware测试使用指导.md)
+使用oec-hardware进行测试的详细指导请查看 [oec-hardware测试使用指导](https://gitee.com/openeuler/oec-hardware/tree/master/docs/test_guide_doc/oech_test_guide.md)
 
 # 结果获取
 
@@ -315,6 +349,7 @@ tar
 测试完成后，测试日志会保存在`/usr/share/oech/logs/`目录下，将测试日志导出并解压即可查看测试日志
 
 ### 浏览器查看测试报告
+
 ***tips：浏览器查看测试报告，前提需要配置server端接收测试结果***
 
 1. 浏览器打开服务端 IP 地址，点击导航栏 `Results` 界面，找到对应的测试 id 进入。
@@ -331,8 +366,6 @@ tar
 
    - `Attachment` 下载测试日志附件。
 
-   - `Submit` 表示将结果上传到欧拉官方认证服务器（**当前尚未开放**）。
-
      ![result-qemu](docs/pictures/result-qemu.png)
 
 
@@ -346,10 +379,11 @@ tar
 
    - oec-hardware 测试日志（`/usr/share/oech/logs/`下）
 
-   - oec-hardware-server 生成的html测试报告（可选）
+   - oec-hardware-server 生成的html测试报告
 
    - 兼容性清单文件（[模板](https://gitee.com/openeuler/oec-hardware/tree/master/templates)）
 
+      **注意：**
       oec-hardware 执行结束后会自动为测试通过的硬件生成兼容性信息文件`hw_compatibility.json`, 可参考该文件填写兼容性清单信息
 
       整机适配需要测试至少一张RAID卡、一张网卡，并提供对应的信息。
@@ -357,6 +391,6 @@ tar
 
 # FAQ
 
- [鲲鹏小智](https://ic-openlabs.huawei.com/chat/#/) 提供了oec-hardware测试过程中可能遇到的问题的解决方案，用户可以通过检索获取问题的解决方法。 常见问题案例库请查看 [oec-hardware使用常见问题解答](https://forum.openeuler.org/t/topic/629) ，用户可以根据场景获取解决方案。
+ [鲲鹏小智](https://ic-openlabs.huawei.com/chat/#/) 提供了oec-hardware测试过程中可能遇到的问题的解决方案，用户可以通过检索获取问题的解决方法。 常见问题案例请查看 [oec-hardware使用常见问题解答](https://forum.openeuler.org/t/topic/629) ，或查询 [openEuler官方论坛](https://forum.openeuler.org/) ，用户可以根据场景获取解决方案。
 
 如果仍有问题无法解决，可在本仓库下提issue反馈或者发邮件至openEuler社区兼容性SIG组邮箱：oecompatibility@openeuler.org。
