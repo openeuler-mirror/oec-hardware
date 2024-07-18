@@ -92,7 +92,7 @@ oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具�
 oec-hardware工具详细版本发布策略和版本发布方案请见 [oec-hardware软件包发布设计文档](https://gitee.com/openeuler/oec-hardware/blob/master/docs/design_docs/oech_rpm_version_design.md)
 
 ## 版本维护策略
-oec-hardware工具发布新版本后，社区成员将只针对最新版本进行维护。其中涉及构建过程的错误将会提交到`src-openEuler/oec-hardware`仓库下，其余问题修复将会提到本仓库下进行
+oec-hardware工具发布新版本后，社区将只针对最新版本进行维护。
 
 # 工具使用
 
@@ -161,8 +161,9 @@ oec-hardware工具发布新版本后，社区成员将只针对最新版本进�
 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything  和 update repo源，使用 `dnf` 获取软件包进行安装。
 
 ### 离线安装
-手动使用`wget`从[openEuler 官方 repo](https://repo.openeuler.org/)中 everything 或 updata 目录下获取最新rpm包
 
+1. 本地挂载openEuler everything镜像，配置repo源，用于依赖获取 
+2. 从 [openEuler 官方 repo](https://repo.openeuler.org/) 的 update 目录获取最新软件包进行安装
 
 ## 安装过程
 
@@ -326,7 +327,7 @@ oec-hardware工具发布新版本后，社区成员将只针对最新版本进�
 
 5. 开始测试。选择完成后输入 `run` 开始测试。
 
-6. 上传测试结果（可选项）。测试完成后可以上传测试结果到服务器，便于结果展示和日志分析。如果上传失败，请检查网络配置，然后重新上传测试结果。
+6. 上传测试结果。测试完成后可以上传测试结果到服务器，便于结果展示和日志分析。如果上传失败，请检查网络配置，然后重新上传测试结果。
 
    ```
    ...
