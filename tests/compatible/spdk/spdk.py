@@ -27,7 +27,7 @@ class SpdkTest(Test):
         self.device = None
         self.pci_num = ""
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
-        self.script = os.path.join(dir_server, 'setup.sh')
+        self.script = os.path.join(self.test_dir, 'setup.sh')
 
     def setup(self, args=None):
         """
@@ -44,16 +44,11 @@ class SpdkTest(Test):
         Test case
         :return:
         """
-        if os.path.exists(self.script):
-            ret = self.command.run_cmd(self.script)
-            if ret[2] == 0:
-                self.logger.info("Load uio_pci_generic driver succeed.")
-            else:
-                self.logger.error("Load uio_pci_generic driver failed.")
-                return False
+        ret = self.command.run_cmd(self.script)
+        if ret[2] == 0:
+            self.logger.info("Load uio_pci_generic driver succeed.")
         else:
-            self.logger.error(
-                "The spdk version is too low and needs to be upgraded to 21.01.1-5.")
+            self.logger.error("Load uio_pci_generic driver failed.")
             return False
 
         # Get MemFree
