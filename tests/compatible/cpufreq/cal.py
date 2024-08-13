@@ -14,13 +14,14 @@
 
 import decimal
 import time
+COUNT = 10000
 
 
 def cal():
     """Call test_case"""
     decimal.getcontext().prec = 1000
     one = decimal.Decimal(1)
-    for i in range(1000):
+    for i in range(COUNT):
         (i * one).sqrt()
 
 
