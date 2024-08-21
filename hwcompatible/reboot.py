@@ -76,7 +76,7 @@ class Reboot:
             if self.testname == test["name"]:
                 reboot = dict()
                 reboot["job_id"] = self.job.job_id
-                reboot["time"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                reboot["time"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
                 reboot["test"] = self.testname
                 reboot["rebootup"] = self.rebootup
                 reboots.append(reboot)
@@ -116,12 +116,12 @@ class Reboot:
             for testcase in doc.document:
                 self.reboot = testcase
                 if self.reboot.get("rebootup"):
-                    self.testname = self.reboot["test"]
-                    self.job.job_id = self.reboot["job_id"]
-                    self.job.logpath = CertEnv.logdirectoy + "/" + self.job.job_id + "/job.log"
-                    self.job.subtests_filter = self.reboot["rebootup"]
+                    self.testname = self.reboot.get("test")
+                    self.job.job_id = self.reboot.get("job_id")
+                    self.job.logpath = os.path.join(CertEnv.logdirectoy + "/" + self.job.job_id + "/job.log")
+                    self.job.subtests_filter = self.reboot.get("rebootup")
                     break
-            time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
+            time_reboot = datetime.datetime.strptime(self.reboot.get("time"), "%Y%m%d%H%M%S")
             test_suite = self.job.test_suite
             reboot_suite = []
             for suit in test_suite:

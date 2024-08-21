@@ -249,7 +249,9 @@ class Job():
             return_code = False
 
         if reboot_flag:
-            _delete_case(name)
+            if not _delete_case(name):
+                logger.error("Delete the data of test cases Failed!")
+                return_code = False
         if not subtests_filter:
             test.teardown()
         logger.stop()
@@ -277,6 +279,7 @@ class Job():
             if test["name"] == test_name:
                 test["run"] = False
                 test["reboot"] = False
+        return True
 
 
 
