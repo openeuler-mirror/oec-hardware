@@ -25,6 +25,7 @@ from .reboot import Reboot
 from .cert_info import CertInfo
 from .constants import NO_CONFIG_DEVICES, NODEVICE
 from .config_ip import ConfigIP
+from .document import Document
 
 
 class Job():
@@ -93,9 +94,10 @@ class Job():
         self.get_config()
         self.test_suite.sort(key=lambda k: k["test"].pri)
         cert_infos = CertInfo(self.logger, self.command)
+        subtests_flag = [1]
         for testcase in self.test_suite:
             config_data = self.get_device(testcase)
-            if self._run_test(testcase, config_data, subtests_filter):
+            if self._run_test(testcase, config_data, subtests_flag, subtests_filter):
                 testcase["status"] = "PASS"
                 self.logger.info("Test %s succeed." %
                                  testcase["name"], terminal_print=False)
@@ -192,7 +194,7 @@ class Job():
                     return device
         return None
 
-    def _run_test(self, testcase, config_data, subtests_filter=None):
+    def _run_test(self, testcase, config_data, subtests_flag, subtests_filter=None):
         """
         Start a testing item
         :param testcase:
@@ -206,12 +208,15 @@ class Job():
         logname = name + ".log"
         reboot = None
         test = None
+        reboot_flag = False
         logger = Logger(logname, self.job_id, sys.stdout, sys.stderr)
         logger.start()
         try:
             test = testcase["test"]
-            if subtests_filter and name != "system":
+            if subtests_flag[0] and subtests_filter and name != "system":
                 return_code = getattr(test, subtests_filter)(logger)
+                subtests_flag[0] = 0
+                reboot_flag = True
             else:
                 self.current_num += 1
                 self.logger.info("Start to run %s/%s test suite: %s." %
@@ -243,11 +248,35 @@ class Job():
             logger.error("Failed to run %s. %s" % (name, concrete_error))
             return_code = False
 
-        if reboot:
-            reboot.clean()
+        if reboot_flag:
+            _delete_case(name)
         if not subtests_filter:
             test.teardown()
         logger.stop()
         self.logger.info("End to run %s/%s test suite: %s." %
                          (self.current_num, self.total_count, name))
         return return_code
+
+    def _delete_case(self, test_name, logger=None):
+        """
+        Delete the test cases that have been completed from the reboot.json
+        :param testcase:
+        :param logger:
+        :return:
+        """
+        doc = Document(CertEnv.rebootfile, logger)
+        if not doc.load():
+            logger.error("Reboot file load failed.")
+            return False
+
+        if doc.document:
+            doc.document = [item for item in doc.document if item.get("test") != test_name]
+            doc.save()
+
+        for test in self.test_factory:
+            if test["name"] == test_name:
+                test["run"] = False
+                test["reboot"] = False
+
+
+

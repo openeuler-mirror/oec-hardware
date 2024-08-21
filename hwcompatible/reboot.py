@@ -19,6 +19,7 @@ from subprocess import getoutput
 from .document import Document, FactoryDocument
 from .env import CertEnv
 from .command import Command
+from .constants import REBOOT_CASE
 
 
 class Reboot:
@@ -63,18 +64,29 @@ class Reboot:
 
         self.job.save_result()
         for test in self.job.test_factory:
-            if test["run"] and self.testname == test["name"]:
+            if test["run"] and test["name"] in REBOOT_CASE:
                 test["reboot"] = True
                 test["status"] = "FAIL"
         if not FactoryDocument(CertEnv.factoryfile, self.logger, self.job.test_factory).save():
             self.logger.error("Save testfactory doc failed before reboot.")
             return False
 
-        self.reboot["job_id"] = self.job.job_id
-        self.reboot["time"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        self.reboot["test"] = self.testname
-        self.reboot["rebootup"] = self.rebootup
-        if not Document(CertEnv.rebootfile, self.logger, self.reboot).save():
+        reboots = list()
+        for test in self.job.test_factory:
+            if self.testname == test["name"]:
+                reboot = dict()
+                reboot["job_id"] = self.job.job_id
+                reboot["time"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                reboot["test"] = self.testname
+                reboot["rebootup"] = self.rebootup
+                reboots.append(reboot)
+            elif test["reboot"]:
+                reboot = dict()
+                reboot["job_id"] = self.job.job_id
+                reboot["test"] = test["name"]
+                reboots.append(reboot)
+
+        if not Document(CertEnv.rebootfile, self.logger, reboots).save():
             self.logger.error("Save reboot doc failed.")
             return False
         command = Command(self.logger)
@@ -101,19 +113,20 @@ class Reboot:
             return False
 
         try:
-            self.testname = doc.document["test"]
-            self.reboot = doc.document
-            self.job.job_id = self.reboot["job_id"]
-            self.job.logpath = CertEnv.logdirectoy + "/" + self.job.job_id + "/job.log"
-            self.job.subtests_filter = self.reboot["rebootup"]
-            time_reboot = datetime.datetime.strptime(
-                self.reboot["time"], "%Y%m%d%H%M%S")
+            for testcase in doc.document:
+                self.reboot = testcase
+                if self.reboot.get("rebootup"):
+                    self.testname = self.reboot["test"]
+                    self.job.job_id = self.reboot["job_id"]
+                    self.job.logpath = CertEnv.logdirectoy + "/" + self.job.job_id + "/job.log"
+                    self.job.subtests_filter = self.reboot["rebootup"]
+                    break
+            time_reboot = datetime.datetime.strptime(self.reboot["time"], "%Y%m%d%H%M%S")
             test_suite = self.job.test_suite
             reboot_suite = []
-            for testcase in test_suite:
-                if testcase["name"] == self.reboot["test"]:
-                    reboot_suite.append(testcase)
-                    break
+            for suit in test_suite:
+                if suit.get("reboot"):
+                    reboot_suite.append(suit)
             self.job.test_suite = reboot_suite
         except Exception:
             logger.error("Reboot file format not as expect.")
@@ -130,3 +143,4 @@ class Reboot:
 
         logger.info("Reboot time check : %s" % cmd_result[0])
         return True
+
