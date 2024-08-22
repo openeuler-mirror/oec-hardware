@@ -46,15 +46,16 @@ class Command:
         error = ""
         returncode = 1
         pipes = []
+        cur_env = os.environ.copy()
         try:
             for index, cmd in enumerate(cmd_list):
                 if index == 0:
                     pipe = subprocess.Popen(cmd, universal_newlines=True, stderr=subprocess.PIPE,
-                                            stdout=subprocess.PIPE, start_new_session=True, env=SHELL_ENV)
+                        stdout=subprocess.PIPE, start_new_session=True, env=(cur_env | SHELL_ENV))
                 else:
                     pipe_stdout = pipes[-1].stdout
                     pipe = subprocess.Popen(cmd, stdin=pipe_stdout, universal_newlines=True, stderr=subprocess.PIPE,
-                                            stdout=subprocess.PIPE, start_new_session=True, env=SHELL_ENV)
+                        stdout=subprocess.PIPE, start_new_session=True, env=(cur_env | SHELL_ENV))
                 pipes.append(pipe)
 
             output, error = pipes[-1].communicate(timeout=timeout)
