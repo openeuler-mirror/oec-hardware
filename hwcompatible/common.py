@@ -94,6 +94,7 @@ def __create_testcase(test, logger, subtests_filter):
     testcase["name"] = test["name"]
     testcase["device"] = test["device"]
     testcase["status"] = "FAIL"
+    testcase["reboot"] = test["reboot"]
     return testcase
 
 

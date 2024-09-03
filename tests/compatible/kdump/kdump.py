@@ -26,7 +26,7 @@ from hwcompatible.document import ConfigFile
 class KdumpTest(Test):
     def __init__(self):
         Test.__init__(self)
-        self.pri = 9
+        self.pri = 10
         self.reboot = True
         self.kernel_version = getoutput("uname -r")
         self.rebootup = "verify_vmcore"
@@ -79,14 +79,12 @@ class KdumpTest(Test):
         self.logger.info("kdump config.")
         config.dump()
 
-        com_ui = CommandUI()
-        if com_ui.prompt_confirm("System will reboot, are you ready?"):
-            self.logger.info("Trigger crash, please wait seconds.")
-            self.command.run_cmd("sync", log_print=False)
-            self.command.run_cmd("echo 'c' | tee /proc/sysrq-trigger")
-            sleep(30)
-            return False
-
+        self.logger.info("The system will restart after 5 seconds.")
+        sleep(5)
+        self.logger.info("Trigger crash, please wait seconds.")
+        self.command.run_cmd("sync", log_print=False)
+        self.command.run_cmd("echo 'c' | tee /proc/sysrq-trigger")
+        sleep(30)
         return False
 
     def verify_vmcore(self, logger):
