@@ -11,7 +11,7 @@ DIR_CONFIG_AVOCADO=/root/.config/avocado
 PKG_CPUID=https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/Packages/c/cpuid-20230614-2.el9.x86_64.rpm
 PKG_MSR_TOOLS=https://mirror.centos.no/epel/9/Everything/x86_64/Packages/m/msr-tools-1.3-17.el9.x86_64.rpm
 
-REPO_IDXD_CONFIG=https://github.com/intel/idxd-config.git
+REPO_IDXD_CONFIG=https://gitee.com/syqust/idxd-config.git
 REPO_LKVS=https://gitee.com/openeuler/intel-lkvs.git
 CONFIG_AVOCADO=$DIR_CONFIG_AVOCADO/avocado.conf
 
@@ -21,6 +21,23 @@ DIR_CPUPOWER=linux-6.10/tools/power/cpupower
 
 TAR_KERNEL_610=linux-6.10.tar.xz
 BIN_STRESS=/usr/local/bin/stress
+
+declare -A cpu_family_mapping=(
+    [143]="spr"  # Sapphire Rapids
+    [207]="emr"  # Emerald Rapids
+    [173]="gnr"   # Granite Rapids
+)
+
+# Function to get CPU family ID and map it to platform name
+get_cpu_platform() {
+    # Execute 'lscpu' and parse output for "Model:" line
+    family_id=$(lscpu | grep "Model:" | awk -F ':' '{print $2}' | xargs)
+
+    # Get the platform name from the mapping using the family ID
+    platform_name=${cpu_family_mapping[$family_id]}
+
+    echo $platform_name
+}
 
 # Define error handler function
 handle_error() {
@@ -40,8 +57,10 @@ cat > $CONFIG_AVOCADO <<EOF
 max_parallel_tasks=1
 EOF
 
+platform=$(get_cpu_platform)
+
 rm -rf lkvs && git clone $REPO_LKVS lkvs
-cd lkvs && git fetch origin --tags --force && git reset --hard emr-oe
+cd lkvs && git fetch origin --tags --force && git reset --hard ${platform}-oe
 cd -
 
 rm -rf idxd-config && git clone $REPO_IDXD_CONFIG

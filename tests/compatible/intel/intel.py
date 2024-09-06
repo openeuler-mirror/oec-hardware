@@ -6,6 +6,7 @@
 
 import os
 import argparse
+import subprocess
 from hwcompatible.test import Test
 from hwcompatible.command import Command
 
@@ -13,6 +14,31 @@ intel_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class IntelTest(Test):
+    # Mapping of CPU family IDs to platform names
+    cpu_family_mapping = {
+        '143': 'spr',
+        '207': 'emr',
+        '173': 'gnr',
+    }
+
+    def get_cpu_family_id(self):
+        # Run the 'lscpu' command and capture its output
+        result = subprocess.run(['/usr/bin/lscpu'], capture_output=True, text=True, check=True)
+
+        # Split the output into lines
+        output_lines = result.stdout.splitlines()
+
+        # Find the line containing "Model:" and extract the family ID
+        for line in output_lines:
+            if "Model:" in line:
+                # Assuming the family ID follows 'Model:' and is separated by spaces
+                family_id = line.split(':')[1].strip()
+                return family_id
+                    # If "Model:" line is not found, raise an exception
+
+        self.logger.info("[FAIL] 'Model:' not found in lscpu output")
+        raise ValueError("'Model:' entry not found in lscpu output")
+
     def __init__(self):
         Test.__init__(self)
         self.requirements = [
@@ -66,6 +92,8 @@ class IntelTest(Test):
         return True
 
     def test(self):
+        platform = self.cpu_family_mapping.get(self.get_cpu_family_id())
+
         if self.env_check['ret'] != 0:
             return False
 
@@ -73,8 +101,11 @@ class IntelTest(Test):
         os.chdir(f'{intel_dir}/lkvs/BM')
 
         for t in self.tests:
-            result = self.command.run_cmd("python3 runtests.py -f %s -t %s/lkvs/scenario/emr-oe/%s"
-                                          % (t[0], intel_dir, t[1]))
+            if not os.path.isfile(f'{intel_dir}/lkvs/scenario/{platform}-oe/{t[1]}'):
+                continue
+
+            result = self.command.run_cmd("python3 runtests.py -f %s -t %s/lkvs/scenario/%s-oe/%s"
+                                          % (t[0], intel_dir, platform, t[1]))
             if result[2] == 0:
                 self.logger.info("[PASS]%s: %s test successfully!" % (t[0], t[1]))
             else:
