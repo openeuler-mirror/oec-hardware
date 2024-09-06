@@ -79,7 +79,7 @@
 #### 测试 cpu 在不同调频策略下运行频率是否同预期
 
 定义 CPUFreqTest 类：
-1. 定义`test_performance test_powersave test_ondemand test_conservative test_userspace`方法，测试在五种调频策略下 CPU 频率变化对性能的影响，其中五中调频策略：
+1. 定义`test_performance test_powersave test_ondemand test_conservative test_userspace`方法，测试在五种调频策略下 CPU 频率变化对性能的影响，其中五种调频策略：
     * performance：始终以最高频率运行，提供最佳性能，但可能消耗更多电力。
 	* powersave：尽可能降低频率运行，以节省电力，但可能牺牲性能。
     * ondemand：根据负载动态调整频率，试图在性能和功耗之间找到平衡点。
@@ -94,28 +94,24 @@
     * 设置一个容差值（tolerance），用于确定加速比的合理范围，并检查所计算的加速比是否落在预期范围。
 
 3. test_ondemand 方法：
-    * 先尝试将所有 CPU 的频率调节策略设置为 powersave，接下来尝试将所有 CPU 的频率调节策略设置为 ondemand。
+    * 先将所有 CPU 的频率调节策略设置为 powersave，接下来将所有 CPU 的频率调节策略设置为 ondemand。
     * 确认 CPU 调节策略为 ondemand 的情况下，创建一个 Load 实例，并在选定的 CPU 上执行负载测试。
     * 负载测试运行期间，获取 CPU 当前频率，检查频率是否已经调整到了最大频率。在负载较高情况下，ondemand 策略应将 CPU 频率提升至最大以提供最佳性能。
 
 4. test_conservative 方法：
-    * 先尝试将所有 CPU 的频率调节策略设置为 powersave，接下来尝试将所有 CPU 的频率调节策略设置为 conservative。
+    * 先将所有 CPU 的频率调节策略设置为 powersave，接下来将所有 CPU 的频率调节策略设置为 conservative。
     * 确认 CPU 调节策略为 conservative 的情况下，创建一个 Load 实例，并在选定的 CPU 上执行负载测试。
     * 负载测试运行期间，获取 CPU 当前频率，检查频率是否在最大频率与最小频率之间。在负载较高情况下，conservative 策略应将 CPU 频率在最小频率和最大频率之间动态调整，以平衡性能和节能。
 
 5. test_powersave 方法：
-    * 尝试将所有 CPU 的频率调节策略设置为 powersave。
+    * 将所有 CPU 的频率调节策略设置为 powersave。
     * 确认 CPU 调节策略为 powersave 的情况下，检查选定的 CPU 频率是否等于最低频率。
     * 创建一个 Load 实例，并在选定的 CPU 上执行负载测试。
 
 6. test_performance 方法：
-    * 尝试将所有 CPU 的频率调节策略设置为 performance。
+    * 将所有 CPU 的频率调节策略设置为 performance。
     * 确认 CPU 调节策略为 performance 的情况下，检查选定的 CPU 频率是否等于最高频率。
     * 创建一个 Load 实例，并在选定的 CPU 上执行负载测试。
-
-#### 测试 cpu 在不同频率下完全同规格计算量所需时间是否与频率值反相关。
-
-在不同频率下进行负载测试时会获取负载测试的运行时间（load_test_time）。
 
 ### 3-clock
 
