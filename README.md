@@ -203,7 +203,7 @@ oec-hardware工具发布新版本后，社区将只针对最新版本进行维�
 
 ## 测试项介绍
 
-请查看 [测试项介绍](https://gitee.com/openeuler/oec-hardware/tree/master/docs/test_case_doc/test_suite.md)
+请查看 [测试项介绍](https://gitee.com/openeuler/oec-hardware/tree/master/docs/test_suite_doc/test_suite.md)
 
 ## 测试项策略
 
