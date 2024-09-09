@@ -168,13 +168,13 @@ def vfs_test(logger, command, disk, filesystems):
         command.run_cmd("mount -t %s %s %s" %
                              (file_sys, device, "vfs_test"))
         logger.info("Starting sequential vfs IO test...")
-        opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -name=directoy -runtime=300"
+        opts = "-direct=1 -iodepth 4 -rw=rw -rwmixread=50 -name=directory -runtime=300"
         if not do_fio(logger, command, path, size, opts):
             return_code = False
             break
 
         logger.info("Starting rand vfs IO test...")
-        opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -name=directoy -runtime=300"
+        opts = "-direct=1 -iodepth 4 -rw=randrw -rwmixread=50 -name=directory -runtime=300"
         if not do_fio(logger, command, path, size, opts):
             return_code = False
             break

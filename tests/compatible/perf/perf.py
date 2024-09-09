@@ -34,8 +34,8 @@ class PerfTest(Test):
         # record
         self.logger.info("Collecting the perf record.")
         perf_record_echo = self.command.run_cmd(self.perf_record)
-        perf_record_macth = re.search("perf record", perf_record_echo[1])
-        if not perf_record_macth:
+        perf_record_match = re.search("perf record", perf_record_echo[1])
+        if not perf_record_match:
             self.logger.error("Record events failed.")
             returncode = False 
         else:
@@ -43,8 +43,8 @@ class PerfTest(Test):
 
         # evList
         perf_evlist_echo = self.command.run_cmd(self.perf_evlist)
-        perf_evlistd_macth = re.search("cycles", perf_evlist_echo[0])
-        if not perf_evlistd_macth:
+        perf_evlistd_match = re.search("cycles", perf_evlist_echo[0])
+        if not perf_evlistd_match:
             self.logger.error("Required hardware event available failed because of:\n %s." % perf_evlist_echo[1])
             returncode = False
         else:
@@ -52,8 +52,8 @@ class PerfTest(Test):
 
         # report
         perf_report_echo = self.command.run_cmd(self.perf_report)
-        perf_report_macth = re.search(r"\s*\S+\s+(\[\S+.\S+\])\s+\S+", perf_report_echo[0])
-        if not perf_report_macth:
+        perf_report_match = re.search(r"\s*\S+\s+(\[\S+.\S+\])\s+\S+", perf_report_echo[0])
+        if not perf_report_match:
             self.logger.error("No samples found. Failed to fetch report because of:\n %s." % perf_report_echo[1])
             returncode = False
         else:
