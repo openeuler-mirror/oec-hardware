@@ -21,7 +21,7 @@ from math import log2
 
 class ShowHugepages:
     """
-     Format memsize, get moutpoint, show hugepages
+     Format memsize, get mountpoints, show hugepages
     """
 
     def __init__(self, logger, command):
