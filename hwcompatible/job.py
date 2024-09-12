@@ -249,7 +249,7 @@ class Job():
             return_code = False
 
         if reboot_flag:
-            if not _delete_case(name):
+            if not self._delete_case(name):
                 logger.error("Delete the data of test cases Failed!")
                 return_code = False
         if not subtests_filter:
