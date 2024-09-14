@@ -75,14 +75,25 @@ class CertDocument(Document):
         """
         try:
             cmd_result = getoutput("/usr/sbin/dmidecode -t 1")
+            defaults = {
+                "Manufacturer": "Unknown Vendor",
+                "Product Name": "Unknown Product",
+                "Version": "Unknown Version"
+            }
             for line in cmd_result.split("\n"):
                 property_right = line.split(":", 1)
                 if len(property_right) != 2:
                     continue
                 key = property_right[0].strip()
                 value = property_right[1].strip()
-                if key in ("Manufacturer", "Product Name", "Version"):
-                    self.document[key] = value
+                if key in defaults:
+                    self.document[key] = value or defaults[key]
+                else:
+                    self.logger.warning(f"Unknown key '{key}' encountered with \
+                                         value '{value}' when parsing hardware info with dmidecode")
+            for key, default_value in defaults.items():
+                if key not in self.document:
+                    self.document[key] = default_value
         except Exception as concrete_error:
             self.logger.error(
                 "Get hardware information failed. %s" % concrete_error)
