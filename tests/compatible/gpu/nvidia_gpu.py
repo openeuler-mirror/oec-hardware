@@ -72,6 +72,11 @@ class NvidiaGpuTest():
             os.environ['CUDA_VISIBLE_DEVICES'] = id_num
 
         self.logger.info("Set default test gpu as %s." % id_num)
+    
+    def clean_default_gpu(self):
+        if 'CUDA_VISIBLE_DEVICES' in os.environ:
+            del os.environ['CUDA_VISIBLE_DEVICES']
+            self.logger.info("Clean default test gpu.")
 
     def test_pressure(self):
         """
@@ -87,10 +92,7 @@ class NvidiaGpuTest():
 
         os.chdir("/opt/gpu-burn")
         cmd = self.command.run_cmd(
-            "nvidia-smi -q | grep -i -A1 '%s' | grep 'Product Name' | cut -d ':' -f 2" % pci_num)
-        device_name = cmd[0].strip()
-        cmd = self.command.run_cmd(
-            "./gpu_burn -l | grep -i '%s' | cut -d ':' -f 1 | awk '{print $2}'" % device_name)
+            "nvidia-smi -q | grep -i -A20 '%s' | grep 'Minor Number' | cut -d ':' -f 2" % pci_num)
         run_id = cmd[0].strip()
         cmd = getstatusoutput(
             'nohup ./gpu_burn -i%s 10 &> %s &' % (run_id, self.gpu_burn))
@@ -184,6 +186,8 @@ class NvidiaGpuTest():
                 else:
                     result = False
                     self.logger.error("Test Vulkan failed.")
+                    
+            self.clean_default_gpu()
 
         except Exception as e:
             self.logger.error(
