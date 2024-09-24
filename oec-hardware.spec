@@ -1,4 +1,4 @@
-%define version    1.1.5
+%define version    1.1.6
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -77,6 +77,12 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
+*Tue Sept 24 2024 wangshuai <wangshuai321@huawei.com> - 1.1.6-0
+1. Add support for Kylin V10 and UOS 20
+2. Add virtual branch of test suite
+3. Add new test suite of srpm and intel
+4. Bugfix
+
 * Mon Oct 23 2023 liuyanze <liuyanze1@huawei.com> - 1.1.5-0
 1. Add support for openEuler 20.03 LTS SP4, openEuler 22.03 LTS SP2, openEuler 22.03 LTS SP3
 2. Add modifications to Kylinsec with oec-hardware
