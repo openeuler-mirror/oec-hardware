@@ -77,7 +77,7 @@ DESTDIR=$RPM_BUILD_ROOT make install
 rm -rf /var/lock/oech.lock
 
 %changelog
-*Tue Sept 24 2024 wangshuai <wangshuai321@huawei.com> - 1.1.6-0
+* Tue Sept 24 2024 wangshuai <wangshuai321@huawei.com> - 1.1.6-0
 1. Add support for Kylin V10 and UOS 20
 2. Add virtual branch of test suite
 3. Add new test suite of srpm and intel
