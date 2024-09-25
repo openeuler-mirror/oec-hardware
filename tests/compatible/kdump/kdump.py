@@ -39,11 +39,12 @@ class KdumpTest(Test):
         Test case
         :return:
         """
-        cmd_result = self.command.run_cmd("yum install -y kernel-debuginfo-%s" % self.kernel_version)
-        if len(cmd_result[1]) != 0 and cmd_result[2] != 0:
-            self.logger.error(
-                "Fail to install required packages.\n %s" % cmd_result[1])
-            return False
+        if not self.command.run_cmd("rpm -qa | grep kernel-debuginfo-%s" % self.kernel_version):
+            cmd_result = self.command.run_cmd("yum install -y kernel-debuginfo-%s" % self.kernel_version)
+            if len(cmd_result[1]) != 0 and cmd_result[2] != 0:
+                self.logger.error(
+                    "Fail to install required packages.\n %s" % cmd_result[1])
+                return False
 
         cmd_result = self.command.run_cmd("grep crashkernel /proc/cmdline")
         if cmd_result[2] != 0:
