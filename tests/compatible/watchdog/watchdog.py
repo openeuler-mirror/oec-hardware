@@ -52,8 +52,9 @@ class WatchDogTest(Test):
             self.command.run_cmd("./watchdog -s %d" % self.max_timeout)
         self.logger.info("Set/Get watchdog timeout succeed.")
 
-        self.logger.info("The system will restart after 5 seconds.")
+        self.logger.info("The system will restart after 10 seconds.")
         time.sleep(10)
+        self.logger.info("Trigger watchdog, please wait some seconds.")
         self.command.run_cmd("sync", log_print=False)
         self.command.run_cmd("./watchdog -t", log_print=False)
         time.sleep(10)
