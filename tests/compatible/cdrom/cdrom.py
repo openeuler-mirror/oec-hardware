@@ -176,7 +176,6 @@ class CDRomTest(Test):
 
         size = self.command.run_cmd(
             "mkisofs -quiet -R -print-size %s" % self.test_dir)
-        blocks = int(size[0])
 
         self.command.run_cmd(
             "mkisofs -o test_cdrom.iso --quiet -r %s" % self.test_dir)
