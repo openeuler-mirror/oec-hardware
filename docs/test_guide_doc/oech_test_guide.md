@@ -1,23 +1,25 @@
 * [前言](#前言)
-* [测试指导](#使用指导)
+* [测试指导](#测试指导)
    * [整机测试项](#整机测试项)
+	    * [disk](#disk)
+        * [memory](#memory)
+        * [kabiwhitelist](#kabiwhitelist)
    * [板卡测试项](#板卡测试项)
         * [RAID](#RAID)
-        * [NIC](#NIC)
-        * [IB](#IB)
-        * [SSD](#SSD)
+        * [NIC/IB](#NIC/IB)
+        * [NVME](#NVME)
         * [GPU](#GPU)
-        * [dpdk](#dpdk)
+        * [DPDK](#DPDK)
 	    * [FC](#FC)
-* [FAQ](#FAQ)
+
 
 # 前言
-在使用本指导前请确保已阅读 [oec-hardware工具说明](https://gitee.com/openeuler/oec-hardware/blob/master/README.md)
+在使用本指导前请确保已阅读 [oec-hardware工具说明](https://gitee.com/openeuler/oec-hardware/blob/master/README.md)。
 
 # 测试指导
 
 ## 启动工具
-1. 在客户端启动测试框架。输入 `oech`启动工具，输入1 选择`compatible`测试类别
+1. 在客户端启动测试框架。输入 `oech`启动工具，输入1 选择`compatible`测试类别，首次进入oech工具需要设置ID、URL、Server配置项。
    ```   
    # oech
    Please select test category.
@@ -77,42 +79,62 @@
    18    yes     NotRun    watchdog     
    Selection (<number>|all|none|quit|run):
    ```
-4. 开始测试。选择完成后输入"run"进行测试
+4. 开始测试。选择完成后输入"run"进行测试。
+
+## 测试前准备
+
+oech工具部分测试项会安装相关依赖包，请尽量保持网络连通repo源。如特殊原因无法连通，则需要手动下载安装相关依赖包。
 
 ## 整机测试项
 
-* 整机测试项中有部分涉及重启操作的测试项，请对这类测试项单独进行测试` kdump watchdog`
-* 测试项介绍详情请查看 [oec-hardware测试项介绍](https://gitee.com/openeuler/oec-hardware/tree/master/docs/test_suite_doc/test_suite.md)
+大部分整机测试项直接选择进行测试即可，这里介绍部分需要注意的整机测试项，测试中常见问题可以参考[oec-hardware 工具使用解答](https://forum.openeuler.org/t/topic/629)。
+
+### disk
+
+1. `lsblk`查看磁盘状态。
+2. 编辑`/usr/share/oech/lib/config/test_config.yaml`文件，设置要测试的disk范围（建议选择一个空闲未挂载的盘进行测试）。
+3. 配置完成后，选择disk测试项进行测试。
+
+### memory
+
+memory测试项中 eat memory 测试容易因为 swap 空间不够导致机器意外重启， 建议将 swap 空间调至10G以上，并根据环境实际内存适当增加。
+
+### kabiwhitelist
+
+如需测试 kabiwhitelist，请在 `usr/share/oech/lib/config/test_config.yaml` 文件中编辑白名单信息。
+![kabiwhitelist](../pictures/kabiwhitelist.png)
+
+
 
 ## 板卡测试项
 
 ### RAID
 
-1. 测试前请确保硬件已被工具识别，并且添加到测试项中
+1. 测试前请确保硬件已被工具识别，并且添加到测试项中。
 ![raid-1](../pictures/raid-1.png)
 
-2. 编辑`/usr/share/oech/lib/config/test_config.yaml`文件，更改raid卡pci地址
+2. 编辑`/usr/share/oech/lib/config/test_config.yaml`文件，更改raid卡pci地址以及要测试的disk范围（建议选择一个空闲未挂载的盘进行测试）。
 ![raid-2](../pictures/raid-2.png)
 
-3. 配置完成后，勾选raid测试项进行测试即可
+3. 配置完成后，选择raid测试项进行测试。
 
 ### NIC/IB 
 
-1. 网卡测试需要额外一台服务器作为服务端，并且需要客户端与服务端安装了相同的待测网卡并确保网卡直连
+1. 网卡测试需要额外一台服务器作为服务端，并且需要客户端与服务端安装了相同的待测网卡并确保网卡直连。
 ![nic-1](../pictures/nic-1.png)
 ![nic-2](../pictures/nic-2.png)
 
-2. 使用`ifconfig xxx`命令配置客户端与服务端网口IP，IP根据自己需要选择
+2. 使用`ifconfig xxx`命令配置客户端与服务端网口IP，IP根据自己需要选择。
 
-* 配置客户端
+* 配置客户端。
 ```
 [root@localhost ~]# ifconfig enp4s0f0 2.2.2.3
 ```
-* 配置服务端
+* 配置服务端。
 ```
 [root@localhost ~]# ifconfig ens6f1 2.2.2.4
 ```
-* 配置完成后任意一段ping另一段测试是否连通
+* 配置完成后任意一段ping另一段测试是否连通。
 ``` 
 [root@localhost ~]# ping 2.2.2.4
 PING 2.2.2.4 (2.2.2.4) 56(84) bytes of data.
@@ -120,7 +142,7 @@ PING 2.2.2.4 (2.2.2.4) 56(84) bytes of data.
 64 bytes from 2.2.2.4: icmp_seq=1 ttl=64 time=0.140ms
 64 bytes from 2.2.2.4: icmp_seq=1 ttl=64 time=0.124ms
 ```
-3. 服务端准备
+3. 服务端准备。
 * 使用 `dnf` 安装服务端 oec-hardware-server。
 
    ```
@@ -141,32 +163,36 @@ PING 2.2.2.4 (2.2.2.4) 56(84) bytes of data.
    iptables -F
    setenforce 0
    ```
-4. 客户端测试
+4. 客户端测试。
 
-* 编辑`/usr/share/oech/lib/config/test_config.yaml`文件，更改网卡端口和服务端IP
+* 编辑`/usr/share/oech/lib/config/test_config.yaml`文件，配置待测网卡端口和服务端IP信息。
 ![nic-3](../pictures/nic-3.png)
 
-* 配置完成后，勾选对应端口的网卡测试项进行测试即可
+* 配置完成后，选择对应端口的网卡测试项进行测试。
 
 
-### SSD
+### NVME
 
-确保硬件被工具识别，并且添加到测试项之后，勾选对应测试项进行测试即可
+确保硬件被工具识别，并且添加到测试项之后，选择对应测试项进行测试。
+![nvme](../pictures/nvme.png)
+
 
 
 ### GPU
 
-1. 从对应GPU厂商官网下载outbox驱动，编译安装到当前环境上
+1. 从对应GPU厂商官网下载outbox驱动，编译安装到当前环境上。
 
-2. 勾选对应测试项进行测试即可
+2. 选择对应测试项进行测试。
 
 
-### dpdk
+### DPDK
 
-1. 进行dpdk测试前，请确保网卡驱动支持dpdk测试（目前支持dpdk测试的驱动：*mlx4_core, mlx5_core, ixgbe, ice, hinic, igc*)
-2. dpdk测试需要配置服务端，将两个以太网连成环回模式，在没有外部流量发生器的情况下， 客户端使用发包模式(Tx-only mode)作为数据包源，服务端使用收包模式(Rx-only mode) 作为数据包接收器, 测试端口传输速率功能。 [服务端配置参考](https://gitee.com/openeuler/oec-hardware#%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4)
+1. 进行dpdk测试前，请确保网卡驱动支持dpdk测试（目前支持dpdk测试的驱动：*mlx4_core, mlx5_core, ixgbe, ice, hinic, igc*)。
+2. 测试需要额外一台服务器作为服务端，并且需要客户端与服务端安装了相同的待测网卡并确保网卡直连。客户端使用发包模式(Tx-only mode)作为数据包源，服务端使用收包模式(Rx-only mode) 作为数据包接收器, 测试端口传输速率功能。
+3. 配置服务端。 为了方便，请在首次启用工具时便设定 `server IP`。[服务端配置参考](https://gitee.com/openeuler/oec-hardware#%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4)
+![dpdk](../pictures/dpdk.png) 
 
-3. 服务端IP配置正确后，勾选对应测试项测试即可
+4. 服务端IP配置正确后，选择对应测试项测试。
 
 ### FC
 
