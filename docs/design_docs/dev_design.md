@@ -110,6 +110,8 @@ Mulan V2
 
 ### 3.1 框架概览
 
+#### 3.1.1 框架目录
+
 ```
 .
 ├── hwcompatible 框架主功能
@@ -148,6 +150,10 @@ Mulan V2
 ├── tests    测试套
 └──vendor_tests               厂商测试工具存放目录
 ```
+#### 3.1.2 功能模块分级
+
+![test_module](../pictures/test_module.png)
+
 
 ### 3.2 框架特点
 
