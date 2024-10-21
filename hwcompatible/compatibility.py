@@ -339,9 +339,12 @@ class EulerCertification():
                         sort_devices["spdk"] = [device]
                 elif "/host" in device.get_property("DEVPATH"):
                     sort_devices["disk"] = [empty_device]
-            if "RAID" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") or \
-                    ("SCSI" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") and
-                     "HBA" not in device.get_property("ID_MODEL_FROM_DATABASE")):
+            is_raid = "RAID" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE")
+            is_scsi_shba = "SCSI" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") and \
+                     "SHBA" in device.get_property("ID_MODEL_FROM_DATABASE")
+            is_scsi_not_hba = "SCSI" in device.get_property("ID_PCI_SUBCLASS_FROM_DATABASE") and \
+                     "HBA" not in device.get_property("ID_MODEL_FROM_DATABASE")
+            if is_raid or is_scsi_shba or is_scsi_not_hba:
                 if "raid" in sort_devices.keys():
                     sort_devices["raid"].extend([device])
                 else:
