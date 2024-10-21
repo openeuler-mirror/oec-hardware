@@ -47,7 +47,7 @@ def bad_request():
 @app.errorhandler(404)
 def page_not_found(e):
     """
-    page not fount
+    page not found
     """
     return render_template('error.html', error='404 - Page Not Found'), 404
 
