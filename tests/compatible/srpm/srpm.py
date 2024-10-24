@@ -82,7 +82,7 @@ class SrpmTest(Test):
         """
         dump test srpms
         @param min_srpms: base min srpms version
-        @param test_srpms: test srpms verison
+        @param test_srpms: test srpms version
         @return:
         """
         all_dumps = []
@@ -114,7 +114,7 @@ class SrpmTest(Test):
 
     def test(self):
         """
-        test current srpms version with base min srpms vresion
+        test current srpms version with base min srpms version
         """
         self.logger.info("Test srpm start.")
         result = True
