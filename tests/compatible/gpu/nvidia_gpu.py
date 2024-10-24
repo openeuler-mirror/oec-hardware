@@ -170,10 +170,10 @@ class NvidiaGpuTest():
             code = self.command.run_cmd(
                 "bash %s/test_nvidia_gpu.sh test_nvidia_smi '%s'" % (gpu_dir, self.gpu_nvidia_smi_log))
             if code[2] == 0:
-                self.logger.info("Using nvidia-smi to test Drvier succeed.")
+                self.logger.info("Using nvidia-smi to test Driver succeed.")
             else:
                 result = False
-                self.logger.error("Using nvidia-smi to test Drvier failed.")
+                self.logger.error("Using nvidia-smi to test Driver failed.")
 
             env_display = os.getenv('DISPLAY')
             if env_display != '':
