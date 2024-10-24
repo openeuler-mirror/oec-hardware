@@ -100,7 +100,7 @@ def __create_testcase(test, logger, subtests_filter):
 
 def copy_pci():
     """
-    copy the PCI file if it exists
+    Copy the PCI file if it exists and its content differs from another specified file.
     """
     if os.path.exists(CertEnv.pcifile) and \
             not filecmp.cmp(CertEnv.oechpcifile, CertEnv.pcifile):
@@ -111,10 +111,12 @@ def copy_pci():
 
 def discover(testname, logger, subtests_filter=None):
     """
-    discover test
-    :param testname:
-    :param subtests_filter:
-    :return:
+    Discover and load a specific test module and extract a test class that meets certain criteria.
+
+    :param testname: The name of the test module to discover.
+    :param logger: A logger object for logging messages.
+    :param subtests_filter: An optional filter to apply to subtests.
+    :return: An instance of the test class if found, otherwise False.
     """
     if not testname:
         logger.warning("Testname is not specified, discover test failed.")
@@ -127,6 +129,7 @@ def discover(testname, logger, subtests_filter=None):
             dirpath = sublist[0]
             break
     pth = os.path.join(dirpath, filename)
+    # check whether the file can be read.
     if not os.access(pth, os.R_OK):
         return False
 

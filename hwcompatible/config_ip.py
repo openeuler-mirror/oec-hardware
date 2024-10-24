@@ -30,6 +30,13 @@ class ConfigIP:
     """
 
     def __init__(self, config_data, logger, testcase):
+        """
+        Initialize the ConfigIP object with configuration data, logger, and testcase.
+
+        :param config_data: Configuration data dictionary.
+        :param logger: Logger object for logging messages.
+        :param testcase: Test case object
+        """
         self.config_data = config_data
         self.logger = logger
         self.command = Command(self.logger)

@@ -21,7 +21,10 @@ from .constants import SHELL_ENV
 
 class Command:
     """ 
-    Creates a Command object that wraps the shell command 
+    Creates a Command object that wraps the shell command.
+
+    Attributes:
+        logger (Logger): A logging object used to record logs.
     """
 
     def __init__(self, logger):

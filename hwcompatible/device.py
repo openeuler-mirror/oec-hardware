@@ -29,8 +29,9 @@ class CertDevice:
 
     def get_devices(self):
         """
-        Get devices information
-        :return:
+        Execute a command to get the device database from the system and parse it to create Device objects.
+
+        :return: A sorted list of Device objects representing the devices found on the system.
         """
         self.devices = list()
         cmd_result = self.command.run_cmd(
@@ -87,16 +88,18 @@ class Device:
 
     def get_property(self, prop):
         """
-        get properties
-        :param prop:
-        :return:
+        Retrieve the value of a specific property from the device's properties dictionary.
+
+        :param prop: The name of the property to retrieve.
+        :return: The value of the specified property, or an empty string if not found.
         """
         return self.properties.get(prop, "")
 
     def get_name(self):
         """
-        get property value
-        :return:
+        Determine the name of the device based on available properties.
+
+        :return: The name of the device derived from INTERFACE, DEVNAME, or DEVPATH.
         """
         if "INTERFACE" in self.properties.keys():
             return self.properties.get("INTERFACE")
@@ -108,8 +111,11 @@ class Device:
 
     def get_model(self, name, file):
         """
-        get board model name
-        :return:
+        Populate the device's board and chip attributes based on the type of device and PCI information.
+
+        :param name: The name of the device (e.g., 'fc', 'gpu').
+        :param file: pci.ids file.
+        :return: A tuple containing the board and chip model strings.
         """
         self.name = name
         self.file = file
@@ -154,7 +160,7 @@ class Device:
 
     def get_raid_card(self):
         """
-        get the board model and chip model of raid card
+        get the board model and chip model of raid card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -176,7 +182,7 @@ class Device:
 
     def get_fc_card(self):
         """
-        get the board model and chip model of FC card
+        get the board model and chip model of FC card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -198,7 +204,7 @@ class Device:
 
     def get_nvme_card(self):
         """
-        get the board model and chip model of nvme card
+        get the board model and chip model of nvme card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -226,7 +232,7 @@ class Device:
 
     def get_nic_intel(self):
         """
-        get the board model and chip model of intel card
+        get the board model and chip model of intel card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -249,7 +255,7 @@ class Device:
 
     def get_nic_broadcom(self):
         """
-        get the board model and chip model of broadcom nic card
+        get the board model and chip model of broadcom nic card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -267,7 +273,7 @@ class Device:
 
     def get_nic_huawei(self):
         """
-        get the board model and chip model of intel card
+        get the board model and chip model of intel card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -287,7 +293,7 @@ class Device:
 
     def get_nic_netswift(self):
         """
-        get the board model and chip model of netswift card
+        get the board model and chip model of netswift card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -305,7 +311,7 @@ class Device:
 
     def get_broadcom_card(self):
         """
-        get the board model and chip model of broadcom card
+        get the board model and chip model of broadcom card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -333,7 +339,7 @@ class Device:
 
     def get_nic_mellanox(self):
         """
-        get the board model and chip model of mellanox card
+        get the board model and chip model of mellanox card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -351,7 +357,7 @@ class Device:
 
     def get_gpu_card(self):
         """
-        get the board model and chip model of gpu card
+        get the board model and chip model of gpu card.
         """
         flag = 0
         for ln in self.file.readlines():
@@ -369,7 +375,7 @@ class Device:
 
     def get_driver(self):
         """
-        get the driver name of the board
+        get the driver name of the board card.
         :return:
         """
         self.get_pci()
@@ -385,7 +391,7 @@ class Device:
 
     def get_driver_version(self):
         """
-        Get the driver version of the board
+        Get the driver version of the board.
         :return:
         """
         if not self.driver:
@@ -403,7 +409,7 @@ class Device:
 
     def get_pci(self):
         """
-        get the pci of card
+        get the pci of card.
         :return:
         """
         self.pci = self.properties.get("PCI_SLOT_NAME", "")
@@ -415,7 +421,7 @@ class Device:
 
     def get_quadruple(self):
         """
-        get quadruple by pci number
+        get quadruple by pci number.
         :return:
         """
         cmd_result = self.command.run_cmd(
@@ -431,6 +437,11 @@ class Device:
         return self.quad
 
     def get_cpu_vendor(self):
+        """
+        Retrieve the CPU vendor ID from the system's CPU information.
+
+        :return: The vendor ID of the CPU or "Unknown Vendor" if not found.
+        """
         cmd_result = self.command.run_cmd(
             "cat /proc/cpuinfo | grep vendor_id | head -1", log_print=False)
         if cmd_result[0] == "":
@@ -441,7 +452,7 @@ class Device:
 
     def _is_null(self):
         """
-        Judge whether the board model and chip signal are empty
+        Judge whether the board model and chip signal are empty.
         """
         if not self.chip:
             self.chip = "N/A"
@@ -450,6 +461,9 @@ class Device:
 
     @staticmethod
     def _search_info(restr, line):
+        """
+        Search for a pattern in the given string using regular expressions.
+        """
         value = re.search(restr, line)
         if value:
             return value.group(1)

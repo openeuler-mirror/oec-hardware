@@ -24,6 +24,13 @@ class Client:
     """
 
     def __init__(self, host, oec_id, logger):
+        """
+        Attributes:
+        host (str): The host address of the server.
+        oec_id (str): An identifier associated with the upload.
+        logger (Logger): An instance of a logging utility.
+        form (dict): A dictionary to hold the form data for the upload request.
+        """
         self.host = host
         self.oec_id = oec_id
         self.logger = logger
@@ -41,7 +48,7 @@ class Client:
             job = filename.split('.')[0]
             with open(files, 'rb') as file:
                 filetext = base64.b64encode(file.read())
-        except Exception as excp:
+        except Exception:
             self.logger.error("Get files which need to upload failed.")
             return False
 
@@ -67,6 +74,6 @@ class Client:
                 self.logger.error("Upload file to server failed. %s" % res.msg)
                 return False
             return True
-        except Exception as excp:
+        except Exception:
             self.logger.error("Upload file to server failed.")
             return False

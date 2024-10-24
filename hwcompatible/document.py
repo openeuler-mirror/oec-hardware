@@ -26,17 +26,26 @@ from .constants import FILE_FLAGS, FILE_MODES
 
 class Document():
     """
-    Basic document module
+    Basic document module.
     """
 
     def __init__(self, filename, logger, document=None):
+        """
+        Initialize the Document object.
+
+        :param filename: The path to the JSON file.
+        :param logger: A logging object for logging messages.
+        :param document: Initial content of the document (optional).
+        """
         self.filename = filename
         self.logger = logger
         self.document = document
 
     def save(self):
         """
-        Save file
+        Save file.
+
+        :return: True if the file was saved, False otherwise.
         """
         with os.fdopen(os.open(self.filename, FILE_FLAGS, FILE_MODES), "w+") as save_f:
             json.dump(self.document, save_f, indent=4)
@@ -44,7 +53,9 @@ class Document():
 
     def load(self):
         """
-        Load file
+        Load file.
+
+        :return: True if the file was loaded, False otherwise.
         """
         if not os.path.exists(self.filename):
             return False
@@ -61,7 +72,7 @@ class Document():
 
 class CertDocument(Document):
     """
-    Get hardware and release information
+    Get hardware and release information.
     """
 
     def __init__(self, filename, logger, document=''):
@@ -71,7 +82,7 @@ class CertDocument(Document):
 
     def new(self):
         """
-        Create new document object
+        Create new document object with hardware and OS information.
         """
         try:
             cmd_result = getoutput("/usr/sbin/dmidecode -t 1")
@@ -102,7 +113,7 @@ class CertDocument(Document):
             self.logger.error("The file %s doesn't exist." %
                               CertEnv.releasefile)
             return False
-
+        # Get the OS, kernel, ID, Product URL, server information
         sysinfo = SysInfo(CertEnv.releasefile)
         self.document["OS"] = sysinfo.get_product() + " " + sysinfo.get_version()
         self.document["kernel"] = sysinfo.get_kernel()
@@ -115,7 +126,7 @@ class CertDocument(Document):
 
     def get_oech_value(self, prop, value):
         """
-        Get oech version or name
+        Get oech version or name.
         """
         config = configparser.ConfigParser()
         config.read(CertEnv.versionfile)
@@ -126,45 +137,45 @@ class CertDocument(Document):
 
     def get_hardware(self):
         """
-        Get hardware information
+        Get hardware information.
         """
         return self.document["Manufacturer"] + " " + self.document["Product Name"] + " " \
             + self.document["Version"]
 
     def get_os(self):
         """
-        Get os information
+        Get os information.
         """
         return self.document["OS"]
 
     def get_server(self):
         """
-        Get server information
+        Get server information.
         """
         return self.document["server"]
 
     def get_url(self):
         """
-        Get url
+        Get url.
         """
         return self.document["Product URL"]
 
     def get_certify(self):
         """
-        Get certify
+        Get certify.
         """
         return self.document["ID"]
 
     def get_kernel(self):
         """
-        Get kernel information
+        Get kernel information.
         """
         return self.document["kernel"]
 
 
 class DeviceDocument(Document):
     """
-    Get device document
+    Get device information from device module.
     """
 
     def __init__(self, filename, logger, devices=''):
@@ -178,7 +189,7 @@ class DeviceDocument(Document):
 
 class FactoryDocument(Document):
     """
-    Get factory from file or factory parameter
+    Get factory from file or factory parameter.
     """
 
     def __init__(self, filename, logger, factory=''):
@@ -193,7 +204,7 @@ class FactoryDocument(Document):
 
     def get_factory(self):
         """
-        Get factory parameter information
+        Get factory parameter information.
         :return:
         """
         factory = list()
@@ -207,10 +218,15 @@ class FactoryDocument(Document):
 
 class ConfigFile:
     """
-    Get parameters from configuration file
+    Class for handling configuration files.
     """
 
     def __init__(self, filename):
+        """
+        Initialize the ConfigFile object.
+
+        :param filename: The path to the configuration file.
+        """
         self.filename = filename
         self.parameters = dict()
         self.config = list()
@@ -218,7 +234,7 @@ class ConfigFile:
 
     def load(self):
         """
-        Load config file
+        Load config file.
         """
         with open(self.filename) as fp_info:
             self.config = fp_info.readlines()
@@ -231,7 +247,7 @@ class ConfigFile:
 
     def get_parameter(self, name):
         """
-        Get parameter
+        Get parameter.
         """
         return self.parameters.get(name, None)
 
@@ -246,7 +262,7 @@ class ConfigFile:
 
     def add_parameter(self, name, value):
         """
-        Add parameter
+        Add parameter.
         """
         if self.get_parameter(name):
             return False

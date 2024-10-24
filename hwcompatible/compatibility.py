@@ -39,32 +39,35 @@ class EulerCertification():
     """
 
     def __init__(self, logger):
-        self.certification = None
-        self.test_factory = list()
-        self.devices = None
-        self.ui = CommandUI()
-        self.client = None
-        self.dir_name = None
-        self.logger = logger
-        self.command = Command(logger)
-        self.category = ''
+        """
+        Initialize the EulerCertification object.
+        """
+        self.certification = None  # Certification document object
+        self.test_factory = list()  # List of test factory objects
+        self.devices = None  # Device document object
+        self.ui = CommandUI()  # User interface for command line interactions
+        self.client = None  # Client object for communication
+        self.dir_name = None  # Directory name for packaging logs
+        self.logger = logger  # Logger instance
+        self.command = Command(logger)  # Command execution helper
+        self.category = ''  # Test category (e.g., 'compatible', 'virtualization')
 
     def run(self):
         """
         Openeuler compatibility verification
         :return:
         """
-        self._select_category()
+        self._select_category()  # Select the test category
         if self.category == "virtualization":
             self.logger.info(
                 "The openEuler Virtualization Test Suite")
         elif self.category == "compatible":
             self.logger.info(
                 "The openEuler Hardware Compatibility Test Suite")
-            copy_pci()
+            copy_pci()  # Copy PCI device information
             certdevice = CertDevice(self.logger)
 
-        self.load()
+        self.load()  # Load existing certification data
 
         while True:
             self.submit()
@@ -75,15 +78,15 @@ class EulerCertification():
 
             oec_devices = list()
             if self.category == "compatible":
-                oec_devices = certdevice.get_devices()
+                oec_devices = certdevice.get_devices()  # Get devices for certification
                 self.devices = DeviceDocument(CertEnv.devicefile, self.logger, oec_devices)
                 self.devices.save()
-            test_factory = self.get_tests(oec_devices)
+            test_factory = self.get_tests(oec_devices)  # Get the list of tests
             self.update_factory(test_factory)
             if not self.choose_tests():
                 return True
 
-            test_suite = create_test_suite(self.test_factory, self.logger, self.category)
+            test_suite = create_test_suite(self.test_factory, self.logger, self.category)  # Create the test suite
             args = argparse.Namespace(
                 test_factory=self.test_factory, test_suite=test_suite)
             job = Job(args)
@@ -92,20 +95,19 @@ class EulerCertification():
 
     def run_rebootup(self):
         """
-        rebootup
-        :return:
+        Handle the reboot process and resume testing.
         """
         try:
             if not os.path.exists(CertEnv.rebootfile):
                 return True
-            self.load()
-            test_suite = create_test_suite(self.test_factory, self.logger)
+            self.load()  # Load the existing certification data
+            test_suite = create_test_suite(self.test_factory, self.logger)   # Create the test suite
             args = argparse.Namespace(
                 test_factory=self.test_factory, test_suite=test_suite)
             job = Job(args)
             reboot = Reboot(None, job, None)
-            if reboot.check(logger=self.logger):
-                job = reboot.job
+            if reboot.check(logger=self.logger):  # check the reboot state and verify the reboot time
+                job = reboot.job  # Update the job object
                 job.run()
             reboot.clean()
             self.save(job)
@@ -138,6 +140,8 @@ class EulerCertification():
         :return:
         """
         os.makedirs(os.path.dirname(CertEnv.datadirectory), exist_ok=True)
+
+        # Create new document object with hardware and OS information.
         if not self.certification:
             self.certification = CertDocument(
                 CertEnv.certificationfile, self.logger)
@@ -151,7 +155,7 @@ class EulerCertification():
                 factory_doc = FactoryDocument(CertEnv.factoryfile, self.logger)
             self.test_factory = factory_doc.get_factory()
 
-        oec_id = self.certification.get_certify()
+        oec_id = self.certification.get_certify()  # The test ID that you provided
         hardware_info = self.certification.get_hardware()
         self.client = Client(hardware_info, oec_id, self.logger)
         version = self.certification.get_oech_value("VERSION", "version")
@@ -169,13 +173,15 @@ class EulerCertification():
 
     def save(self, job):
         """
-        collect Job log
+        Collect Job logs and package.
         :param job:
         :return:
         """
-        doc_dir = os.path.join(CertEnv.logdirectoy, job.job_id)
+        doc_dir = os.path.join(CertEnv.logdirectoy, job.job_id)  # create the directory of logs.
         if not os.path.exists(doc_dir):
             return
+
+        # copy the temporary log files to log directory
         if self.category == "virtualization":
             FactoryDocument(CertEnv.virtfactoryfile, self.logger, self.test_factory).save()
             shutil.copy(CertEnv.virtfactoryfile, doc_dir)
@@ -185,6 +191,7 @@ class EulerCertification():
             shutil.copy(CertEnv.devicefile, doc_dir)
         shutil.copy(CertEnv.certificationfile, doc_dir)
 
+        # rename and compress the logs package
         cwd = os.getcwd()
         os.chdir(os.path.dirname(doc_dir))
         self.dir_name = "oech-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") \
@@ -200,6 +207,7 @@ class EulerCertification():
 
         self.logger.info("Log saved to file: %s succeed." %
                          os.path.join(os.getcwd(), pack_name))
+        # copy logs package for submit process
         shutil.copy(pack_name, CertEnv.datadirectory)
         for sublist in os.walk("./"):
             for dirname in sublist[1]:
@@ -209,9 +217,10 @@ class EulerCertification():
 
     def submit(self):
         """
-        submit last result
+        submit request of last result
         :return:
         """
+        # Get the logs package and sorted
         packages = list()
         pattern = re.compile("^oech-[0-9]{14}-[0-9a-zA-Z]{10}.tar$")
         files = []
@@ -233,7 +242,7 @@ class EulerCertification():
                 self.logger.info(
                     "Upload result to server %s succeed." % server)
             time.sleep(2)
-
+        # clean the copied logs package after submit process
         for filename in packages:
             os.remove(os.path.join(CertEnv.datadirectory, filename))
 
@@ -263,6 +272,8 @@ class EulerCertification():
         sort_devices = self.sort_tests(devices)
         empty_device = Device(logger=self.logger)
         test_factory = list()
+
+        # from test scripts get the test name
         casenames = []
         test_path = os.path.join(CertEnv.testdirectoy, self.category)
         for (_, dirs, filenames) in os.walk(test_path):
@@ -296,6 +307,7 @@ class EulerCertification():
                             test["driverVersion"] = test.get("device", "").get_driver_version()
                             test["boardModel"], test["chipModel"] = test.get("device", "").get_model(testname, file)
                             test_factory.append(test)
+                    # the tests don't need physical device
                     elif testname in NODEVICE:
                         test = dict()
                         test["name"] = testname
@@ -312,7 +324,7 @@ class EulerCertification():
 
     def sort_tests(self, devices):
         """
-        sort tests
+        sort tests from devices list
         :param devices:
         :return:
         """
@@ -465,7 +477,7 @@ class EulerCertification():
 
     def show_tests(self):
         """
-        show test items
+        show test items in UI
         :return:
         """
         device_info = namedtuple('Device_info', DEVICE_INFO)
@@ -507,7 +519,7 @@ class EulerCertification():
 
     def show_virt_tests(self):
         """
-        show virtualization test items
+        show virtualization test items in UI
         :return:
         """
         self.logger.info("\033[1;35m" + "No.".ljust(4) + "Run-Now?".ljust(10)
@@ -563,7 +575,7 @@ class EulerCertification():
 
     def check_result(self):
         """
-        check test result
+        check whether all the tests were passed
         :return:
         """
         if len(self.test_factory) == 0:
@@ -575,7 +587,7 @@ class EulerCertification():
 
     def update_factory(self, test_factory):
         """
-        update tese factory
+        update test_factory
         :param test_factory:
         :return:
         """
@@ -620,6 +632,9 @@ class EulerCertification():
                          + device.version.ljust(18) + device.chip.ljust(20) + device.board, log_print=False)
 
     def _select_category(self):
+        """
+        select category of certificate type
+        """
         self.logger.info("Please select test category.", log_print=False)
         self.logger.info("\033[1;35m" + "No.".ljust(6) + "category".ljust(35) + "\033[0m", log_print=False)
         categories = dict(enumerate(TEST_CATEGORY))
