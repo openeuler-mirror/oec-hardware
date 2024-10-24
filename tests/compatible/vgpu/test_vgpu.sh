@@ -62,7 +62,7 @@ function create_uuid() {
 }
 
 
-# Desc: Destory virtual machine and remove vgpu uuid
+# Desc: Destroy virtual machine and remove vgpu uuid
 # Input: gpu device name
 function destory_vm() {
     name=$1

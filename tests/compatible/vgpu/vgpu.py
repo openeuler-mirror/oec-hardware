@@ -81,6 +81,6 @@ class VGpuTest(Test):
         destory_cmd = self.command.run_cmd(
             "bash %s/test_vgpu.sh destory_vm %s" % (vgpu_dir, self.name))
         if destory_cmd[2] == 0:
-            self.logger.info("Destory openEuler vm succeed.")
+            self.logger.info("Destroy openEuler vm succeed.")
         else:
-            self.logger.error("Destory openEuler vm failed.")
+            self.logger.error("Destroy openEuler vm failed.")
