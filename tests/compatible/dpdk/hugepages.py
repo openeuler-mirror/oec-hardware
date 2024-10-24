@@ -65,6 +65,10 @@ class ShowHugepages:
             for hdir in os.listdir(path):
                 comm = self.command.run_cmd("cat %s/%s/nr_hugepages" % (path, hdir))
                 pages = int(comm[0].strip('\n'))
+                if not os.path.exists(path):
+                    self.logger.info("%s doesn't exist" % path)
+                    continue
+
                 if pages > 0:
                     kb = int(hdir[10:-2])  # slice out of hugepages-NNNkB
                     self.logger.info('{:<4} {:<5} {:<6} {}'.format(node, pages,
