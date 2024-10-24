@@ -152,8 +152,11 @@ Mulan V2
 ```
 #### 3.1.2 功能模块分级
 
-![test_module](../pictures/test_module.png)
-
+|模块分级|模块|
+|-------|----|
+|核心功能实现|compatibility|
+|主要功能模块|document、device、job、command、command_ui、common|
+|次要功能模块|cert_info、client、config_ip、constants、env、log、reboot、test|
 
 ### 3.2 框架特点
 
