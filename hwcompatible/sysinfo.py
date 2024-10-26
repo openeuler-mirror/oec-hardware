@@ -18,10 +18,15 @@ from subprocess import getoutput
 
 class SysInfo:
     """
-    Deal system information
+    Deal system information.
     """
 
     def __init__(self, filename):
+        """
+        Initialize the system information object with a filename to read from.
+
+        :param filename: os-release file.
+        """
         self.product = None
         self.version = None
         self.kernel = None
@@ -55,7 +60,7 @@ class SysInfo:
 
     def _load(self, filename):
         """
-        Collect system information
+        Collect system information.
         :param filename:
         :return:
         """

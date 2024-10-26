@@ -23,14 +23,17 @@ class Test:
     """
 
     def __init__(self):
-        self.pri = 0
-        self.requirements = list()
-        self.reboot = False
-        self.rebootup = None
-        self.args = None
-        self.logger = None
-        self.command = None
-        self.log_path = ""
+        """
+        Initialize the Test instance with default attributes.
+        """
+        self.pri = 0  # Priority level of the test
+        self.requirements = list()  # List of requirements needed for the test
+        self.reboot = False  # Indicates whether a reboot is required after the test
+        self.rebootup = None  # Action to take after rebooting
+        self.args = None  # Command-line arguments
+        self.logger = None  # Logger instance for logging messages
+        self.command = None  # Command object for executing shell commands
+        self.log_path = ""  # Path to the log file
 
     def setup(self, args=None):
         """

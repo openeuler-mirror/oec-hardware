@@ -23,10 +23,19 @@ from .constants import MAX_BYTES, MAX_COUNT
 
 class Logger():
     """
-    Log management
+    Logger class for managing log outputs to both files and the console.
     """
 
     def __init__(self, logname, logdir, out, err):
+        """
+        Initialize the logger with the given parameters.
+
+        Args:
+            logname (str): The name of the log file.
+            logdir (str): The directory where logs should be stored.
+            out (file-like object): Output stream for console logging.
+            err (file-like object): Error stream for console logging.
+        """
         self.logdir = None
         self.log = None
         self.stdout = out

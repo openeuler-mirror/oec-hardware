@@ -20,18 +20,26 @@ from .constants import SAMEASYES, YES, SAMEASNO, NO
 
 class CommandUI:
     """
-    Command user interface selection
+    Provides methods for command-line interface interaction such as prompting the user for input,
+    reading integers, getting confirmations, and editing values.
     """
 
     def __init__(self, echoResponses=False):
+        """
+        Initialize the CommandUI object with an option to echo responses.
+
+        Args:
+            echoResponses (bool, optional): Whether to echo the user's responses. Defaults to False.
+        """
         self.echo = echoResponses
 
     @staticmethod
     def print_pipe(pipe):
         """
-        print pipe data
-        :param pipe:
-        :return:
+        Print data from the given pipe until there is no more data.
+
+        Args:
+            pipe (file-like object): A pipe-like object to read from.
         """
         while 1:
             line = pipe.readline()
@@ -42,10 +50,14 @@ class CommandUI:
 
     def prompt(self, question, choices=None):
         """
-        choice test item
-        :param question:
-        :param choices:
-        :return:
+        Prompt the user for input with an optional set of choices.
+
+        Args:
+            question (str): The question to ask the user.
+            choices (list, optional): A list of possible choices. Defaults to None.
+
+        Returns:
+            str: The user's response stripped of leading/trailing whitespace.
         """
         while True:
             sys.stdout.write(question)
@@ -63,10 +75,14 @@ class CommandUI:
 
     def prompt_integer(self, question, choices=None):
         """
-        choice test item
-        :param question:
-        :param choices:
-        :return:
+        Prompt the user for an integer input with an optional set of choices.
+
+        Args:
+            question (str): The question to ask the user.
+            choices (list, optional): A list of possible choices. Defaults to None.
+
+        Returns:
+            int: The user's response converted to an integer.
         """
         while True:
             sys.stdout.write(question)
@@ -86,9 +102,13 @@ class CommandUI:
 
     def prompt_confirm(self, question):
         """
-        Command interface displays confirmation information
-        :param question:
-        :return:
+        Prompt the user for a yes/no confirmation.
+
+        Args:
+            question (str): The question to ask the user.
+
+        Returns:
+            bool: True if the user's response indicates 'yes', False otherwise.
         """
         while True:
             reply = self.prompt(question, (YES, NO))
@@ -101,10 +121,12 @@ class CommandUI:
     @staticmethod
     def prompt_edit(label, value, choices=None):
         """
-        prompt choice edit
-        :param label:
-        :param value:
-        :param choices:
+        Prompt the user to edit a given value with an optional set of choices.
+
+        Args:
+            label (str): The label to display next to the input field.
+            value (str): The initial value to be edited.
+            choices (list, optional): A list of possible choices. Defaults to None.
         :return:
         """
         if not value:

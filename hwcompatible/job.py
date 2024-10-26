@@ -30,7 +30,7 @@ from .document import Document
 
 class Job():
     """
-    Test task management
+    Manages the execution of test tasks.
     """
 
     def __init__(self, args=None):
@@ -57,8 +57,10 @@ class Job():
 
     def check_test_depends(self):
         """
-        Install  dependency packages
-        :return: depending
+        Checks and installs necessary dependencies for the tests.
+
+        :return: True if dependencies are successfully installed, False otherwise.
+        :rtype: bool
         """
         required_rpms = []
         for tests in self.test_suite:
@@ -83,7 +85,7 @@ class Job():
 
     def run_tests(self, subtests_filter=None):
         """
-        Start testing
+        Executes the defined test suites.
         :param subtests_filter:
         :return:
         """
@@ -113,7 +115,7 @@ class Job():
 
     def run(self):
         """
-        Test entrance
+        Test entrance.
         :return:
         """
         self.logger.start()
@@ -130,7 +132,7 @@ class Job():
 
     def show_summary(self):
         """
-        Command line interface display summary
+        Command line interface summary of the test results.
         :return:
         """
         self.logger.info(
@@ -150,7 +152,7 @@ class Job():
 
     def save_result(self):
         """
-        Get test status
+        Save the test status.
         :return:
         """
         for test in self.test_factory:
@@ -161,7 +163,10 @@ class Job():
 
     def get_config(self):
         """
-        get configuration file
+        Loads the configuration file(test_config.yaml).
+
+        :return: True if successful, False otherwise.
+        :rtype: bool
         """
         if not os.path.exists(self.yaml_file):
             self.logger.error("Failed to get configuration file information.")
@@ -179,7 +184,10 @@ class Job():
 
     def get_device(self, testcase):
         """
-        Get the board configuration information to be tested
+        Retrieves the configuration information for the device being tested.
+
+        :param testcase: The current test case being processed.
+        :return: Configuration data for the device or None if not found.
         """
         types = testcase["name"]
         device_name = testcase["device"].get_name()
@@ -196,10 +204,14 @@ class Job():
 
     def _run_test(self, testcase, config_data, subtests_flag, subtests_filter=None):
         """
-        Start a testing item
-        :param testcase:
-        :param subtests_filter:
-        :return:
+        Start a testing item.
+
+        :param testcase: The test case to run.
+        :param config_data: Configuration data for the test.
+        :param subtests_flag: Flag indicating if subtests should be run.
+        :param subtests_filter: Filter for subtests.
+        :return: True if the test passes, False otherwise.
+        :rtype: bool
         """
         name = testcase["name"]
         device_name = testcase["device"].get_name()
@@ -261,10 +273,12 @@ class Job():
 
     def _delete_case(self, test_name, logger=None):
         """
-        Delete the test cases that have been completed from the reboot.json
-        :param testcase:
-        :param logger:
-        :return:
+        Delete the test cases that have been completed from the reboot.json.
+
+        :param test_name: Name of the test case.
+        :param logger: Logger instance.
+        :return: True if deletion was successful, False otherwise.
+        :rtype: bool
         """
         doc = Document(CertEnv.rebootfile, logger)
         if not doc.load():

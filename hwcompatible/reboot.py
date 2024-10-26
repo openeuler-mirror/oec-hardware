@@ -28,6 +28,14 @@ class Reboot:
     """
 
     def __init__(self, testname, job, rebootup):
+        """
+        Initialize the Reboot instance with test name, job, and rebootup flag.
+
+        Args:
+            testname (str): Name of the test.
+            job (object): Job object containing test suite and factory information.
+            rebootup (list): List of subtests that need to run post-reboot.
+        """
         self.testname = testname
         self.rebootup = rebootup
         self.job = job
@@ -37,7 +45,7 @@ class Reboot:
 
     def clean(self):
         """
-        Remove reboot file
+        Remove reboot file.
         :return:
         """
         if not (self.job and self.testname):
@@ -52,8 +60,13 @@ class Reboot:
 
     def setup(self, args=None):
         """
-        Reboot  setuping
-        :return:
+        Set up the reboot process.
+
+        Args:
+            args (argparse.Namespace, optional): Arguments from the command line. Defaults to None.
+
+        Returns:
+            bool: True if setup is successful, False otherwise.
         """
         self.args = args or argparse.Namespace()
         self.logger = getattr(self.args, "test_logger", None)
@@ -63,14 +76,16 @@ class Reboot:
             return False
 
         self.job.save_result()
+        # Mark the test items that need to be restarted
         for test in self.job.test_factory:
             if test["run"] and test["name"] in REBOOT_CASE:
                 test["reboot"] = True
                 test["status"] = "FAIL"
+        # Save the status of the testfactory
         if not FactoryDocument(CertEnv.factoryfile, self.logger, self.job.test_factory).save():
             self.logger.error("Save testfactory doc failed before reboot.")
             return False
-
+        # Build restart test information
         reboots = list()
         for test in self.job.test_factory:
             if self.testname == test["name"]:
@@ -89,6 +104,7 @@ class Reboot:
         if not Document(CertEnv.rebootfile, self.logger, reboots).save():
             self.logger.error("Save reboot doc failed.")
             return False
+        # start the service
         command = Command(self.logger)
         command.run_cmd("systemctl daemon-reload")
         cmd_result = command.run_cmd("systemctl enable oech")
@@ -101,8 +117,13 @@ class Reboot:
 
     def check(self, logger=None):
         """
-        Reboot file check
-        :return:
+        Check the reboot state and verify the reboot time.
+
+        Args:
+            logger (Logger, optional): Logger instance for logging messages. Defaults to None.
+
+        Returns:
+            bool: True if check is successful, False otherwise.
         """
         if not logger:
             logger = self.logger
@@ -124,9 +145,9 @@ class Reboot:
             time_reboot = datetime.datetime.strptime(self.reboot.get("time"), "%Y%m%d%H%M%S")
             test_suite = self.job.test_suite
             reboot_suite = []
-            for suit in test_suite:
-                if suit.get("reboot"):
-                    reboot_suite.append(suit)
+            for suite in test_suite:
+                if suite.get("reboot"):
+                    reboot_suite.append(suite)
             self.job.test_suite = reboot_suite
         except Exception:
             logger.error("Reboot file format not as expect.")
