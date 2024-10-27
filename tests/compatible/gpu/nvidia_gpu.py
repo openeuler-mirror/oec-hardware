@@ -176,7 +176,7 @@ class NvidiaGpuTest():
                 self.logger.error("Using nvidia-smi to test Drvier failed.")
 
             env_display = os.getenv('DISPLAY')
-            if env_display != '':
+            if env_display is not None and env_display != '':
                 self.logger.info("Start to test Vulkan.")
                 self.set_default_gpu()
                 code = self.command.run_cmd(

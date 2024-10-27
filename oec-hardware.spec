@@ -3,6 +3,8 @@
 %define debug_package %{nil}
 %global _build_id_links none
 %undefine __brp_mangle_shebangs
+%define vendor %{?_vendor:%{_vendor}}%{!?_vendor:openEuler}
+%define vendor_lowercase %{?_vendor:%(echo %{_vendor} | tr '[:upper:]' '[:lower:]')}%{!?_vendor:openeuler}
 
 Name:           oec-hardware
 Summary:        openEuler Hardware Compatibility Test Suite
@@ -45,6 +47,9 @@ DESTDIR=$RPM_BUILD_ROOT VERSION_RELEASE=%{version} make
 
 %install
 DESTDIR=$RPM_BUILD_ROOT make install
+
+# Custom vendor
+sed -i 's#grep openeulerversion /etc/openEuler-latest#grep %{vendor_lowercase}version /etc/%{vendor}-latest#g' %{buildroot}/usr/share/oech/lib/hwcompatible/cert_info.py
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && [ -d $RPM_BUILD_ROOT ] && rm -rf $RPM_BUILD_ROOT;
