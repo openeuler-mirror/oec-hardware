@@ -63,7 +63,7 @@ class Qemu005(Test):
         # 获取内存数量
         stdin, stdout, stderr = ssh_client.exec_command('free -k|grep Mem|awk \'{print$2}\'')
         total_mem = stdout.read().decode('utf-8').strip()
-        self.logger.info(f'Total memor: {total_mem}')
+        self.logger.info(f'Total memory: {total_mem}')
 
         # 获取磁盘信息
         stdin, stdout, stderr = ssh_client.exec_command('lsblk')
