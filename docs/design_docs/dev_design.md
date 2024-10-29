@@ -308,7 +308,17 @@ infiniband:
     device: ibp1s0
     client_ip:
     server_ip: 
-  ```
+# kabiwhitelist是用于检查核外驱动是否符合openEuler社区kabi白名单。核外驱动是指非内核自带的硬件驱动，一般通过源码编译安装，或者rpm二进制文件安装的硬件驱动。
+# 一般来讲，系统安装完成后，通过手动方式安装的硬件驱动需要执行该测试项。如果不存在此类驱动，可跳过该测试项。
+# 配置待测ko或rpm文件，并将待测ko或rpm文件以及当前架构的kabi白名单文件（kabi_whitelist_$arch）放入/root目录下。
+kabiwhitelist:
+  ko1:
+    ko_name: ''
+  ko2:
+    ko_name: ''
+  rpm:
+    rpm_name: ''
+```
 
 ### 3.5 内部模块间接口清单
 

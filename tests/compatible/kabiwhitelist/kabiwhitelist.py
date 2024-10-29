@@ -46,6 +46,10 @@ class KabiWhiteListTest(Test):
         if ko_result[2] == 0:
             self.logger.error("Please configure the board information in the configuration file")
             return False
+        ko_file_result = self.command.run_cmd("ls %s/test_log/ | grep nofile" % kabi_whitelist_dir)
+        if ko_file_result[2] == 0:
+            self.logger.error("Please put ko or rpm file configured in the configuration file into the /root")
+            return False
         self.logger.info("Ko or rpm check complete")
 
         test_result = self.command.run_cmd("ls %s/test_log | grep change" % kabi_whitelist_dir)

@@ -147,6 +147,7 @@ oec-hardware工具发布新版本后，社区将只针对最新版本进行维�
    |      | https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip | `/opt` |
    | VGPU | NVIDIA vgpu client驱动软件包 | /root |
    |      | 下载对应版本和架构的虚拟机镜像文件，此处以openEuler 22.03LTS、x86_64为例：https://repo.openeuler.org/openEuler-22.03-LTS/virtual_machine_img/x86_64/openEuler-22.03-LTS-x86_64.qcow2.xz | `/opt` |
+   | kabiwhitelist | 当前架构的kabi白名单文件（kabi_whitelist_$arch）、待测ko或rpm文件 | /root |
 
 # 工具安装
 

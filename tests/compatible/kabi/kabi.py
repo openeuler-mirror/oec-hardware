@@ -121,8 +121,8 @@ class KabiTest(Test):
         if product == "openEuler":
             standard_kernel_version = getoutput(
                 "dnf list --repo=source | grep '^kernel.src' | awk '{print $2}'")
-            self.command.run_cmd("dnf download --source kernel-%s"
-                                 % standard_kernel_version)
+            self.command.run_cmd("dnf download --source kernel-%s --downloaddir %s"
+                                 % (standard_kernel_version, rpmpath))
         elif product == "KylinSec":
             kylinsec_version = getoutput("cat /etc/dnf/vars/osversion | sed 's/[^0-9]//g'")
             kernel_dict = Document(CertEnv.kernelinfo, self.logger)
@@ -138,7 +138,7 @@ class KabiTest(Test):
             self.logger.info("Currently, this system is not supported to test kabi,"
                              " Please add the corresponding system in kernelrelease.json.")
 
-        rpm = os.path.join("kernel-" + standard_kernel_version + ".src.rpm")
+        rpm = os.path.join(rpmpath, "kernel-" + standard_kernel_version + ".src.rpm")
         getoutput("rpm -ivh %s" % rpm)
         os.remove(rpm)
         return standard_symvers

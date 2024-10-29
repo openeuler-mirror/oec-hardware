@@ -144,6 +144,7 @@ oec-hardware-1.1.1 is no longer updated or maintained. Obtain the latest oec-har
    |      | https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip | `/opt` |
    | VGPU | NVIDIA vGPU client driver | `/root` |
    |      | Download the VM image file of the corresponding version and architecture. The following uses openEuler 22.03 LTS in x86_64 as an example: https://repo.openeuler.org/openEuler-22.03-LTS/virtual_machine_img/x86_64/openEuler-22.03-LTS-x86_64.qcow2.xz | `/opt` |
+   | kabiwhitelist | The current architecture's kabi white list file (kabi_whitelist_ $arch), ko or rpm file to be tested | /root |
 
 # Tool Installation
 

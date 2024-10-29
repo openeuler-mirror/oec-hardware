@@ -19,6 +19,10 @@ os_version=`cat /etc/openEuler-latest|grep openeulerversion |awk -F = '{print $2
 arch=`uname -m`
 url="https://gitee.com/src-openeuler/kernel/raw/$os_version/kabi_whitelist_$arch"
 wget $url
+# if get kabi_whitelist failed because of internet or other
+if [ ! -f $testdir"/kabi_whitelist_"$arch ]; then
+	cp /root/kabi_whitelist_$arch $testdir/
+fi
 kernel_version=`uname -r`
 symvers_gz="symvers-"$kernel_version".gz"
 cp /boot/$symvers_gz   /usr/share/oech/lib/tests/compatible/kabiwhitelist/test_log
@@ -103,6 +107,9 @@ do
 	if [ -f /root/$line ]; then
 		cp /root/$line  ./
 		echo $line >> dirth
+	else
+		echo "no ko or rpm file" >> nofile.txt
+		exit 0
 	fi
 done
 cat dirth|while read line;

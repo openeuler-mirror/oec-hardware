@@ -94,6 +94,8 @@ class SystemTest(Test):
             os_version = getoutput("cat /etc/os-release | grep -i version_id | awk -F = '{print $2}' | sed 's/[\"]//g'")
         elif product == "UOS":
             os_version = getoutput("cat /etc/os-release | grep -i version_id | awk -F = '{print $2}' | sed 's/[\"]//g'")
+        elif self.sysinfo.product is not None and self.sysinfo.get_version() is not None:
+            os_version = self.sysinfo.product + " " + self.sysinfo.get_version()
         else:
             self.logger.error("Failed to get os version info.")
         self.logger.info("OS Version: %s" % os_version, terminal_print=False)
@@ -115,6 +117,8 @@ class SystemTest(Test):
             kernel_release = kernel_dict.document[product][os_version].split('/')[1].split('-')[0]
         elif product == "UOS":
             kernel_release = kernel_dict.document[product][os_version].split('/')[1].split('-')[0]
+        elif kernel_dict.document[product] is not None and kernel_dict.document[product][os_version] is not None:
+            kernel_release = kernel_dict.document[product][os_version]
         try:
             if kernel_release != self.sysinfo.kernel_version:
                 self.logger.error("Failed to check kernel %s GA status." %
