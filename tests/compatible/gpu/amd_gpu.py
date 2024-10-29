@@ -31,7 +31,7 @@ class AMDGpuTest():
 
     def get_driver_info(self):
         """
-        Get driver info, includings name, version
+        Get driver info, including name, version
         """
         self.logger.info("Vendor Info:", terminal_print=False)
         self.command.run_cmd('lspci -vs %s' % self.device.pci)
