@@ -99,9 +99,6 @@ class CertDocument(Document):
                 value = property_right[1].strip()
                 if key in defaults:
                     self.document[key] = value or defaults[key]
-                else:
-                    self.logger.warning(f"Unknown key '{key}' encountered with \
-                                         value '{value}' when parsing hardware info with dmidecode")
             for key, default_value in defaults.items():
                 if key not in self.document:
                     self.document[key] = default_value
