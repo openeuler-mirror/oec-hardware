@@ -45,7 +45,7 @@ class Logger():
 
     def start(self):
         """
-        Start outputing to file
+        Start outputting to file
         :return:
         """
         self.log = logging.getLogger(name=self.logfile)
@@ -71,7 +71,7 @@ class Logger():
 
     def stop(self):
         """
-        Stop outputing to file
+        Stop outputting to file
         :return:
         """
         self.stdout = sys.stdout
