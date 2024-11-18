@@ -17,7 +17,7 @@ kernel_version=$(uname -r)
 
 
 # Desc: Create virtual machine
-# Input: vgpu testcase direcotry, gpu device name
+# Input: vgpu testcase directory, gpu device name
 function create_vm() {
     vgpu_dir=$1
     name=$2
@@ -46,7 +46,7 @@ function create_vm() {
 }
 
 
-# Desc: Create vgpu uuid fro vm
+# Desc: Create vgpu uuid for vm
 # Input: gpu device bus number
 function create_uuid() {
     bus=$1
