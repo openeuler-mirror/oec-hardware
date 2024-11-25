@@ -17,6 +17,7 @@ import sys
 import string
 import random
 import argparse
+import traceback
 import yaml
 from .env import CertEnv
 from .command import Command
@@ -257,7 +258,8 @@ class Job():
                 else:
                     return_code = test.test()
         except Exception as concrete_error:
-            logger.error("Failed to run %s. %s" % (name, concrete_error))
+            exstr = traceback.format_exc()
+            logger.error("Failed to run %s. %s\n%s" % (name, concrete_error, exstr))
             return_code = False
 
         if reboot_flag:
