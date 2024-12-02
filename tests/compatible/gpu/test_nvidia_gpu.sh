@@ -67,6 +67,14 @@ function install_cuda_samples() {
         rm -rf v${cuda_version}.zip
     fi
     cuda_name=$(ls /opt | grep cuda-samples)
+    cd /opt/${cuda_name}
+    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
+    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
+    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
+    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
+    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+
     return 0
 }
 
