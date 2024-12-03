@@ -14,6 +14,7 @@
 
 cuda_version=$(nvidia-smi -q | grep "CUDA Version" | awk '{print $4}')
 cuda_name=$(ls /opt | grep cuda-samples)
+vulkansdk_version="1.3.296.0"
 
 function install_clpeak() {
     cd /opt
@@ -63,9 +64,15 @@ function install_cuda_samples() {
     cd /opt
     if [ -z ${cuda_name} ]; then
         wget https://github.com/NVIDIA/cuda-samples/archive/refs/tags/v${cuda_version}.zip
-        unzip v${cuda_version}.zip >/dev/null
-        rm -rf v${cuda_version}.zip
+        if [ $? -eq 0 ]; then
+            unzip v${cuda_version}.zip >/dev/null
+            rm -rf v${cuda_version}.zip
+        else
+            echo "Download cuda-samples-${cuda_version} error!!!"
+            return 1;
+        fi
     fi
+
     cuda_name=$(ls /opt | grep cuda-samples)
     cd /opt/${cuda_name}
     sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
@@ -75,6 +82,56 @@ function install_cuda_samples() {
     sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
     sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
 
+    if [ ! -d "/tmp/xdg-runtime" ]; then
+        mkdir /tmp/xdg-runtime
+    fi
+
+    export XDG_RUNTIME_DIR=/tmp/xdg-runtime
+
+    return 0
+}
+
+function install_Vulkansdk_Depend_Packages() {
+    if uname -m | grep -q 'x86_64'; then
+        rm -rf /opt/vulkansdk
+        rm -rf /opt/vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
+        cd /opt
+        mkdir vulkansdk
+        cd vulkansdk
+        wget https://sdk.lunarg.com/sdk/download/${vulkansdk_version}/linux/vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
+        if [ $? -eq 0 ]; then
+            dnf install qt xinput xz libXinerama
+            tar xvf vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz >/dev/null
+            rm -rf ./vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
+            source /opt/vulkansdk/${vulkansdk_version}/setup-env.sh
+        else
+            echo "Download vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz error!!!"
+            rm -rf /opt/vulkansdk
+            return 1;
+        fi
+    fi
+
+    rm -rf /opt/glfw
+    cd /opt
+    git clone https://gitee.com/baogen_shang/glfw.git
+    if [ $? -eq 0 ]; then
+        dnf install wayland-devel libxkbcommon-devel libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel doxygen
+        cd /opt/glfw
+        git checkout tags/3.4
+        mkdir build
+        cd build
+        cmake -DBUILD_SHARED_LIBS=ON ..
+        make
+        make install
+        export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:$PKG_CONFIG_PATH
+        export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
+    else
+        echo "Download glfw error!!!"
+        rm -rf /opt/glfw
+        return 1;
+    fi
+
+    dnf install -y mesa-libGLU mesa-libGLU-devel openmpi-devel openmpi freeglut freeglut-devel
     return 0
 }
 
@@ -101,9 +158,8 @@ function test_nvidia_case() {
     casename=$1
     logfile=$2
     res_code=0
-    cd /opt/${cuda_name}
-    make &>/dev/null
 
+    cd /opt/${cuda_name}
     if [[ $casename == 'cuda_maketest' ]];then
         make test &>>$logfile
     else
@@ -149,6 +205,7 @@ function test_cuda_samples() {
     allcases=(${2//,/ })
     res_code=0
     install_cuda_samples
+    install_Vulkansdk_Depend_Packages
     cd /opt/${cuda_name}
     lsmod | grep bi_driver
     if [[ $? -eq 0 ]]; then
@@ -159,6 +216,8 @@ function test_cuda_samples() {
             fi
         done
     else
+        cd /opt/${cuda_name}
+        make &>/dev/null
         for casename in ${allcases[@]}; do
             test_nvidia_case $casename $logfile
             if [[ $? -eq 1 ]]; then
