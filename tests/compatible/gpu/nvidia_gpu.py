@@ -72,7 +72,7 @@ class NvidiaGpuTest():
             os.environ['CUDA_VISIBLE_DEVICES'] = id_num
 
         self.logger.info("Set default test gpu as %s." % id_num)
-    
+
     def clean_default_gpu(self):
         if 'CUDA_VISIBLE_DEVICES' in os.environ:
             del os.environ['CUDA_VISIBLE_DEVICES']
@@ -175,18 +175,19 @@ class NvidiaGpuTest():
                 result = False
                 self.logger.error("Using nvidia-smi to test Driver failed.")
 
-            env_display = os.getenv('DISPLAY')
-            if env_display is not None and env_display != '':
-                self.logger.info("Start to test Vulkan.")
-                self.set_default_gpu()
-                code = self.command.run_cmd(
-                    "bash %s/test_nvidia_gpu.sh test_VulkanSamples '%s'" % (gpu_dir, self.gpu_vulkan_log))
-                if code[2] == 0:
-                    self.logger.info("Test Vulkan succeed.")
-                else:
-                    result = False
-                    self.logger.error("Test Vulkan failed.")
-                    
+            if machine == 'x86_64':
+                env_display = os.getenv('DISPLAY')
+                if env_display is not None and env_display != '':
+                    self.logger.info("Start to test Vulkan.")
+                    self.set_default_gpu()
+                    code = self.command.run_cmd(
+                        "bash %s/test_nvidia_gpu.sh test_VulkanSamples '%s'" % (gpu_dir, self.gpu_vulkan_log))
+                    if code[2] == 0:
+                        self.logger.info("Test Vulkan succeed.")
+                    else:
+                        result = False
+                        self.logger.error("Test Vulkan failed.")
+
             self.clean_default_gpu()
 
         except Exception as e:

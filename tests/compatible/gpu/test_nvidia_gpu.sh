@@ -138,19 +138,28 @@ function install_Vulkansdk_Depend_Packages() {
 function install_VulkanSamples() {
     cd /opt
     res_code=0
-    if [ ! -d VulkanSamples ]; then
-        git clone https://github.com/LunarG/VulkanSamples.git
+    if [ ! -d Vulkan-Samples ]; then
+        git clone --recurse-submodules https://github.com/KhronosGroup/Vulkan-Samples.git
+        if [ $? -ne 0 ]; then
+            echo "Download the Vulkan-Samples failed, Please check your network!!!"
+            exit 1
+        fi
     fi
-    cd VulkanSamples
-    if [ ! -d build ]; then
-	mkdir build
-	cd build
-	sed -i 's/python/python3/g' ../scripts/update_deps.py
-	chmod +x ../scripts/update_deps.py
-	../scripts/update_deps.py &>/dev/null || res_code=1
-	cmake -C helper.cmake .. &>/dev/null || res_code=1
-	cmake --build . &>/dev/null || res_code=1
+    cd Vulkan-Samples
+    cmake -G "Unix Makefiles" -Bbuild/linux -DCMAKE_BUILD_TYPE=Release &>/dev/null
+    if [[ $? -eq 0 ]]; then
+        cmake --build build/linux --config Release --target vulkan_samples -j4 &>/dev/null || res_code=1
+    else
+        echo "Generate Makefile Failed!!!"
+        res_code=1
     fi
+
+    if [ ! -d "/opt/vulkansdk" ]; then
+        install_Vulkansdk_Depend_Packages
+    else
+        source /opt/vulkansdk/${vulkansdk_version}/setup-env.sh
+    fi
+
     return $res_code
 }
 
@@ -296,24 +305,21 @@ function test_VulkanSamples() {
     res_code=0
     install_VulkanSamples
     if [[ $? -eq 1 ]]; then
-        echo "Install VulkanSamples failed."
-        res_code=1
-        return $res_code
+        echo "Install VulkanSamples failed." &>> $logfile
+        exit 1
     fi
-    source  ~/.bash_profile
     if [ -n "$DISPLAY" ]; then
-        timeout 5s /opt/VulkanSamples/build/Sample-Programs/Hologram/Hologram &> $logfile
-        cd /opt/VulkanSamples/build/API-Samples/
-        ./run_all_samples.sh &>> $logfile
+        cd /opt/Vulkan-Samples
+        ./build/linux/app/bin/Release/x86_64/vulkan_samples batch &>> $logfile
         if [[ $? -eq 0 ]]; then
-            echo "Test VulkanSamples succeed."
+            echo "Test VulkanSamples succeed." &>> $logfile
             res_code=0
         else
-            echo "Test VulkanSamples failed."
+            echo "Test VulkanSamples failed." &>> $logfile
             res_code=1
         fi
     else
-        echo "Please set the DISPLAY environment variables!"
+        echo "Please set the DISPLAY environment variables!" &>> $logfile
         res_code=1
     fi
     return $res_code
