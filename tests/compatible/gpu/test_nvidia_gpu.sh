@@ -81,6 +81,13 @@ function install_cuda_samples() {
     sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
     sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
     sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+    if uname -m | grep -q 'aarch64'; then
+       sed -i 's/build: cdpAdvancedQuicksort/build:/g' Samples/3_CUDA_Features/cdpAdvancedQuicksort/Makefile
+       sed -i 's/build: cdpBezierTessellation/build:/g' Samples/3_CUDA_Features/cdpBezierTessellation/Makefile
+       sed -i 's/build: cdpQuadtree/build:/g' Samples/3_CUDA_Features/cdpQuadtree/Makefile
+       sed -i 's/build: cdpSimplePrint/build:/g' Samples/3_CUDA_Features/cdpSimplePrint/Makefile
+       sed -i 's/build: cdpSimpleQuicksort/build:/g' Samples/3_CUDA_Features/cdpSimpleQuicksort/Makefile
+    fi
 
     if [ ! -d "/tmp/xdg-runtime" ]; then
         mkdir /tmp/xdg-runtime
