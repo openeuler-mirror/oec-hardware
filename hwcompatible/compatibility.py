@@ -131,7 +131,7 @@ class EulerCertification():
                 os.remove(CertEnv.virtfactoryfile)
             if os.path.exists(CertEnv.devicefile):
                 os.remove(CertEnv.devicefile)
-        self.logger.info("Clean compatibility test data succeed.")
+            self.logger.info("Clean compatibility test data succeed.")
         return True
 
     def load(self):
