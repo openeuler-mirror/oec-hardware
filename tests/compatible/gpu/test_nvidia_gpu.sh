@@ -268,6 +268,11 @@ sm_clock=`nvidia-smi -q|grep "SM "|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
 memory_clock=`nvidia-smi -q -d SUPPORTED_CLOCKS|grep Memory|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
 min_power_limit=`nvidia-smi -q|grep "Min Power Limit"|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
 max_power_limit=`nvidia-smi -q|grep "Max Power Limit"|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
+if nvidia-smi |grep -q 'Tesla V100'; then
+    RESET_CASE=""
+else
+    RESET_CASE="nvidia-smi -r;"
+fi
 
 allcases="nvidia-smi; \
          nvidia-smi -L; \
@@ -289,7 +294,7 @@ allcases="nvidia-smi; \
          nvidia-smi -am 1; \
          nvidia-smi -am 0; \
          nvidia-smi -caa; \
-         nvidia-smi -r; \
+         $RESET_CASE \
 "
 
 function test_nvidia_smi() {
