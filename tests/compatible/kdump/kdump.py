@@ -19,7 +19,6 @@ from time import sleep
 from subprocess import getoutput
 from hwcompatible.test import Test
 from hwcompatible.command import Command
-from hwcompatible.command_ui import CommandUI
 from hwcompatible.document import ConfigFile
 
 
@@ -108,6 +107,9 @@ class KdumpTest(Test):
                 if dir_pattern.search(eve_dir):
                     vmcore_dirs.append(eve_dir)
         vmcore_dirs.sort()
+        if not vmcore_dirs:
+            logger.error("There is no generated kernel crash dump file named vmcore!")
+            return False
         vmcore_file = os.path.join(self.vmcore_path, vmcore_dirs[-1], "vmcore")
         command = Command(logger)
         cmd = command.run_cmd(
