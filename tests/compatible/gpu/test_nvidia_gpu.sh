@@ -13,7 +13,7 @@
 # Desc: Shell script used for testing nvidia gpu
 
 cuda_version=$(nvidia-smi -q | grep "CUDA Version" | awk '{print $4}')
-cuda_name="cuda-samples-${cuda_version}"
+cuda_name=$(ls /opt | grep cuda-samples)
 
 function install_clpeak() {
     cd /opt
