@@ -61,11 +61,12 @@ function install_gpu_burn() {
 
 function install_cuda_samples() {
     cd /opt
-    if [ ! -d ${cuda_name} ]; then
+    if [ -z ${cuda_name} ]; then
         wget https://github.com/NVIDIA/cuda-samples/archive/refs/tags/v${cuda_version}.zip
         unzip v${cuda_version}.zip >/dev/null
         rm -rf v${cuda_version}.zip
     fi
+    cuda_name=$(ls /opt | grep cuda-samples)
     return 0
 }
 
