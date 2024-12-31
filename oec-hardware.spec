@@ -1,4 +1,4 @@
-%define version    1.1.6
+%define version    1.1.7
 %define release    0
 %define debug_package %{nil}
 %global _build_id_links none
@@ -82,6 +82,22 @@ sed -i 's#grep openeulerversion /etc/openEuler-latest#grep %{vendor_lowercase}ve
 rm -rf /var/lock/oech.lock
 
 %changelog
+* Tue Dec 30 2024 wangshuai <wangshuai321@huawei.com> - 1.1.7-0
+- Optimized the logic for locating the cuda-samples directory
+- add kernel support for openEuler 24.03 LTS SP1
+- Kdump test suite bugfix
+- Update the pci.ids file
+- Remove unused variable in cdrom test suite
+- Update test_guide doc
+- Unify the location for downloading kernel source RPMs
+- Optimize kabiwhitelist and system test
+- Fix the bug that dpdk test terminates when accessing numa node hugepages directory
+- Fix bug that the raid test cannot identify PM8222-SHBA
+- Add new test suite srpm and intel
+- Add virtual branch of test suite
+- Add support for Kylin and UOS
+- Bugfix
+
 * Tue Sept 24 2024 wangshuai <wangshuai321@huawei.com> - 1.1.6-0
 1. Add support for Kylin V10 and UOS 20
 2. Add virtual branch of test suite
