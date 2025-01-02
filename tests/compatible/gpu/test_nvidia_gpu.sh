@@ -14,6 +14,7 @@
 
 cuda_version=$(nvidia-smi -q | grep "CUDA Version" | awk '{print $4}')
 cuda_name=$(ls /opt | grep cuda-samples)
+vulkansdk_version="1.3.296.0"
 
 function install_clpeak() {
     cd /opt
@@ -63,29 +64,109 @@ function install_cuda_samples() {
     cd /opt
     if [ -z ${cuda_name} ]; then
         wget https://github.com/NVIDIA/cuda-samples/archive/refs/tags/v${cuda_version}.zip
-        unzip v${cuda_version}.zip >/dev/null
-        rm -rf v${cuda_version}.zip
+        if [ $? -eq 0 ]; then
+            unzip v${cuda_version}.zip >/dev/null
+            rm -rf v${cuda_version}.zip
+        else
+            echo "Download cuda-samples-${cuda_version} error!!!"
+            return 1;
+        fi
     fi
+
     cuda_name=$(ls /opt | grep cuda-samples)
+    cd /opt/${cuda_name}
+    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
+    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
+    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
+    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
+    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+    if uname -m | grep -q 'aarch64'; then
+       sed -i 's/build: cdpAdvancedQuicksort/build:/g' Samples/3_CUDA_Features/cdpAdvancedQuicksort/Makefile
+       sed -i 's/build: cdpBezierTessellation/build:/g' Samples/3_CUDA_Features/cdpBezierTessellation/Makefile
+       sed -i 's/build: cdpQuadtree/build:/g' Samples/3_CUDA_Features/cdpQuadtree/Makefile
+       sed -i 's/build: cdpSimplePrint/build:/g' Samples/3_CUDA_Features/cdpSimplePrint/Makefile
+       sed -i 's/build: cdpSimpleQuicksort/build:/g' Samples/3_CUDA_Features/cdpSimpleQuicksort/Makefile
+    fi
+
+    if [ ! -d "/tmp/xdg-runtime" ]; then
+        mkdir /tmp/xdg-runtime
+    fi
+
+    export XDG_RUNTIME_DIR=/tmp/xdg-runtime
+
+    return 0
+}
+
+function install_Vulkansdk_Depend_Packages() {
+    if uname -m | grep -q 'x86_64'; then
+        rm -rf /opt/vulkansdk
+        rm -rf /opt/vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
+        cd /opt
+        mkdir vulkansdk
+        cd vulkansdk
+        wget https://sdk.lunarg.com/sdk/download/${vulkansdk_version}/linux/vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
+        if [ $? -eq 0 ]; then
+            dnf install qt xinput xz libXinerama
+            tar xvf vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz >/dev/null
+            rm -rf ./vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
+            source /opt/vulkansdk/${vulkansdk_version}/setup-env.sh
+        else
+            echo "Download vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz error!!!"
+            rm -rf /opt/vulkansdk
+            return 1;
+        fi
+    fi
+
+    rm -rf /opt/glfw
+    cd /opt
+    git clone https://gitee.com/baogen_shang/glfw.git
+    if [ $? -eq 0 ]; then
+        dnf install wayland-devel libxkbcommon-devel libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel doxygen
+        cd /opt/glfw
+        git checkout tags/3.4
+        mkdir build
+        cd build
+        cmake -DBUILD_SHARED_LIBS=ON ..
+        make
+        make install
+        export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:$PKG_CONFIG_PATH
+        export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
+    else
+        echo "Download glfw error!!!"
+        rm -rf /opt/glfw
+        return 1;
+    fi
+
+    dnf install -y mesa-libGLU mesa-libGLU-devel openmpi-devel openmpi freeglut freeglut-devel
     return 0
 }
 
 function install_VulkanSamples() {
     cd /opt
     res_code=0
-    if [ ! -d VulkanSamples ]; then
-        git clone https://github.com/LunarG/VulkanSamples.git
+    if [ ! -d Vulkan-Samples ]; then
+        git clone --recurse-submodules https://github.com/KhronosGroup/Vulkan-Samples.git
+        if [ $? -ne 0 ]; then
+            echo "Download the Vulkan-Samples failed, Please check your network!!!"
+            exit 1
+        fi
     fi
-    cd VulkanSamples
-    if [ ! -d build ]; then
-	mkdir build
-	cd build
-	sed -i 's/python/python3/g' ../scripts/update_deps.py
-	chmod +x ../scripts/update_deps.py
-	../scripts/update_deps.py &>/dev/null || res_code=1
-	cmake -C helper.cmake .. &>/dev/null || res_code=1
-	cmake --build . &>/dev/null || res_code=1
+    cd Vulkan-Samples
+    cmake -G "Unix Makefiles" -Bbuild/linux -DCMAKE_BUILD_TYPE=Release &>/dev/null
+    if [[ $? -eq 0 ]]; then
+        cmake --build build/linux --config Release --target vulkan_samples -j4 &>/dev/null || res_code=1
+    else
+        echo "Generate Makefile Failed!!!"
+        res_code=1
     fi
+
+    if [ ! -d "/opt/vulkansdk" ]; then
+        install_Vulkansdk_Depend_Packages
+    else
+        source /opt/vulkansdk/${vulkansdk_version}/setup-env.sh
+    fi
+
     return $res_code
 }
 
@@ -93,9 +174,8 @@ function test_nvidia_case() {
     casename=$1
     logfile=$2
     res_code=0
-    cd /opt/${cuda_name}
-    make &>/dev/null
 
+    cd /opt/${cuda_name}
     if [[ $casename == 'cuda_maketest' ]];then
         make test &>>$logfile
     else
@@ -141,6 +221,7 @@ function test_cuda_samples() {
     allcases=(${2//,/ })
     res_code=0
     install_cuda_samples
+    install_Vulkansdk_Depend_Packages
     cd /opt/${cuda_name}
     lsmod | grep bi_driver
     if [[ $? -eq 0 ]]; then
@@ -151,6 +232,8 @@ function test_cuda_samples() {
             fi
         done
     else
+        cd /opt/${cuda_name}
+        make &>/dev/null
         for casename in ${allcases[@]}; do
             test_nvidia_case $casename $logfile
             if [[ $? -eq 1 ]]; then
@@ -185,6 +268,11 @@ sm_clock=`nvidia-smi -q|grep "SM "|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
 memory_clock=`nvidia-smi -q -d SUPPORTED_CLOCKS|grep Memory|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
 min_power_limit=`nvidia-smi -q|grep "Min Power Limit"|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
 max_power_limit=`nvidia-smi -q|grep "Max Power Limit"|head -n 1|cut -d ':' -f 2|awk '{print $1}'`
+if nvidia-smi |grep -q 'Tesla V100'; then
+    RESET_CASE=""
+else
+    RESET_CASE="nvidia-smi -r;"
+fi
 
 allcases="nvidia-smi; \
          nvidia-smi -L; \
@@ -206,7 +294,7 @@ allcases="nvidia-smi; \
          nvidia-smi -am 1; \
          nvidia-smi -am 0; \
          nvidia-smi -caa; \
-         nvidia-smi -r; \
+         $RESET_CASE \
 "
 
 function test_nvidia_smi() {
@@ -229,24 +317,21 @@ function test_VulkanSamples() {
     res_code=0
     install_VulkanSamples
     if [[ $? -eq 1 ]]; then
-        echo "Install VulkanSamples failed."
-        res_code=1
-        return $res_code
+        echo "Install VulkanSamples failed." &>> $logfile
+        exit 1
     fi
-    source  ~/.bash_profile
     if [ -n "$DISPLAY" ]; then
-        timeout 5s /opt/VulkanSamples/build/Sample-Programs/Hologram/Hologram &> $logfile
-        cd /opt/VulkanSamples/build/API-Samples/
-        ./run_all_samples.sh &>> $logfile
+        cd /opt/Vulkan-Samples
+        ./build/linux/app/bin/Release/x86_64/vulkan_samples batch &>> $logfile
         if [[ $? -eq 0 ]]; then
-            echo "Test VulkanSamples succeed."
+            echo "Test VulkanSamples succeed." &>> $logfile
             res_code=0
         else
-            echo "Test VulkanSamples failed."
+            echo "Test VulkanSamples failed." &>> $logfile
             res_code=1
         fi
     else
-        echo "Please set the DISPLAY environment variables!"
+        echo "Please set the DISPLAY environment variables!" &>> $logfile
         res_code=1
     fi
     return $res_code
