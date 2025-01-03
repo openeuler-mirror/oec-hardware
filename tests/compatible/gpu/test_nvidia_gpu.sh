@@ -107,7 +107,7 @@ function install_Vulkansdk_Depend_Packages() {
         cd vulkansdk
         wget https://sdk.lunarg.com/sdk/download/${vulkansdk_version}/linux/vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
         if [ $? -eq 0 ]; then
-            dnf install qt xinput xz libXinerama
+            dnf install -y qt xinput xz libXinerama
             tar xvf vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz >/dev/null
             rm -rf ./vulkansdk-linux-x86_64-${vulkansdk_version}.tar.xz
             source /opt/vulkansdk/${vulkansdk_version}/setup-env.sh
@@ -122,7 +122,7 @@ function install_Vulkansdk_Depend_Packages() {
     cd /opt
     git clone https://gitee.com/baogen_shang/glfw.git
     if [ $? -eq 0 ]; then
-        dnf install wayland-devel libxkbcommon-devel libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel doxygen
+        dnf install -y wayland-devel libxkbcommon-devel libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel doxygen
         cd /opt/glfw
         git checkout tags/3.4
         mkdir build
