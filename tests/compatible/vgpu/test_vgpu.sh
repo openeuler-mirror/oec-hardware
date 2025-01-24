@@ -41,7 +41,7 @@ function create_vm() {
     sed -i "s#test_uuid#${uuid}#" /opt/${vmfile}
     virsh define /opt/${vmfile}
     virsh start openEulerVM
-    sleep 60
+    sleep 90
     return 0
 }
 
@@ -96,6 +96,13 @@ function test_vgpu_client() {
 
     echo "Check vgpu device in vm."
     testcmd="lspci | grep -i nvidia"
+    sshcmd $vm_ip $passwd "${testcmd}"
+    if [[ $? -ne 0 ]]; then
+        return 1
+    fi
+
+    echo "Remove the nouveau module."
+    testcmd="modprobe -r nouveau"
     sshcmd $vm_ip $passwd "${testcmd}"
     if [[ $? -ne 0 ]]; then
         return 1
@@ -175,7 +182,7 @@ function sshcmd() {
     ip=$1
     passwd=$2
     cmd=$3
-    timeout=600
+    timeout=1200
     expect <<-SSHEOF
         set timeout $timeout
         spawn ssh -o "ConnectTimeout=${timeout}" root@${ip} "${cmd}"
