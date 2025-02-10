@@ -54,7 +54,7 @@ class SrpmTest(Test):
             for line in srpms_repo.split("\n"):
                 src_info = line.split()
                 if len(src_info) != 3:
-                    self.logger.debug("abnormal source rpm info line: %s" % line)
+                    self.logger.info("abnormal source rpm info line: %s" % line)
                     continue
                 src_name = src_info[0].split('.')[0]
                 version = src_info[1].split('-')[0].split(':')[-1]
