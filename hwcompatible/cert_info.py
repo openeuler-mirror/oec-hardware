@@ -73,7 +73,7 @@ class CertInfo:
             "grep openeulerversion /etc/openEuler-latest | cut -d '=' -f 2", log_print=False)
         os_version = os_cmd[0].strip("\n").replace('-', ' ')
         oec_json["os"] = os_version
-        curday = date.today().strftime("%Y.%m.%d")
+        curday = date.today().strftime("%Y-%m-%d")
         oec_json["date"] = curday
         filename = self.command.run_cmd(
             "modinfo %s | grep filename | awk '{print $2}'" % device.driver, log_print=False)
