@@ -136,6 +136,7 @@ class NetworkTest(Test):
         :return:
         """
         self.command.run_cmd("ip link set down %s" % interface)
+        time.sleep(5)
         for _ in range(10):
             result = self.command.run_cmd(
                 "ip link show %s | grep 'state DOWN'" % interface, ignore_errors=False)
@@ -143,7 +144,7 @@ class NetworkTest(Test):
                 self.logger.info("Set interface %s down succeed." % self.interface)
                 return True
             time.sleep(1)
-            
+
         self.logger.error("Set interface %s down failed." % self.interface)
         return False
 
