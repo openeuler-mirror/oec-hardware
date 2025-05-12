@@ -146,7 +146,7 @@ def vfs_test(logger, command, disk, filesystems):
     if not os.path.exists(proc_path):
         proc_path = os.path.join("/sys/block/*/", disk)
     size = getoutput("cat %s/size" % proc_path)
-    size = int(size) / 2 / 2
+    size = int(size) / 2
     if size <= 0:
         logger.error(
             "Device %s size is not suitable for testing." % device)
