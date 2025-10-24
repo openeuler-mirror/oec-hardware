@@ -16,6 +16,14 @@ cuda_version=$(nvidia-smi -q | grep "CUDA Version" | awk '{print $4}')
 cuda_name=$(ls /opt | grep cuda-samples)
 vulkansdk_version="1.3.296.0"
 
+if [[ $cuda_version == '12.6' ]];then
+    cuda_samples_version="12.5"
+fi
+
+if [[ $cuda_version == '12.8' ]];then
+    cuda_samples_version="12.9"
+fi
+
 function install_clpeak() {
     cd /opt
     res_code=0
@@ -42,6 +50,7 @@ function install_gpu_burn() {
         git clone https://github.com/wilicc/gpu-burn.git
     fi
     cd gpu-burn
+    git checkout 9aefd7c0cc603bbc8c3c102f5338c6af26f8127c
     lsmod | grep bi_driver >/dev/null
     if [ $? -eq 0 ]; then
         COREX_PATH=${COREX_PATH:-/usr/local/corex}
@@ -63,30 +72,82 @@ function install_gpu_burn() {
 function install_cuda_samples() {
     cd /opt
     if [ -z ${cuda_name} ]; then
-        wget https://github.com/NVIDIA/cuda-samples/archive/refs/tags/v${cuda_version}.zip
+        wget https://github.com/NVIDIA/cuda-samples/archive/refs/tags/v${cuda_samples_version}.zip
         if [ $? -eq 0 ]; then
-            unzip v${cuda_version}.zip >/dev/null
-            rm -rf v${cuda_version}.zip
+            unzip v${cuda_samples_version}.zip >/dev/null
+            rm -rf v${cuda_samples_version}.zip
         else
-            echo "Download cuda-samples-${cuda_version} error!!!"
+            echo "Download cuda-samples-${cuda_samples_version} error!!!"
             return 1;
         fi
     fi
-
     cuda_name=$(ls /opt | grep cuda-samples)
-    cd /opt/${cuda_name}
-    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
-    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
-    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
-    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
-    sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
-    sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
-    if uname -m | grep -q 'aarch64'; then
-       sed -i 's/build: cdpAdvancedQuicksort/build:/g' Samples/3_CUDA_Features/cdpAdvancedQuicksort/Makefile
-       sed -i 's/build: cdpBezierTessellation/build:/g' Samples/3_CUDA_Features/cdpBezierTessellation/Makefile
-       sed -i 's/build: cdpQuadtree/build:/g' Samples/3_CUDA_Features/cdpQuadtree/Makefile
-       sed -i 's/build: cdpSimplePrint/build:/g' Samples/3_CUDA_Features/cdpSimplePrint/Makefile
-       sed -i 's/build: cdpSimpleQuicksort/build:/g' Samples/3_CUDA_Features/cdpSimpleQuicksort/Makefile
+    if [[ $cuda_samples_version == '12.5' ]];then
+        cd /opt/${cuda_name}
+        sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
+        sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkan/findvulkan.mk
+        sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
+        sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
+        sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+        sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+        if uname -m | grep -q 'aarch64'; then
+           sed -i 's/build: cdpAdvancedQuicksort/build:/g' Samples/3_CUDA_Features/cdpAdvancedQuicksort/Makefile
+           sed -i 's/build: cdpBezierTessellation/build:/g' Samples/3_CUDA_Features/cdpBezierTessellation/Makefile
+           sed -i 's/build: cdpQuadtree/build:/g' Samples/3_CUDA_Features/cdpQuadtree/Makefile
+           sed -i 's/build: cdpSimplePrint/build:/g' Samples/3_CUDA_Features/cdpSimplePrint/Makefile
+           sed -i 's/build: cdpSimpleQuicksort/build:/g' Samples/3_CUDA_Features/cdpSimpleQuicksort/Makefile
+        fi
+    fi
+
+
+    if [[ $cuda_samples_version == '12.9' ]];then
+        if nvidia-smi |grep -q 'Tesla T4'; then
+	    cd /opt/${cuda_name}
+            sed -i '343a\
+            "cudaCompressibleMemory": {\
+                "skip": true\
+            },\
+            "tf32TensorCoreGemm": {\
+                "skip": true\
+            },\
+            "simpleAttributes": {\
+                "skip": true\
+            },\
+            "dmmaTensorCoreGemm": {\
+                "skip": true\
+            },\
+            "bf16TensorCoreGemm": {\
+                "skip": true\
+            },' test_args.json
+        fi
+        if nvidia-smi |grep -q 'Tesla V100'; then
+            cd /opt/${cuda_name}
+            sed -i '343a\
+            "cudaCompressibleMemory": {\
+                "skip": true\
+            },\
+            "simpleDrvRuntime": {\
+                "skip": true\
+            },\
+            "memMapIPCDrv": {\
+                "skip": true\
+            },\
+            "tf32TensorCoreGemm": {\
+                "skip": true\
+            },\
+            "simpleAttributes": {\
+                "skip": true\
+            },\
+            "dmmaTensorCoreGemm": {\
+                "skip": true\
+            },\
+            "immaTensorCoreGemm": {\
+                "skip": true\
+            },\
+            "bf16TensorCoreGemm": {\
+                "skip": true\
+            },' test_args.json
+        fi
     fi
 
     if [ ! -d "/tmp/xdg-runtime" ]; then
@@ -153,6 +214,7 @@ function install_VulkanSamples() {
         fi
     fi
     cd Vulkan-Samples
+    git checkout 3944ae5426106a02546c46ae1be70b79133bdbfb
     cmake -G "Unix Makefiles" -Bbuild/linux -DCMAKE_BUILD_TYPE=Release &>/dev/null
     if [[ $? -eq 0 ]]; then
         cmake --build build/linux --config Release --target vulkan_samples -j4 &>/dev/null || res_code=1
@@ -233,13 +295,26 @@ function test_cuda_samples() {
         done
     else
         cd /opt/${cuda_name}
-        make &>/dev/null
-        for casename in ${allcases[@]}; do
-            test_nvidia_case $casename $logfile
+        if [[ $cuda_samples_version == '12.5' ]];then
+            make &>/dev/null
+            for casename in ${allcases[@]}; do
+                test_nvidia_case $casename $logfile
+                if [[ $? -eq 1 ]]; then
+                    res_code=1
+                fi
+            done
+        fi
+        if [[ $cuda_samples_version == '12.9' ]];then
+            mkdir build
+            cd build
+            cmake ..
+            make
+            cd ..
+            python3 run_tests.py --output ./test --dir ./build/Samples --config test_args.json &> $logfile
             if [[ $? -eq 1 ]]; then
                 res_code=1
             fi
-        done
+        fi
     fi
     return $res_code
 }
