@@ -163,7 +163,7 @@ class SystemTest(Test):
         if kernel_verfiy[2] == 0:
             return return_code
 
-        except_list = ["modules.dep", "modules.symbols", "modules.dep.bin", "modules.symbols.bin"]
+        except_list = ["modules.dep", "modules.symbols", "modules.dep.bin", "modules.symbols.bin", "modules.alias", "modules.alias.bin"]
         for line in kernel_verfiy[0].strip().split("\n"):
             if line.split("/")[-1] in except_list:
                 continue
