@@ -13,6 +13,7 @@
 # Create: 2020-04-01
 # Desc: Intelligent Platform Management Interface test
 
+import os
 from hwcompatible.test import Test
 
 
@@ -34,6 +35,18 @@ class IpmiTest(Test):
         self.logger.info("Ipmi service start succeed.")
         return True
 
+    def is_bmc_by_ipmi_si(self):
+        """
+        Determine whether BMC is recognized by the ipmi_si driver
+        """
+        res = self.command.run_cmd("dmesg | grep -E 'ipmi_si.*Found'")
+        ret = res[2] == 0
+        if ret:
+            self.logger.info("BMC is detected by ipmi_si driver.")
+        else:
+            self.logger.info("BMC is not detected by ipmi_si driver.")
+        return ret
+
     def ipmitool(self):
         """
         Testing with iptool tools
@@ -53,8 +66,15 @@ class IpmiTest(Test):
         Test case
         :return:
         """
-        if not self.start_ipmi():
-            return False
+        if self.is_bmc_by_ipmi_si():
+            if not self.start_ipmi():
+                return False
+        else:
+            dev_ipmi = "/dev/ipmi0"
+            if not os.path.exists(dev_ipmi):
+                self.logger.error(f"{dev_ipmi} node not exist.")
+                return False
+
         if not self.ipmitool():
             return False
         return True
