@@ -90,6 +90,7 @@ function install_cuda_samples() {
         sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/simpleVulkanMMAP/findvulkan.mk
         sed -i 's/centos/openEuler/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
         sed -i 's/CENTOS/OPENEULER/g' Samples/5_Domain_Specific/vulkanImageCUDA/findvulkan.mk
+        sed -i '/^FILTER_OUT :=/s/$/ %simpleCUDA2GL\/Makefile %fluidsGL\/Makefile %postProcessGL\/Makefile/' Makefile
         if uname -m | grep -q 'aarch64'; then
            sed -i 's/build: cdpAdvancedQuicksort/build:/g' Samples/3_CUDA_Features/cdpAdvancedQuicksort/Makefile
            sed -i 's/build: cdpBezierTessellation/build:/g' Samples/3_CUDA_Features/cdpBezierTessellation/Makefile
@@ -156,6 +157,7 @@ function install_cuda_samples() {
 
     export XDG_RUNTIME_DIR=/tmp/xdg-runtime
 
+    dnf install -y freeimage-devel
     return 0
 }
 
