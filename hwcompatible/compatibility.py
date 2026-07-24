@@ -232,8 +232,13 @@ class EulerCertification():
             return
         packages.sort()
 
+        certification = self.certification
+        if certification is None:
+            self.logger.error("Certification data is not loaded.")
+            return
+
         if self.ui.prompt_confirm("Do you want to submit last result?"):
-            server = self.certification.get_server()
+            server = certification.get_server()
             path = os.path.join(CertEnv.datadirectory, packages[-1])
             if not self.upload(path, server):
                 self.logger.error(
@@ -255,11 +260,17 @@ class EulerCertification():
         """
         self.logger.info(
             "Start to upload result to server %s, please wait." % server, log_print=False)
-        if not self.client:
-            oec_id = self.certification.get_certify()
-            hardware_info = self.certification.get_hardware()
-            self.client = Client(hardware_info, oec_id, self.logger)
-        return self.client.upload(path, server)
+        client = self.client
+        if client is None:
+            certification = self.certification
+            if certification is None:
+                self.logger.error("Certification data is not loaded.")
+                return False
+            oec_id = certification.get_certify()
+            hardware_info = certification.get_hardware()
+            client = Client(hardware_info, oec_id, self.logger)
+            self.client = client
+        return client.upload(path, server)
 
     def get_tests(self, devices=None):
         """
@@ -280,7 +291,7 @@ class EulerCertification():
             dirs.sort()
             for filename in filenames:
                 if filename.endswith(".py") and \
-                        not filename.startswith("__init__"):
+                        not filename.startswith("_"):
                     casenames.append(filename.split(".")[0])
 
         if self.category == "virtualization":
