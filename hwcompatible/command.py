@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2026 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
-# You may ob tain a copy of Mulan PSL v2 at:
+# You may obtain a copy of Mulan PSL v2 at:
 #     http://license.coscl.org.cn/MulanPSL2
 # THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
@@ -18,11 +18,34 @@ import signal
 import subprocess
 import threading
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Tuple
+
 from .constants import SHELL_ENV
 
 if TYPE_CHECKING:
     from .log import Logger
+
+
+@dataclass
+class CommandResult:
+    """
+    Encapsulates the result of running a shell command.
+
+    Attributes:
+        command (str): The command that was executed.
+        output (str): Content captured from stdout.
+        error (str): Content captured from stderr.
+        returncode (int): The exit code of the command.
+        status (str): Outcome label, e.g. ``succeed``, ``failed`` or ``timed out``.
+        exception (Exception, optional): Exception raised during execution, if any.
+    """
+    command: str
+    output: str
+    error: str
+    returncode: int
+    status: str
+    exception: Optional[Exception] = None
 
 
 class Command:
@@ -57,30 +80,25 @@ class Command:
 
     def _log_command_result(
         self,
-        command: str,
-        output: str,
-        error: str,
-        returncode: int,
-        status: str,
+        result: CommandResult,
         ignore_errors: bool,
         log_print: bool,
         terminal_print: bool,
-        exception: Optional[Exception] = None,
     ) -> None:
         """Record both output streams for every command result."""
         exception_message = ""
-        if exception is not None:
-            exception_message = "\nException:\n%s" % exception
+        if result.exception is not None:
+            exception_message = "\nException:\n%s" % result.exception
         message = (
             "Execute command %s %s.\n"
             "Return code: %s\n"
             "stdout:\n%s\n"
             "stderr:\n%s%s"
-            % (command, status, returncode,
-               self._stream_for_log(output),
-               self._stream_for_log(error), exception_message))
+            % (result.command, result.status, result.returncode,
+               self._stream_for_log(result.output),
+               self._stream_for_log(result.error), exception_message))
 
-        if status == "succeed" or (status == "failed" and ignore_errors):
+        if result.status == "succeed" or (result.status == "failed" and ignore_errors):
             self.logger.info(message, log_print, terminal_print)
         else:
             self.logger.error(message, log_print, terminal_print)
@@ -184,21 +202,21 @@ class Command:
 
             if timed_out:
                 self._log_command_result(
-                    command, output, error, returncode, "timed out",
+                    CommandResult(command, output, error, returncode, "timed out"),
                     ignore_errors, log_print, terminal_print)
             elif returncode != 0:
                 self._log_command_result(
-                    command, output, error, returncode, "failed",
+                    CommandResult(command, output, error, returncode, "failed"),
                     ignore_errors, log_print, terminal_print)
             else:
                 self._log_command_result(
-                    command, output, error, returncode, "succeed",
+                    CommandResult(command, output, error, returncode, "succeed"),
                     ignore_errors, log_print, terminal_print)
         except Exception as e:
             self._kill_processes(pipes)
             self._log_command_result(
-                command, output, error, returncode, "failed",
-                ignore_errors, log_print, terminal_print, exception=e)
+                CommandResult(command, output, error, returncode, "failed", exception=e),
+                ignore_errors, log_print, terminal_print)
         return output, error, returncode
 
     def change_command_format(

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# coding: utf-8
-# oec-hardware is licensed under the Mulan PSL v2.gica's
+# Copyright (c) 2022-2026 Huawei Technologies Co., Ltd.
+# oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
 #     http://license.coscl.org.cn/MulanPSL2
@@ -12,12 +12,13 @@
 # Create: 2022-08-24
 # Desc: Generate compatibility json file
 
-import os
 import json
+import os
 import shlex
 from datetime import date
-from .env import CertEnv
+
 from .constants import FILE_FLAGS, FILE_MODES
+from .env import CertEnv
 
 PASSTHROUGH_DRIVERS = {
     "igb-uio",

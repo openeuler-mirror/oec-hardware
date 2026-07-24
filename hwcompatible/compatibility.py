@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2026 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,25 +12,36 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
-import time
 import argparse
-import shutil
 import datetime
+import os
 import re
+import shutil
+import time
 from collections import namedtuple
 
-from .document import CertDocument, DeviceDocument, FactoryDocument
-from .env import CertEnv
-from .device import CertDevice, Device
+from .client import Client
 from .command import Command
 from .command_ui import CommandUI
+from .common import copy_pci, create_test_suite, search_factory
+from .constants import (
+    BOARD,
+    CDTYPES,
+    CHIP,
+    DEVICE_INFO,
+    DRIVER,
+    GPU_DRIVER,
+    IB,
+    KEYCARD_VENDORS,
+    NODEVICE,
+    TEST_CATEGORY,
+    VERSION,
+)
+from .device import CertDevice, Device
+from .document import CertDocument, DeviceDocument, FactoryDocument
+from .env import CertEnv
 from .job import Job
 from .reboot import Reboot
-from .client import Client
-from .common import create_test_suite, copy_pci, search_factory
-from .constants import NODEVICE, GPU_DRIVER, IB, CDTYPES, KEYCARD_VENDORS, \
-    BOARD, VERSION, DRIVER, CHIP, DEVICE_INFO, TEST_CATEGORY
 
 
 class EulerCertification():

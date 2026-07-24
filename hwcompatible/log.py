@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2026 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,14 +12,16 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
-import sys
 import datetime
 import logging
+import os
+import sys
 from typing import TextIO
+
 from concurrent_log_handler import ConcurrentRotatingFileHandler
-from .env import CertEnv
+
 from .constants import MAX_BYTES, MAX_COUNT
+from .env import CertEnv
 
 
 class Logger():
@@ -37,7 +39,7 @@ class Logger():
             out (file-like object): Output stream for console logging.
             err (file-like object): Error stream for console logging.
         """
-        self.logdir: str = self._check_logdir(logdir)
+        self.logdir: str = Logger._check_logdir(logdir)
         self.logfile: str = os.path.join(self.logdir, logname)
         self.log: logging.Logger = logging.getLogger(name=self.logfile)
         self.stdout: TextIO = out
@@ -77,7 +79,8 @@ class Logger():
         self.stdout = sys.stdout
         self.stderr = sys.stderr
 
-    def _check_logdir(self, logdir: str) -> str:
+    @staticmethod
+    def _check_logdir(logdir: str) -> str:
         """
         Check and create log directory
         """

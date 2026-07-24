@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2026 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,18 +12,18 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
-import json
 import configparser
 import copy
+import json
+import os
 from subprocess import getoutput
 from typing import Any, Dict, List, Optional
 
 from .command_ui import CommandUI
-from .device import Device
-from .sysinfo import SysInfo
-from .env import CertEnv
 from .constants import FILE_FLAGS, FILE_MODES
+from .device import Device
+from .env import CertEnv
+from .sysinfo import SysInfo
 
 
 class Document():

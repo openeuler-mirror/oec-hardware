@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 # Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
@@ -12,10 +11,10 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
 import base64
+import os
 from urllib.parse import urlencode
-from urllib.request import urlopen, Request
+from urllib.request import Request, urlopen
 
 
 class Client:
