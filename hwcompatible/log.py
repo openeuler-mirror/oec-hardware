@@ -16,6 +16,7 @@ import os
 import sys
 import datetime
 import logging
+from typing import TextIO
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 from .env import CertEnv
 from .constants import MAX_BYTES, MAX_COUNT
@@ -26,7 +27,7 @@ class Logger():
     Logger class for managing log outputs to both files and the console.
     """
 
-    def __init__(self, logname, logdir, out, err):
+    def __init__(self, logname: str, logdir: str, out: TextIO, err: TextIO):
         """
         Initialize the logger with the given parameters.
 
@@ -36,12 +37,11 @@ class Logger():
             out (file-like object): Output stream for console logging.
             err (file-like object): Error stream for console logging.
         """
-        self.logdir = None
-        self.log = None
-        self.stdout = out
-        self.stderr = err
-        self._check_logdir(logdir)
-        self.logfile = os.path.join(self.logdir, logname)
+        self.logdir: str = self._check_logdir(logdir)
+        self.logfile: str = os.path.join(self.logdir, logname)
+        self.log: logging.Logger = logging.getLogger(name=self.logfile)
+        self.stdout: TextIO = out
+        self.stderr: TextIO = err
 
     def start(self):
         """
@@ -77,18 +77,18 @@ class Logger():
         self.stdout = sys.stdout
         self.stderr = sys.stderr
 
-    def _check_logdir(self, logdir):
+    def _check_logdir(self, logdir: str) -> str:
         """
         Check and create log directory
         """
-        self.logdir = logdir
-        if not self.logdir:
+        if not logdir:
             curtime = datetime.datetime.now().isoformat()
-            self.logdir = os.path.join(CertEnv.logdirectoy, curtime)
+            logdir = os.path.join(CertEnv.logdirectoy, curtime)
         if not logdir.startswith(os.path.sep):
-            self.logdir = os.path.join(CertEnv.logdirectoy, self.logdir)
-        if not os.path.exists(self.logdir):
-            os.makedirs(self.logdir)
+            logdir = os.path.join(CertEnv.logdirectoy, logdir)
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+        return logdir
 
     def _print(self, level, message, log_print, terminal_print):
         """

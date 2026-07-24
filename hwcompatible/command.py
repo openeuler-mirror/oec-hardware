@@ -16,7 +16,13 @@ import os
 import shlex
 import signal
 import subprocess
+import threading
+import time
+from typing import TYPE_CHECKING, List, Optional, Tuple
 from .constants import SHELL_ENV
+
+if TYPE_CHECKING:
+    from .log import Logger
 
 
 class Command:
@@ -27,30 +33,96 @@ class Command:
         logger (Logger): A logging object used to record logs.
     """
 
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self, logger: "Logger"):
+        self.logger: "Logger" = logger
 
-    def run_cmd(self, command, ignore_errors=False, log_print=True, terminal_print=False, timeout=None):
+    @staticmethod
+    def _stream_for_log(stream: str) -> str:
+        """Return an explicit value for an empty command output stream."""
+        return stream if stream else "<empty>"
+
+    @staticmethod
+    def _kill_processes(pipes) -> None:
+        """Kill every process started for a command or pipeline."""
+        for pipe in pipes:
+            if pipe.poll() is not None:
+                continue
+            try:
+                if os.name == "posix":
+                    os.killpg(pipe.pid, signal.SIGKILL)
+                else:
+                    pipe.kill()
+            except OSError:
+                pass
+
+    def _log_command_result(
+        self,
+        command: str,
+        output: str,
+        error: str,
+        returncode: int,
+        status: str,
+        ignore_errors: bool,
+        log_print: bool,
+        terminal_print: bool,
+        exception: Optional[Exception] = None,
+    ) -> None:
+        """Record both output streams for every command result."""
+        exception_message = ""
+        if exception is not None:
+            exception_message = "\nException:\n%s" % exception
+        message = (
+            "Execute command %s %s.\n"
+            "Return code: %s\n"
+            "stdout:\n%s\n"
+            "stderr:\n%s%s"
+            % (command, status, returncode,
+               self._stream_for_log(output),
+               self._stream_for_log(error), exception_message))
+
+        if status == "succeed" or (status == "failed" and ignore_errors):
+            self.logger.info(message, log_print, terminal_print)
+        else:
+            self.logger.error(message, log_print, terminal_print)
+
+    def run_cmd(
+        self,
+        command: str,
+        ignore_errors: bool = False,
+        log_print: bool = True,
+        terminal_print: bool = False,
+        timeout: Optional[float] = None,
+    ) -> Tuple[str, str, int]:
         """
         Run single or multiple shell command
+
+        The return code, stdout, and stderr are recorded for every outcome
+        when log output is enabled. Empty streams are recorded as ``<empty>``.
+
         Args:
             command (string): Actual execution command
-            ignore_errors (bool, optional): Use for if ignore command execution error. Defaults to False.
+            ignore_errors (bool, optional): Log a nonzero result at INFO level
+                so the caller can handle it. Defaults to False.
             log_print (bool, optional): Use for print messages into log file. Defaults to True.
             terminal_print (bool, optional): Use for print messages into terminal. Defaults to False.
             timeout (number, optional): Determine command execution timeout. Defaults to None.
 
         Returns:
-            list: [output, error, returncode]
+            tuple: (output, error, returncode)
         """
-        cmd_list = self.change_command_format(
-            command, log_print=log_print, terminal_print=terminal_print)
         output = ""
         error = ""
         returncode = 1
         pipes = []
+        stderr_outputs = []
+        stderr_threads = []
+        timed_out = False
         cur_env = os.environ.copy()
         try:
+            cmd_list = self.change_command_format(
+                command,
+                log_print=log_print,
+                terminal_print=terminal_print)
             for index, cmd in enumerate(cmd_list):
                 if index == 0:
                     pipe = subprocess.Popen(cmd, universal_newlines=True, stderr=subprocess.PIPE,
@@ -59,30 +131,82 @@ class Command:
                     pipe_stdout = pipes[-1].stdout
                     pipe = subprocess.Popen(cmd, stdin=pipe_stdout, universal_newlines=True, stderr=subprocess.PIPE,
                         stdout=subprocess.PIPE, start_new_session=True, env=(cur_env | SHELL_ENV))
+                    pipe_stdout.close()
                 pipes.append(pipe)
 
-            output, error = pipes[-1].communicate(timeout=timeout)
+            stderr_outputs = [""] * len(pipes)
+
+            def read_stderr(index, stream):
+                try:
+                    stderr_outputs[index] = stream.read()
+                except (OSError, ValueError) as exception:
+                    stderr_outputs[index] = (
+                        "Unable to read pipeline stderr: %s" % exception)
+
+            for index, pipe in enumerate(pipes[:-1]):
+                thread = threading.Thread(
+                    target=read_stderr,
+                    args=(index, pipe.stderr),
+                    daemon=True)
+                thread.start()
+                stderr_threads.append(thread)
+
+            deadline = None if timeout is None else time.monotonic() + timeout
+
+            def remaining_timeout():
+                if deadline is None:
+                    return None
+                return max(0, deadline - time.monotonic())
+
+            try:
+                output, stderr_outputs[-1] = pipes[-1].communicate(
+                    timeout=remaining_timeout())
+                for pipe in pipes[:-1]:
+                    pipe.wait(timeout=remaining_timeout())
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                self._kill_processes(pipes)
+                output, stderr_outputs[-1] = pipes[-1].communicate()
+                for pipe in pipes[:-1]:
+                    pipe.wait()
+
+            for thread in stderr_threads:
+                thread.join()
+
+            if len(stderr_outputs) == 1:
+                error = stderr_outputs[0]
+            else:
+                error = "\n".join(
+                    "[pipeline stage %d stderr]\n%s" % (index + 1, value)
+                    for index, value in enumerate(stderr_outputs)
+                    if value)
             returncode = pipes[-1].returncode
 
-            if returncode != 0 and not ignore_errors:
-                error = error.replace("\n", "").replace("\r", "")
-                self.logger.error(
-                    "Execute command %s failed.\n %s" % (command, error), log_print, terminal_print)
+            if timed_out:
+                self._log_command_result(
+                    command, output, error, returncode, "timed out",
+                    ignore_errors, log_print, terminal_print)
+            elif returncode != 0:
+                self._log_command_result(
+                    command, output, error, returncode, "failed",
+                    ignore_errors, log_print, terminal_print)
             else:
-                self.logger.info(
-                    "Execute command %s succeed.\n %s" % (command, output), log_print, terminal_print)
-        except subprocess.TimeoutExpired:
-            pipe.kill()
-            pipe.terminate()
-            os.killpg(pipe.pid, signal.SIGTERM)
-            self.logger.error("Execute command timeout: %s." % command)
+                self._log_command_result(
+                    command, output, error, returncode, "succeed",
+                    ignore_errors, log_print, terminal_print)
         except Exception as e:
-            if not ignore_errors:
-                self.logger.error(
-                    "Execute command %s failed.\n %s" % (command, e), log_print, terminal_print)
-        return [output, error, returncode]
+            self._kill_processes(pipes)
+            self._log_command_result(
+                command, output, error, returncode, "failed",
+                ignore_errors, log_print, terminal_print, exception=e)
+        return output, error, returncode
 
-    def change_command_format(self, command, log_print=True, terminal_print=False):
+    def change_command_format(
+        self,
+        command: str,
+        log_print: bool = True,
+        terminal_print: bool = False,
+    ) -> List[List[str]]:
         """
         Change command format from string to list
         Args:

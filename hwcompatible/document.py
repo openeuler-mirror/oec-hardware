@@ -17,6 +17,8 @@ import json
 import configparser
 import copy
 from subprocess import getoutput
+from typing import Any, Dict, List, Optional
+
 from .command_ui import CommandUI
 from .device import Device
 from .sysinfo import SysInfo
@@ -175,7 +177,8 @@ class DeviceDocument(Document):
     Get device information from device module.
     """
 
-    def __init__(self, filename, logger, devices=''):
+    def __init__(self, filename, logger,
+                 devices: Optional[List[Device]] = None):
         super().__init__(filename, logger, list())
         if not devices:
             self.load()
@@ -189,7 +192,8 @@ class FactoryDocument(Document):
     Get factory from file or factory parameter.
     """
 
-    def __init__(self, filename, logger, factory=''):
+    def __init__(self, filename, logger,
+                 factory: Optional[List[Dict[str, Any]]] = None):
         super().__init__(filename, logger, list())
         if not factory:
             self.load()

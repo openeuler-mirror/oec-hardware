@@ -15,15 +15,21 @@
 
 import os
 from subprocess import getstatusoutput
+from typing import TYPE_CHECKING
+
+from hwcompatible.command import Command
+
+if TYPE_CHECKING:
+    from hwcompatible.log import Logger
 
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class AMDGpuTest():
-    def __init__(self, device, logger, command):
+    def __init__(self, device, logger: "Logger", command: Command):
         self.device = device
-        self.logger = logger
-        self.command = command
+        self.logger: "Logger" = logger
+        self.command: Command = command
         self.radeontop_log = os.path.join(self.logger.logdir, 'radeontop.log')
         self.screen_info_log = os.path.join(
             self.logger.logdir, 'screen_info.log')

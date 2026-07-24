@@ -14,7 +14,11 @@
 # Desc: Test template
 
 import argparse
+from typing import TYPE_CHECKING, Optional
 from hwcompatible.command import Command
+
+if TYPE_CHECKING:
+    from hwcompatible.log import Logger
 
 
 class Test:
@@ -31,8 +35,8 @@ class Test:
         self.reboot = False  # Indicates whether a reboot is required after the test
         self.rebootup = None  # Action to take after rebooting
         self.args = None  # Command-line arguments
-        self.logger = None  # Logger instance for logging messages
-        self.command = None  # Command object for executing shell commands
+        self.logger: Optional["Logger"] = None  # Logger instance for logging messages
+        self.command: Optional[Command] = None  # Command object for executing shell commands
         self.log_path = ""  # Path to the log file
 
     def setup(self, args=None):
