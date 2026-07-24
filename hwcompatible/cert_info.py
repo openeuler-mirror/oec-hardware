@@ -14,9 +14,17 @@
 
 import os
 import json
+import shlex
 from datetime import date
 from .env import CertEnv
 from .constants import FILE_FLAGS, FILE_MODES
+
+PASSTHROUGH_DRIVERS = {
+    "igb-uio",
+    "pci-stub",
+    "uio-pci-generic",
+    "vfio-pci",
+}
 
 
 class CertInfo:
@@ -28,6 +36,76 @@ class CertInfo:
                       "downloadLink"]
         self.logger = logger
         self.command = command
+
+    @staticmethod
+    def _normalize_driver_name(driver):
+        return driver.strip().replace("_", "-")
+
+    def _get_driver_candidates(self, device):
+        """Return driver modules in the order they should be inspected."""
+        driver = getattr(device, "driver", "").strip()
+        modules = getattr(device, "kernel_modules", [])
+        modules = [module.strip() for module in modules if module.strip()]
+
+        if self._normalize_driver_name(driver) in PASSTHROUGH_DRIVERS:
+            candidates = modules + [driver]
+        else:
+            candidates = [driver] + modules
+
+        result = []
+        seen = set()
+        for candidate in candidates:
+            normalized = self._normalize_driver_name(candidate)
+            if not candidate or normalized in seen:
+                continue
+            seen.add(normalized)
+            result.append(candidate)
+        return result
+
+    def _get_driver_file(self, device_name, device):
+        """Return the selected driver module and its file path."""
+        candidates = self._get_driver_candidates(device)
+        current_driver = getattr(device, "driver", "").strip()
+        current_is_passthrough = (
+            self._normalize_driver_name(current_driver) in PASSTHROUGH_DRIVERS)
+        builtin_driver = ""
+
+        self.logger.info(
+            "Start to collect driver file information for %s, candidates: %s."
+            % (device_name, ", ".join(candidates)))
+        for driver in candidates:
+            filename = self.command.run_cmd(
+                "modinfo -F filename %s" % shlex.quote(driver),
+                log_print=False, timeout=30)
+            if filename[2] != 0 or not filename[0].strip():
+                continue
+
+            driver_file = filename[0].strip()
+            if driver_file == "(builtin)":
+                if driver == current_driver and not current_is_passthrough:
+                    return driver, ""
+                if not builtin_driver:
+                    builtin_driver = driver
+                continue
+            return driver, driver_file
+
+        if builtin_driver:
+            return builtin_driver, ""
+        return current_driver, ""
+
+    def _get_driver_version(self, selected_driver, device):
+        """Get the version belonging to the selected driver module."""
+        if not selected_driver:
+            return ""
+        if selected_driver == getattr(device, "driver", ""):
+            return getattr(device, "driver_version", "")
+
+        version = self.command.run_cmd(
+            "modinfo -F version %s" % shlex.quote(selected_driver),
+            log_print=False, timeout=30)
+        if version[2] == 0:
+            return version[0].strip()
+        return ""
 
     def create_json(self, device_name, device):
         """
@@ -57,8 +135,6 @@ class CertInfo:
         oec_json["deviceID"] = device.quad[1]
         oec_json["svID"] = device.quad[2]
         oec_json["ssID"] = device.quad[3]
-        oec_json["driverName"] = device.driver
-        oec_json["version"] = device.driver_version
         chip_vendor = self.command.run_cmd(
             "grep '^%s' %s | cut -d ' ' -f 3" % (device.quad[0], CertEnv.pcifile), log_print=False)
         oec_json["chipVendor"] = chip_vendor[0].strip("\n")
@@ -75,14 +151,42 @@ class CertInfo:
         oec_json["os"] = os_version
         curday = date.today().strftime("%Y-%m-%d")
         oec_json["date"] = curday
-        filename = self.command.run_cmd(
-            "modinfo %s | grep filename | awk '{print $2}'" % device.driver, log_print=False)
-        shanum = self.command.run_cmd(
-            "sha256sum %s | awk '{print $1}'" % filename[0].strip("\n"), log_print=False)
-        oec_json["sha256"] = shanum[0].strip("\n")
-        driver_size = self.command.run_cmd(
-            "ls -lh %s | awk '{print $5}'" % filename[0].strip("\n"), log_print=False)
-        oec_json["driverSize"] = driver_size[0].strip("\n")
+        selected_driver, driver_file = self._get_driver_file(device_name, device)
+        oec_json["driverName"] = selected_driver
+        oec_json["version"] = self._get_driver_version(selected_driver, device)
+        if not driver_file:
+            self.logger.warning(
+                "Failed to get driver filename for %s, driver: %s. "
+                "Please fill sha256, driverSize and downloadLink manually."
+                % (device_name, selected_driver))
+        else:
+            self.logger.info(
+                "Driver file for %s, driver: %s is %s. "
+                "Start to calculate sha256."
+                % (device_name, selected_driver, driver_file))
+            shanum = self.command.run_cmd(
+                "sha256sum %s" % shlex.quote(driver_file),
+                log_print=False, timeout=120)
+            if shanum[2] == 0 and shanum[0].strip():
+                oec_json["sha256"] = shanum[0].split()[0]
+                self.logger.info("Calculate driver sha256 for %s succeed." % device_name)
+            else:
+                self.logger.warning(
+                    "Calculate driver sha256 for %s failed. Please fill it manually."
+                    % device_name)
+
+            self.logger.info("Start to get driver size for %s." % device_name)
+            driver_size = self.command.run_cmd(
+                "ls -lh %s" % shlex.quote(driver_file),
+                log_print=False, timeout=30)
+            size_info = driver_size[0].split()
+            if driver_size[2] == 0 and len(size_info) >= 5:
+                oec_json["driverSize"] = size_info[4]
+                self.logger.info("Get driver size for %s succeed." % device_name)
+            else:
+                self.logger.warning(
+                    "Get driver size for %s failed. Please fill it manually."
+                    % device_name)
         oec_json["item"] = ""
         oec_json["downloadLink"] = "inbox"
 

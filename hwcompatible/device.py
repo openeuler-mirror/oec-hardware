@@ -13,8 +13,13 @@
 # Create: 2020-04-01
 
 import re
+from typing import Optional, TYPE_CHECKING, TextIO
+
 from .command import Command
 from .env import CertEnv
+
+if TYPE_CHECKING:
+    from .log import Logger
 
 
 class CertDevice:
@@ -22,8 +27,8 @@ class CertDevice:
     Certified device
     """
 
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self, logger: "Logger"):
+        self.logger: "Logger" = logger
         self.devices = None
         self.command = Command(self.logger)
 
@@ -56,7 +61,7 @@ class CertDevice:
                                 properties[keyvalue[0]] = keyvalue[1]
                         elif tp == "P":
                             properties["INFO"] = attribute
-        except Exception as e:
+        except Exception:
             self.logger.error("Get devices failed.")
 
         self.devices.sort(key=lambda k: k.path)
@@ -68,18 +73,21 @@ class Device:
     Device properties
     """
 
-    def __init__(self, properties=None, logger=None):
-        self.logger = logger
+    def __init__(self, properties=None, logger: Optional["Logger"] = None):
+        if logger is None:
+            raise ValueError("logger is required")
+        self.logger: "Logger" = logger
         self.command = Command(self.logger)
         self.name = ""
         self.path = ""
         self.pci = ""
         self.quad = list()
         self.driver = ""
+        self.kernel_modules = []
         self.driver_version = ""
         self.chip = ""
         self.board = ""
-        self.file = ""
+        self.file: TextIO
         if properties:
             self.properties = properties
             self.path = properties["DEVPATH"]
@@ -109,16 +117,16 @@ class Device:
             return self.path.split("/")[-1]
         return ""
 
-    def get_model(self, name, file):
+    def get_model(self, name, pci_file: TextIO):
         """
         Populate the device's board and chip attributes based on the type of device and PCI information.
 
         :param name: The name of the device (e.g., 'fc', 'gpu').
-        :param file: pci.ids file.
+        :param pci_file: pci.ids file.
         :return: A tuple containing the board and chip model strings.
         """
         self.name = name
-        self.file = file
+        self.file = pci_file
         self.file.seek(0)
         # get PCI number
         if not self.get_pci():
@@ -136,7 +144,7 @@ class Device:
             elif name == "nvme" or name == "spdk":
                 self.get_nvme_card()
             else:
-                # 8080 indicate intel
+                # 8086 indicate intel
                 if self.quad[0] == "8086":
                     self.get_nic_intel()
                 # 15b3 indicate mellanox
@@ -329,7 +337,9 @@ class Device:
                         self.chip = val.group(1)
             else:
                 if re.match("\t\t" + self.quad[3] + " " + self.quad[2], ln) and ";" in ln:
-                    model = ln.split(" ")[2].strip().split(";").strip()
+                    model_info = ln.replace(
+                        "\t\t" + self.quad[3] + " " + self.quad[2], "", 1).strip()
+                    model = [item.strip() for item in model_info.split(";", 1)]
                     self.chip = model[0]
                     self.board = model[1]
                     break
@@ -378,16 +388,35 @@ class Device:
         get the driver name of the board card.
         :return:
         """
+        self.driver = ""
+        self.kernel_modules = []
+        self.driver_version = ""
         self.get_pci()
         if not self.pci:
             return ""
         cmd_result = self.command.run_cmd(
-            "lspci -xs %s -v" % self.pci, log_print=False)
+            "lspci -vmmk -s %s" % self.pci, log_print=False)
         for info in cmd_result[0].split('\n'):
-            if re.search("Kernel driver in use|Kernel modules", info):
-                self.driver = info.split(":")[1].strip()
-                return self.driver
-        return ""
+            key, separator, value = info.partition(":")
+            if not separator:
+                continue
+
+            key = key.strip()
+            value = value.strip()
+            if key == "Driver":
+                self.driver = value
+            elif key == "Module":
+                self.kernel_modules.extend(
+                    module.strip() for module in value.split(",") if module.strip())
+
+        if self.driver:
+            return self.driver
+
+        # A device may not currently have a bound driver.  Keep one candidate
+        # as its display value while retaining all candidates for cert_info.
+        if self.kernel_modules:
+            self.driver = self.kernel_modules[0]
+        return self.driver
 
     def get_driver_version(self):
         """
