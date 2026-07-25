@@ -19,6 +19,7 @@ from hwcompatible.command import Command
 if TYPE_CHECKING:
     from hwcompatible.log import Logger
 
+
 class MetaXMCCLTest():
     def __init__(self, logger: "Logger", command: Command):
         self.logger: "Logger" = logger
@@ -130,6 +131,7 @@ class MetaXMCCLTest():
 
         for bench, size, mode in sorted(expected_keys):
             for metric, threshold in thresholds.items():
+                metric_name = metric_names.get(metric, metric)
                 values = [
                     result[(bench, size, mode)][metric]
                     for result in run_results
@@ -138,7 +140,7 @@ class MetaXMCCLTest():
                 if average == 0:
                     if any(value != 0 for value in values):
                         self.logger.error(
-                            f"MCCL {metric_names[metric]} unstable for {bench} "
+                            f"MCCL {metric_name} unstable for {bench} "
                             f"size {size} {mode}: values "
                             f"{', '.join(f'{value:.4f}' for value in values)}, "
                             f"average {average:.4f}.")
@@ -149,7 +151,7 @@ class MetaXMCCLTest():
                     abs(value - average) / average for value in values)
                 if max_deviation > threshold:
                     self.logger.error(
-                        f"MCCL {metric_names[metric]} fluctuation exceeds "
+                        f"MCCL {metric_name} fluctuation exceeds "
                         f"{threshold * 100:.2f}% for {bench} size {size} "
                         f"{mode}: values "
                         f"{', '.join(f'{value:.4f}' for value in values)}, "

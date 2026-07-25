@@ -1,5 +1,3 @@
-# coding: utf-8
-
 # Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -15,12 +13,14 @@
 
 import argparse
 from typing import TYPE_CHECKING, Optional
+
+from amd_gpu import AMDGpuTest
+from metax_gpu import MetaXGpuTest
+from nvidia_gpu import NvidiaGpuTest
+
 from hwcompatible.command import Command
 from hwcompatible.device import Device
 from hwcompatible.test import Test
-from nvidia_gpu import NvidiaGpuTest
-from amd_gpu import AMDGpuTest
-from metax_gpu import MetaXGpuTest
 
 if TYPE_CHECKING:
     from hwcompatible.log import Logger

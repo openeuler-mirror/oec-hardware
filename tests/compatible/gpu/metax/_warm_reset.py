@@ -19,6 +19,7 @@ from ._common import MetaXCommon
 if TYPE_CHECKING:
     from hwcompatible.log import Logger
 
+
 class MetaXWarmResetTest():
     """MetaX GPU 热复位可靠性测试。
 

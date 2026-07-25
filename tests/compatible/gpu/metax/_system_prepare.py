@@ -18,6 +18,7 @@ from hwcompatible.command import Command
 if TYPE_CHECKING:
     from hwcompatible.log import Logger
 
+
 class MetaXSystemPrepare():
     def __init__(self, device, logger: "Logger", command: Command):
         self.device = device
