@@ -17,6 +17,8 @@ install:
 	mkdir -p $(DEST)
 	cp -a *.py $(DEST)
 	cp -a *.sh $(DEST)
+	mkdir -p $(DEST)/metax
+	cp -a metax/*.py $(DEST)/metax
 	chmod a+x $(DEST)/*.py
 
 clean:
