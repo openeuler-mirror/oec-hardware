@@ -29,7 +29,7 @@ NODEVICE = ("intel", "cpufreq", "memory", "clock", "profiler", "system",
 TEST_KABI_ARCH = ("aarch64", "x86_64")
 CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD")
-GPU_DRIVER = ("nouveau", "nvidia", "bi_driver", "amdgpu")
+GPU_DRIVER = ("nouveau", "nvidia", "bi_driver", "amdgpu", "METAX")
 KEYCARD_VENDORS = ('Xilinx', 'Renesas', 'Texas', 'PLX')
 IB = "infiniband"
 DEVICE_INFO = ('color', 'status', 'num', 'run', 'name',
