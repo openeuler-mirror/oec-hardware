@@ -1,6 +1,6 @@
 # coding: utf-8
 
-# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2026 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -17,14 +17,21 @@ import re
 import time
 import platform
 from subprocess import getstatusoutput
+from typing import TYPE_CHECKING
+
+from hwcompatible.command import Command
+
+if TYPE_CHECKING:
+    from hwcompatible.log import Logger
+
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class NvidiaGpuTest():
-    def __init__(self, device, logger, command):
+    def __init__(self, device, logger: "Logger", command: Command):
         self.device = device
-        self.logger = logger
-        self.command = command
+        self.logger: "Logger" = logger
+        self.command: Command = command
         self.cuda_samples_log = os.path.join(
             self.logger.logdir, 'cuda_samples.log')
         self.gpu_burn = os.path.join(self.logger.logdir, 'gpu_burn.log')

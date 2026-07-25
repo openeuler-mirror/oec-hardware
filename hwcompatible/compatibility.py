@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-# Copyright (c) 2020-2022 Huawei Technologies Co., Ltd.
+# Copyright (c) 2020-2026 Huawei Technologies Co., Ltd.
 # oec-hardware is licensed under the Mulan PSL v2.
 # You can use this software according to the terms and conditions of the Mulan PSL v2.
 # You may obtain a copy of Mulan PSL v2 at:
@@ -12,25 +12,36 @@
 # See the Mulan PSL v2 for more details.
 # Create: 2020-04-01
 
-import os
-import time
 import argparse
-import shutil
 import datetime
+import os
 import re
+import shutil
+import time
 from collections import namedtuple
 
-from .document import CertDocument, DeviceDocument, FactoryDocument
-from .env import CertEnv
-from .device import CertDevice, Device
+from .client import Client
 from .command import Command
 from .command_ui import CommandUI
+from .common import copy_pci, create_test_suite, search_factory
+from .constants import (
+    BOARD,
+    CDTYPES,
+    CHIP,
+    DEVICE_INFO,
+    DRIVER,
+    GPU_DRIVER,
+    IB,
+    KEYCARD_VENDORS,
+    NODEVICE,
+    TEST_CATEGORY,
+    VERSION,
+)
+from .device import CertDevice, Device
+from .document import CertDocument, DeviceDocument, FactoryDocument
+from .env import CertEnv
 from .job import Job
 from .reboot import Reboot
-from .client import Client
-from .common import create_test_suite, copy_pci, search_factory
-from .constants import NODEVICE, GPU_DRIVER, IB, CDTYPES, KEYCARD_VENDORS, \
-    BOARD, VERSION, DRIVER, CHIP, DEVICE_INFO, TEST_CATEGORY
 
 
 class EulerCertification():
@@ -232,8 +243,13 @@ class EulerCertification():
             return
         packages.sort()
 
+        certification = self.certification
+        if certification is None:
+            self.logger.error("Certification data is not loaded.")
+            return
+
         if self.ui.prompt_confirm("Do you want to submit last result?"):
-            server = self.certification.get_server()
+            server = certification.get_server()
             path = os.path.join(CertEnv.datadirectory, packages[-1])
             if not self.upload(path, server):
                 self.logger.error(
@@ -255,11 +271,17 @@ class EulerCertification():
         """
         self.logger.info(
             "Start to upload result to server %s, please wait." % server, log_print=False)
-        if not self.client:
-            oec_id = self.certification.get_certify()
-            hardware_info = self.certification.get_hardware()
-            self.client = Client(hardware_info, oec_id, self.logger)
-        return self.client.upload(path, server)
+        client = self.client
+        if client is None:
+            certification = self.certification
+            if certification is None:
+                self.logger.error("Certification data is not loaded.")
+                return False
+            oec_id = certification.get_certify()
+            hardware_info = certification.get_hardware()
+            client = Client(hardware_info, oec_id, self.logger)
+            self.client = client
+        return client.upload(path, server)
 
     def get_tests(self, devices=None):
         """
@@ -280,7 +302,7 @@ class EulerCertification():
             dirs.sort()
             for filename in filenames:
                 if filename.endswith(".py") and \
-                        not filename.startswith("__init__"):
+                        not filename.startswith("_"):
                     casenames.append(filename.split(".")[0])
 
         if self.category == "virtualization":
