@@ -13,6 +13,7 @@
 # Desc: MetaX GPU test
 
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from hwcompatible.command import Command
@@ -21,6 +22,19 @@ from ._common import MetaXCommon
 
 if TYPE_CHECKING:
     from hwcompatible.log import Logger
+
+
+@dataclass(frozen=True)
+class _BandwidthBenchmarkConfig:
+    name: str
+    command: str
+    pattern: "re.Pattern[str]"
+    raw_tolerance: float
+    effective_tolerance: float
+    theoretical_multiplier: float
+    result_precheck: Optional[Callable[[dict[str, Any]], bool]] = None
+    use_global_device_option: bool = False
+
 
 class MetaXBandwidthTest():
     RESULT_PATTERN = re.compile(
@@ -132,11 +146,8 @@ class MetaXBandwidthTest():
     def _check_result(
             self,
             result: dict[str, Any],
-            theoretical_bandwidths: dict[str, float],
             run: int,
-            raw_tolerance: float,
-            effective_tolerance: float,
-            theoretical_multiplier: float) -> bool:
+            config: _BandwidthBenchmarkConfig) -> bool:
         board_ids = self._get_result_board_ids(result)
         if not board_ids:
             self.logger.error(
@@ -147,7 +158,7 @@ class MetaXBandwidthTest():
 
         missing_board_ids = [
             board_id for board_id in board_ids
-            if board_id not in theoretical_bandwidths
+            if board_id not in self.pcie_theoretical_bandwidths
         ]
         if missing_board_ids:
             self.logger.error(
@@ -157,8 +168,9 @@ class MetaXBandwidthTest():
             return False
 
         theoretical_bandwidth = min(
-            theoretical_bandwidths[board_id] for board_id in board_ids)
-        theoretical_bandwidth *= theoretical_multiplier
+            self.pcie_theoretical_bandwidths[board_id]
+            for board_id in board_ids)
+        theoretical_bandwidth *= config.theoretical_multiplier
         raw_deviation = (
             abs(result["raw"] - theoretical_bandwidth) / theoretical_bandwidth)
         effective_deviation = (
@@ -180,20 +192,21 @@ class MetaXBandwidthTest():
                 f"{result['direction']} {result['dst']}: "
                 f"{result['validation']} ({run}/{self.repeat_times}).")
             return False
-        if raw_deviation > raw_tolerance:
+        if raw_deviation > config.raw_tolerance:
             self.logger.error(
                 f"PCIe RAW bandwidth deviation exceeds "
-                f"{raw_tolerance * 100:.2f}% for {result['src']} "
+                f"{config.raw_tolerance * 100:.2f}% for {result['src']} "
                 f"{result['direction']} {result['dst']}: "
                 f"raw {result['raw']:.2f} GB/s, "
                 f"theoretical {theoretical_bandwidth:.2f} GB/s, "
                 f"deviation {raw_deviation * 100:.2f}% "
                 f"({run}/{self.repeat_times}).")
             return False
-        if effective_deviation > effective_tolerance:
+        if effective_deviation > config.effective_tolerance:
             self.logger.error(
                 f"PCIe EFFECTIVE bandwidth deviation exceeds "
-                f"{effective_tolerance * 100:.2f}% for {result['src']} "
+                f"{config.effective_tolerance * 100:.2f}% "
+                f"for {result['src']} "
                 f"{result['direction']} {result['dst']}: "
                 f"effective {result['effective']:.2f} GB/s, "
                 f"theoretical {theoretical_bandwidth:.2f} GB/s, "
@@ -206,67 +219,60 @@ class MetaXBandwidthTest():
     def _run_once(
             self,
             run: int,
-            benchmark_name: str,
-            benchmark_cmd: str,
-            pattern: "re.Pattern[str]",
-            raw_tolerance: float,
-            effective_tolerance: float,
-            theoretical_multiplier: float,
-            result_precheck: Optional[Callable[[dict[str, Any]], bool]] = None,
-            use_global_device_option: bool = False
+            config: _BandwidthBenchmarkConfig
             ) -> bool:
         """执行一次 PCIe 带宽基准测试。
 
-        run 为 1 起始的迭代序号；其余参数控制子命令、解析模式、容差、理论带宽倍率与设备选择方式。
+        run 为 1 起始的迭代序号；config 封装子命令、解析模式、容差、
+        理论带宽倍率与设备选择方式。
         """
         self.logger.info(
-            f"Run PCIe {benchmark_name} bandwidth benchmark "
+            f"Run PCIe {config.name} bandwidth benchmark "
             f"({run}/{self.repeat_times}).")
         command_builder = (
             MetaXCommon.build_mxvs_cmd
-            if use_global_device_option
+            if config.use_global_device_option
             else MetaXCommon.build_pcie_mxvs_cmd)
         cmd = self.command.run_cmd(
-            command_builder(self.board_id, benchmark_cmd),
+            command_builder(self.board_id, config.command),
             ignore_errors=True)
         if cmd[2] != 0:
             self.logger.error(
-                f"Run PCIe {benchmark_name} bandwidth benchmark failed "
+                f"Run PCIe {config.name} bandwidth benchmark failed "
                 f"({run}/{self.repeat_times}).")
             return False
 
-        benchmark_results = self._parse_benchmark_output(cmd[0], pattern)
+        benchmark_results = self._parse_benchmark_output(
+            cmd[0], config.pattern)
         if not benchmark_results:
             self.logger.error(
-                f"No PCIe {benchmark_name} bandwidth result parsed "
+                f"No PCIe {config.name} bandwidth result parsed "
                 f"({run}/{self.repeat_times}).")
             return False
 
         for result in benchmark_results:
-            if result_precheck is not None and not result_precheck(result):
+            if (config.result_precheck is not None
+                    and not config.result_precheck(result)):
                 return False
-            if not self._check_result(
-                    result, self.pcie_theoretical_bandwidths, run,
-                    raw_tolerance, effective_tolerance,
-                    theoretical_multiplier):
+            if not self._check_result(result, run, config):
                 return False
 
         return True
 
     def _run_repeated(
             self,
-            name: str,
-            once_runner: Callable[[int], bool]) -> bool:
-        """连续执行 ``repeat_times`` 次带宽基准测试。
+            config: _BandwidthBenchmarkConfig) -> bool:
+        """按 config 连续执行 ``repeat_times`` 次带宽基准测试。
 
-        once_runner 为单次迭代回调，返回 False 中止；全部通过返回 True。
+        单次迭代返回 False 时中止；全部通过时返回 True。
         """
-        self.logger.info(f"Check MetaX GPU PCIe {name} bandwidth.")
+        self.logger.info(
+            f"Check MetaX GPU PCIe {config.name} bandwidth.")
         for run in range(1, self.repeat_times + 1):
-            if not once_runner(run):
+            if not self._run_once(run, config):
                 return False
         self.logger.info(
-            f"MetaX GPU PCIe {name} bandwidth test succeed.")
+            f"MetaX GPU PCIe {config.name} bandwidth test succeed.")
         return True
 
     def check_p2p_unidirectional_bandwidth(self) -> bool:
@@ -282,46 +288,37 @@ class MetaXBandwidthTest():
                 return False
             return True
 
-        return self._run_repeated(
-            "P2P unidirectional",
-            lambda run: self._run_once(
-                run,
-                "P2P unidirectional",
-                "p2p --unidirection",
-                self.P2P_RESULT_PATTERN,
-                self.unidirectional_raw_tolerance,
-                self.unidirectional_effective_tolerance,
-                1.0,
-                topology_precheck))
+        return self._run_repeated(_BandwidthBenchmarkConfig(
+            name="P2P unidirectional",
+            command="p2p --unidirection",
+            pattern=self.P2P_RESULT_PATTERN,
+            raw_tolerance=self.unidirectional_raw_tolerance,
+            effective_tolerance=self.unidirectional_effective_tolerance,
+            theoretical_multiplier=1.0,
+            result_precheck=topology_precheck))
 
     def check_bandwidth(self) -> bool:
         """测试 MetaX GPU PCIe 单向、双向及 P2P 带宽。"""
         if not self.get_pcie_theoretical_bandwidths():
             return False
 
-        if not self._run_repeated(
-                "unidirectional",
-                lambda run: self._run_once(
-                    run,
-                    "unidirectional",
-                    "pcie benchmark unidirection",
-                    self.RESULT_PATTERN,
-                    self.unidirectional_raw_tolerance,
-                    self.unidirectional_effective_tolerance,
-                    1.0)):
+        if not self._run_repeated(_BandwidthBenchmarkConfig(
+                name="unidirectional",
+                command="pcie benchmark unidirection",
+                pattern=self.RESULT_PATTERN,
+                raw_tolerance=self.unidirectional_raw_tolerance,
+                effective_tolerance=self.unidirectional_effective_tolerance,
+                theoretical_multiplier=1.0)):
             return False
 
-        if not self._run_repeated(
-                "bidirectional",
-                lambda run: self._run_once(
-                    run,
-                    "bidirectional",
-                    "pcie benchmark bidirection",
-                    self.RESULT_PATTERN,
-                    self.bidirectional_raw_tolerance,
-                    self.bidirectional_effective_tolerance,
-                    2.0,
-                    use_global_device_option=True)):
+        if not self._run_repeated(_BandwidthBenchmarkConfig(
+                name="bidirectional",
+                command="pcie benchmark bidirection",
+                pattern=self.RESULT_PATTERN,
+                raw_tolerance=self.bidirectional_raw_tolerance,
+                effective_tolerance=self.bidirectional_effective_tolerance,
+                theoretical_multiplier=2.0,
+                use_global_device_option=True)):
             return False
 
         if not self.check_p2p_unidirectional_bandwidth():

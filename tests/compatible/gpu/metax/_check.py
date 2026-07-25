@@ -270,11 +270,12 @@ class MetaXCheck():
                     f"height {result['height']:.2f} mV, "
                     f"width {result['width']:.2f} UI ({run}/{total}).")
 
-            failed = [
-                result for result in eye_results
-                if result["width"] <= width_threshold
-                or result["height"] <= height_threshold
-            ]
+            failed = []
+            for result in eye_results:
+                width_failed = result["width"] <= width_threshold
+                height_failed = result["height"] <= height_threshold
+                if width_failed or height_failed:
+                    failed.append(result)
             if failed:
                 failed_descriptions = [
                     f"dev {result['dev_id']} ({result['bdf']}) "
