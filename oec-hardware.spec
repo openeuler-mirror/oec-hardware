@@ -12,7 +12,7 @@ Version:        %{version}
 Release:        %{release}
 Group:          Development/Tools
 License:        Mulan PSL v2
-URL:            https://gitee.com/openeuler/oec-hardware
+URL:            https://atomgit.com/openeuler/oec-hardware
 Source0:        %{name}-%{version}.tar.bz2
 
 Buildroot:      %{_tmppath}/%{name}-%{version}-root

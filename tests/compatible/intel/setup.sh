@@ -12,7 +12,7 @@ PKG_CPUID=https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/Packages/c/c
 PKG_MSR_TOOLS=https://mirror.centos.no/epel/9/Everything/x86_64/Packages/m/msr-tools-1.3-17.el9.x86_64.rpm
 
 REPO_IDXD_CONFIG=https://gitee.com/syqust/idxd-config.git
-REPO_LKVS=https://gitee.com/openeuler/intel-lkvs.git
+REPO_LKVS=https://atomgit.com/openeuler/intel-lkvs.git
 CONFIG_AVOCADO=$DIR_CONFIG_AVOCADO/avocado.conf
 
 URL_KERNEL6=https://kernel.org/pub/linux/kernel/v6.x
