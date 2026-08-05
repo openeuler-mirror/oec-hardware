@@ -19,9 +19,7 @@ from typing import TYPE_CHECKING, Any, Optional
 from metax._bandwidth import MetaXBandwidthTest
 from metax._check import MetaXCheck
 from metax._common import (
-    C500_BIOS_PATH,
     METAX_DRIVER_NAME,
-    MXVS_PATH,
     MetaXCommon,
 )
 from metax._mccl import MetaXMCCLTest
@@ -34,20 +32,6 @@ if TYPE_CHECKING:
     from hwcompatible.log import Logger
 
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
-
-__all__ = [
-    "C500_BIOS_PATH",
-    "METAX_DRIVER_NAME",
-    "MXVS_PATH",
-    "MetaXBandwidthTest",
-    "MetaXCheck",
-    "MetaXCommon",
-    "MetaXGpuTest",
-    "MetaXMCCLTest",
-    "MetaXSystemPrepare",
-    "MetaXWarmResetTest",
-    "gpu_dir",
-]
 
 
 class MetaXGpuTest():
