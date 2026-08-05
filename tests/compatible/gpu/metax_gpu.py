@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 
 gpu_dir = os.path.dirname(os.path.realpath(__file__))
 
+
 class MetaXGpuTest():
     def __init__(self, device, logger: "Logger", command: Command):
         self.device = device
