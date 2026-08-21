@@ -25,6 +25,7 @@ from .command import Command
 from .command_ui import CommandUI
 from .common import copy_pci, create_test_suite, search_factory
 from .constants import (
+    ASCEND_PCI_IDS,
     BOARD,
     CDTYPES,
     CHIP,
@@ -396,6 +397,11 @@ class EulerCertification():
                     sort_devices["keycard"].extend([device])
                 else:
                     sort_devices["keycard"] = [device]
+                continue
+            if device.get_property("PCI_ID").lower() in ASCEND_PCI_IDS:
+                # Unified test: bound to empty_device so it runs once
+                # regardless of how many Ascend cards are present.
+                sort_devices["ascend"] = [empty_device]
                 continue
             if any([d in driver for d in GPU_DRIVER]):
                 if "gpu" in sort_devices.keys():

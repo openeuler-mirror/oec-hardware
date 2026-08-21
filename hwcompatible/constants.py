@@ -30,6 +30,7 @@ TEST_KABI_ARCH = ("aarch64", "x86_64")
 CDTYPES = ("DVD_RW", "DVD_PLUS_RW", "DVD_R", "DVD_PLUS_R", "DVD",
            "BD_RE", "BD_R", "BD", "CD_RW", "CD_R", "CD")
 GPU_DRIVER = ("nouveau", "nvidia", "bi_driver", "amdgpu", "METAX")
+ASCEND_PCI_IDS = ("19e5:d802", "19e5:d803")
 KEYCARD_VENDORS = ('Xilinx', 'Renesas', 'Texas', 'PLX')
 IB = "infiniband"
 DEVICE_INFO = ('color', 'status', 'num', 'run', 'name',
