@@ -18,8 +18,11 @@ import json
 import os
 import re
 import shlex
+import shutil
+import tempfile
 from typing import TYPE_CHECKING, ClassVar
 
+from helper import pcie_theoretical_bandwidth
 from map import NPU_ARCH_MAP, THEORETICAL_SPECS
 
 from hwcompatible.command import Command
@@ -289,7 +292,6 @@ class AscendTransportCheck(_AscendCommandRunner):
                 f"device {self.device_id}: PCIe speed/lanes not "
                 f"provided")
             return False
-        from helper import pcie_theoretical_bandwidth
         theoretical = pcie_theoretical_bandwidth(
             self.pcie_speed, self.pcie_lanes)
         tolerance = self._SIZE_TOLERANCES.get(size, 0.30)
@@ -444,7 +446,6 @@ class AscendCompileTest(_AscendCommandRunner):
         self.logger: Logger = logger or command.logger
 
     def _prepare_workdir(self):
-        import tempfile
         workdir = tempfile.mkdtemp(prefix=self._TMP_DIR_PREFIX, dir="/tmp")
         source = os.path.join(os.path.dirname(__file__), self._SOURCE)
         dest_source = os.path.join(workdir, self._SOURCE)
@@ -454,12 +455,9 @@ class AscendCompileTest(_AscendCommandRunner):
             self.logger.error(
                 "Ascend compile test: failed to copy source to "
                 f"{workdir}")
+            shutil.rmtree(workdir, ignore_errors=True)
             return None, None
         return workdir, dest_source
-
-    def _cleanup(self, workdir):
-        rm_cmd = f"rm -rf {shlex.quote(workdir)}"
-        _, _, _ = self.run_cmd(rm_cmd, ignore_errors=True)
 
     def compile_test(self):
         self.logger.info("Run Ascend compile test.")
@@ -474,6 +472,12 @@ class AscendCompileTest(_AscendCommandRunner):
         if workdir is None or dest_source is None:
             return False
 
+        try:
+            return self._run_compile_test(workdir, dest_source, arch)
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+
+    def _run_compile_test(self, workdir, dest_source, arch):
         dest_bin = os.path.join(workdir, self._OUTPUT_BIN)
         compile_cmd = (
             f"bisheng {shlex.quote(dest_source)} --npu-arch={arch} "
@@ -485,7 +489,6 @@ class AscendCompileTest(_AscendCommandRunner):
             self.logger.error(
                 "Ascend compile test: bisheng compilation failed:\n"
                 f"{output.strip() or error.strip() or 'No output'}")
-            self._cleanup(workdir)
             return False
 
         self.logger.info(
@@ -499,19 +502,16 @@ class AscendCompileTest(_AscendCommandRunner):
             self.logger.error(
                 "Ascend compile test: running compiled binary failed:\n"
                 f"{output.strip() or error.strip() or 'No output'}")
-            self._cleanup(workdir)
             return False
 
         if not self._SUCCESS_PATTERN.search(output):
             self.logger.error(
                 "Ascend compile test: verification marker not found:\n"
                 f"{output.strip() or 'No output'}")
-            self._cleanup(workdir)
             return False
 
         self.logger.info(
             "Ascend compile test: accuracy verification passed")
-        self._cleanup(workdir)
         return True
 
 
@@ -630,11 +630,11 @@ class AscendTest(Test):
             self.check_ascend_toolbox(),
             version.version_check(),
         ]
-        for index in range(len(devices)):
+        for index, device in enumerate(devices):
             health = AscendHealthCheck(
                 self.command, index, logger=self.logger)
             results.append(health.health_check())
-            speed, lanes = self.get_pcie_link_info(devices[index])
+            speed, lanes = self.get_pcie_link_info(device)
             transport = AscendTransportCheck(
                 self.command, index, pcie_speed=speed, pcie_lanes=lanes,
                 logger=self.logger)
