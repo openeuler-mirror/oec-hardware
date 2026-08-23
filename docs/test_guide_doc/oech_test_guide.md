@@ -14,7 +14,7 @@
 
 
 # 前言
-在使用本指导前请确保已阅读 [oec-hardware工具说明](https://gitee.com/openeuler/oec-hardware/blob/master/README.md)。
+在使用本指导前请确保已阅读 [oec-hardware工具说明](https://atomgit.com/openeuler/oec-hardware/blob/master/README.md)。
 
 # 测试指导
 
@@ -189,7 +189,7 @@ PING 2.2.2.4 (2.2.2.4) 56(84) bytes of data.
 
 1. 进行dpdk测试前，请确保网卡驱动支持dpdk测试（目前支持dpdk测试的驱动：*mlx4_core, mlx5_core, ixgbe, ice, hinic, igc*)。
 2. 测试需要额外一台服务器作为服务端，并且需要客户端与服务端安装了相同的待测网卡并确保网卡直连。客户端使用发包模式(Tx-only mode)作为数据包源，服务端使用收包模式(Rx-only mode) 作为数据包接收器, 测试端口传输速率功能。
-3. 配置服务端。 为了方便，请在首次启用工具时便设定 `server IP`。[服务端配置参考](https://gitee.com/openeuler/oec-hardware#%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4)
+3. 配置服务端。 为了方便，请在首次启用工具时便设定 `server IP`。[服务端配置参考](https://atomgit.com/openeuler/oec-hardware#%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4)
 ![dpdk](../pictures/dpdk.png) 
 
 4. 服务端IP配置正确后，选择对应测试项测试。

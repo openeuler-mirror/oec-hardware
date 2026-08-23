@@ -39,11 +39,11 @@ openEuler兼容性计划提供了硬件厂家与openEuler兼容性测试支持�
 
 ## 兼容性技术支持
 
-openEuler社区成立sig-Compatibility-Infra的[oec-hardware](https://gitee.com/openeuler/oec-hardware)项目来提供相关支持，统一在该项目下采用issue方式提供技术支持。
+openEuler社区成立sig-Compatibility-Infra的[oec-hardware](https://atomgit.com/openeuler/oec-hardware)项目来提供相关支持，统一在该项目下采用issue方式提供技术支持。
 
 # 兼容性流程概述
 
-1.  在社区[oec-hardware](https://gitee.com/openeuler/oec-hardware)项目下创建issue并启动相关协议签署。
+1.  在社区[oec-hardware](https://atomgit.com/openeuler/oec-hardware)项目下创建issue并启动相关协议签署。
 2.  准备好安装有openEuler版本的硬件环境。
 3.  安装OECH工具。
 4.  执行测试并获取测试结果。

@@ -481,7 +481,7 @@ If the tested hardware and servers need to be released to the openEuler compatib
 2. Clone the source code.
 
     ```
-    git clone https://gitee.com/${gitee_id}/oec-hardware.git
+    git clone https://atomgit.com/${atomgit_id}/oec-hardware.git
     ```
 
 3. Go to the corresponding directory and compile and install the software.
@@ -518,7 +518,7 @@ If the tested hardware and servers need to be released to the openEuler compatib
 
    - `reboot` and `rebootup` variables: If `reboot = True`, the test suite or test case will reboot the system and continue to execute the function specified by `rebootup` after the reboot. The kdump test can be used as reference.
 
-3. Add the identification result of the test to the **hwcompatible/compatibility.py** file. For details about how to identify boards, see https://gitee.com/openeuler/oec-hardware/blob/master/docs/develop_doc/get_board_en.md.
+3. Add the identification result of the test to the **hwcompatible/compatibility.py** file. For details about how to identify boards, see https://atomgit.com/openeuler/oec-hardware/blob/master/docs/develop_doc/get_board_en.md.
 
 # FAQs
 

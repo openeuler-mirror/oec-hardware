@@ -17,7 +17,7 @@ cd $testdir
 
 os_version=`cat /etc/openEuler-latest|grep openeulerversion |awk -F = '{print $2}'`
 arch=`uname -m`
-url="https://gitee.com/src-openeuler/kernel/raw/$os_version/kabi_whitelist_$arch"
+url="https://atomgit.com/src-openeuler/kernel/raw/$os_version/kabi_whitelist_$arch"
 wget $url
 # if get kabi_whitelist failed because of internet or other
 if [ ! -f $testdir"/kabi_whitelist_"$arch ]; then

@@ -89,7 +89,7 @@ oec-hardware工具是openEuler社区提供的一款硬件兼容性测试工具�
 # 版本发行说明
 
 ## 版本发布策略
-oec-hardware工具详细版本发布策略和版本发布方案请见 [oec-hardware软件包发布设计文档](https://gitee.com/openeuler/oec-hardware/blob/master/docs/design_docs/oech_rpm_version_design.md)
+oec-hardware工具详细版本发布策略和版本发布方案请见 [oec-hardware软件包发布设计文档](https://atomgit.com/openeuler/oec-hardware/blob/master/docs/design_docs/oech_rpm_version_design.md)
 
 ## 版本维护策略
 oec-hardware工具发布新版本后，社区将只针对最新版本进行维护。
@@ -204,7 +204,7 @@ oec-hardware工具发布新版本后，社区将只针对最新版本进行维�
 
 ## 测试项介绍
 
-请查看 [测试项介绍](https://gitee.com/openeuler/oec-hardware/tree/master/docs/test_suite_doc/test_suite.md)
+请查看 [测试项介绍](https://atomgit.com/openeuler/oec-hardware/tree/master/docs/test_suite_doc/test_suite.md)
 
 ## 测试项策略
 
@@ -267,7 +267,7 @@ oec-hardware工具发布新版本后，社区将只针对最新版本进行维�
 
 2. 填写`ID`、`URL`、`Server`配置项
 
-`ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。服务端`nginx`默认端口号是`80`，如果服务端安装完成后没有修改该端口，`Compatibility Test Server` 的值只需要输入服务端的业务IP地址；否则需要带上端口号，比如：`172.167.145.2:90`。
+`ID` 建议填写 atomgit 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。服务端`nginx`默认端口号是`80`，如果服务端安装完成后没有修改该端口，`Compatibility Test Server` 的值只需要输入服务端的业务IP地址；否则需要带上端口号，比如：`172.167.145.2:90`。
 
    ```
    The openEuler Hardware Compatibility Test Suite
@@ -344,7 +344,7 @@ oec-hardware工具发布新版本后，社区将只针对最新版本进行维�
    Successfully uploaded result to server X.X.X.X.
    ```
 # 详细测试指导
-使用oec-hardware进行测试的详细指导请查看 [oec-hardware测试使用指导](https://gitee.com/openeuler/oec-hardware/tree/master/docs/test_guide_doc/oech_test_guide.md)
+使用oec-hardware进行测试的详细指导请查看 [oec-hardware测试使用指导](https://atomgit.com/openeuler/oec-hardware/tree/master/docs/test_guide_doc/oech_test_guide.md)
 
 # 结果获取
 
@@ -386,7 +386,7 @@ oec-hardware工具发布新版本后，社区将只针对最新版本进行维�
 
    - oec-hardware-server 生成的html测试报告
 
-   - 兼容性清单文件（[模板](https://gitee.com/openeuler/oec-hardware/tree/master/templates)）
+   - 兼容性清单文件（[模板](https://atomgit.com/openeuler/oec-hardware/tree/master/templates)）
 
       **注意：**
       oec-hardware 执行结束后会自动为测试通过的硬件生成兼容性信息文件`hw_compatibility.json`, 可参考该文件填写兼容性清单信息
