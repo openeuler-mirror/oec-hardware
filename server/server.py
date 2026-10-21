@@ -14,6 +14,8 @@
 # Desc: oech server url
 
 import ast
+import glob
+import ipaddress
 import os
 import json
 import sys
@@ -435,7 +437,7 @@ def unbind_server_card():
         subprocess.getoutput("dpdk-devbind -b %s %s" % (kernel_driver, pci_num))
         result = subprocess.getoutput(("dpdk-devbind -s | grep {0}").format(pci_num))
         interface = re.search(r'if=(\S*)', result).group(1)
-        subprocess.getoutput("ip link set up %s") % interface
+        subprocess.getoutput("ip link set up %s" % interface)
 
     return render_template('index.html')
 
@@ -460,8 +462,10 @@ def test_server(act):
             cmd = ['rping', '-s']
         if 'ib_' in cmd[0]:
             ib_server_ip = request.values.get('ib_server_ip', '')
-            if not ib_server_ip:
-                sys.stdout.write("No ib_server_ip assigned.\n")
+            try:
+                ipaddress.ip_address(ib_server_ip)
+            except ValueError:
+                sys.stdout.write("Invalid ib_server_ip: %s.\n" % ib_server_ip)
                 abort(400)
             ibdev, ibport = __get_ib_dev_port(ib_server_ip)
             if not all([ibdev, ibport]):
@@ -552,21 +556,39 @@ def __execute_cmd(cmd):
 
 def __get_ib_dev_port(ib_server_ip):
     try:
-        cmd = "ip -o a | grep -w %s | awk '{print $2}'" % ib_server_ip
-        netdev = subprocess.getoutput(cmd)
+        result = subprocess.run(['ip', '-o', 'a'], capture_output=True, text=True)
+        netdev = ''
+        for line in result.stdout.split('\n'):
+            if re.search(r'\b%s\b' % re.escape(ib_server_ip), line):
+                fields = line.split()
+                if len(fields) >= 2:
+                    netdev = fields[1]
+                break
+        if not netdev:
+            return None, None
 
-        cmd = "udevadm info --export-db | grep DEVPATH | grep -w %s | awk -F= '{print $2}'" % netdev
-        path_netdev = ''.join(['/sys', subprocess.getoutput(cmd).strip()])
-        path_pci = path_netdev.split('net')[0]
-        path_ibdev = 'infiniband_verbs/uverb*/ibdev'
-        path_ibdev = ''.join([path_pci, path_ibdev])
+        result = subprocess.run(['udevadm', 'info', '--export-db'],
+                                capture_output=True, text=True)
+        devpath = ''
+        for line in result.stdout.split('\n'):
+            if line.startswith('DEVPATH') and \
+                    re.search(r'\b%s\b' % re.escape(netdev), line):
+                devpath = line.split('=', 1)[1]
+                break
+        if not devpath:
+            return None, None
 
-        cmd = "cat %s" % path_ibdev
-        ibdev = subprocess.getoutput(cmd).strip()
+        path_pci = ''.join(['/sys', devpath]).split('net')[0]
+        ibdev_files = glob.glob(
+            os.path.join(path_pci, 'infiniband_verbs', 'uverb*', 'ibdev'))
+        if not ibdev_files:
+            return None, None
+        with open(ibdev_files[0], 'r') as file_content:
+            ibdev = file_content.read().strip()
 
-        path_ibport = '/sys/class/net/%s/dev_id' % netdev
-        cmd = "cat %s" % path_ibport
-        ibport = subprocess.getoutput(cmd).strip()
+        path_ibport = os.path.join('/sys/class/net', netdev, 'dev_id')
+        with open(path_ibport, 'r') as file_content:
+            ibport = file_content.read().strip()
 
         ibport = int(ibport, 16) + 1
         ibport = str(ibport)
