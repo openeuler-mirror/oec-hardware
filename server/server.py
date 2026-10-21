@@ -20,13 +20,15 @@ import os
 import json
 import sys
 import time
+import uuid
 import subprocess
 import base64
 import re
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
-from flask import Flask, render_template, redirect, url_for, abort, request, send_from_directory, flash
+from flask import Flask, render_template, redirect, url_for, abort, request, \
+    send_from_directory, flash, Response
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -39,7 +41,7 @@ DPDK_DRIVER = "uio_pci_generic"
 
 
 @app.errorhandler(400)
-def bad_request():
+def bad_request(e=None):
     """
     bad request
     """
@@ -47,7 +49,7 @@ def bad_request():
 
 
 @app.errorhandler(404)
-def page_not_found(e):
+def page_not_found(e=None):
     """
     page not found
     """
@@ -327,31 +329,45 @@ def get_files():
 @app.route('/files/<path:path>')
 def download_file(path):
     """
-    Download file
+    Download file, path must stay inside the files directory
     """
+    real_root = os.path.realpath(dir_files)
+    real_path = os.path.realpath(os.path.join(dir_files, path))
+    if not real_path.startswith(real_root + os.sep):
+        abort(400)
     return send_from_directory('files', path, as_attachment=True)
 
 
 @app.route('/api/file/upload', methods=['GET', 'POST'])
 def upload_file():
     """
-    Upload_file
+    Upload file with a server generated random filename
     """
     filename = secure_filename(request.values.get('filename', ''))
     filetext = request.values.get('filetext', '')
-    if not (all([filename, filetext])):
-        return render_template('upload.html', filename=filename, filetext=filetext,
-                               ret='Failed'), 400
+    if not filetext:
+        return Response("Failed", status=400, mimetype='text/plain')
 
-    filepath = os.path.join(dir_files, filename)
+    try:
+        ori_file = base64.b64decode(filetext)
+    except ValueError:
+        return Response("Failed", status=400, mimetype='text/plain')
+    filesize = len(ori_file)
+    if filesize > 1073741824:
+        sys.stderr.write(
+            "The file size is more than 1GB, upload file failed.\n")
+        return Response("Failed", status=400, mimetype='text/plain')
+
     if not os.path.exists(dir_files):
         os.makedirs(dir_files)
 
+    suffix = os.path.splitext(filename)[1]
+    random_name = uuid.uuid4().hex + suffix
+    filepath = os.path.join(dir_files, random_name)
     with open(filepath, 'wb') as file_content:
-        file_content.write(base64.b64decode(filetext))
+        file_content.write(ori_file)
 
-    return render_template('upload.html', filename=filename, filetext=filetext,
-                           ret='Successful')
+    return Response(random_name, mimetype='text/plain')
 
 
 @app.route('/api/config/ip', methods=['GET', 'POST'])
