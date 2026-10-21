@@ -41,6 +41,7 @@ class NetworkTest(Test):
         self.target_bandwidth_percent = 0.75
         self.testfile = 'testfile'
         self.testbw_file = "test_bw.log"
+        self.remote_filename = ""
 
     def setup(self, args=None):
         """
@@ -331,6 +332,10 @@ class NetworkTest(Test):
 
         self.logger.info("Status: %u %s" % (response.code, response.msg))
         self.logger.info(str(response.headers), terminal_print=False)
+        self.remote_filename = response.read().decode('utf8').strip()
+        if not self.remote_filename:
+            self.logger.error("Get uploaded filename from server failed.")
+            return False
         if time_upload != 0:
             self.logger.info("Upload %s in %.2fs, %.2f MB/s" %
                              (filename, time_upload, size/1000000 / time_upload))
@@ -342,8 +347,11 @@ class NetworkTest(Test):
         :return:
         """
         filename = os.path.basename(self.testfile)
+        if not self.remote_filename:
+            self.logger.error("No uploaded filename, download skipped.")
+            return False
         url = "http://%s:%s/files/%s" % (self.server_ip,
-                                         self.server_port, filename)
+                                         self.server_port, self.remote_filename)
 
         time_start = time.time()
         try:
