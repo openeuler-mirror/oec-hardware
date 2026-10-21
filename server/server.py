@@ -13,6 +13,7 @@
 # Create: 2020-04-01
 # Desc: oech server url
 
+import ast
 import os
 import json
 import sys
@@ -20,7 +21,6 @@ import time
 import subprocess
 import base64
 import re
-import operator
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
@@ -358,7 +358,9 @@ def config_ip():
     config server ip
     """
     sever_ip = request.values.get('serverip', '')
-    card_id = request.values.get('cardid', '')
+    card_id = __parse_card_id(request.values.get('cardid', ''))
+    if not card_id:
+        abort(400)
     cmd_result = subprocess.getoutput("ip link show up | grep 'state UP'")
 
     ports = []
@@ -371,7 +373,7 @@ def config_ip():
             if "bus-info" in data:
                 pci_num = data.split(':', 1)[1].strip()
                 quad = __get_quad(pci_num)
-                if operator.eq(quad, eval(card_id)):
+                if quad == card_id:
                     subprocess.getoutput(
                         "ifconfig %s:0 %s/24" % (pt, sever_ip))
                     break
@@ -388,7 +390,9 @@ def get_ethpeer():
     get ethpeer
     """
     dic = {}
-    card_id = request.values.get('cardid', '')
+    card_id = __parse_card_id(request.values.get('cardid', ''))
+    if not card_id:
+        abort(400)
     __setting_dpdk_env()
     interface = __get_server_port(card_id)
     ethpeer = subprocess.getoutput("ip link show dev %s | grep 'link/ether' | awk '{print $2}'" % interface)
@@ -403,7 +407,9 @@ def bind_server_card():
     Bind server card
     """
     interface = ""
-    card_id = request.values.get('cardid', '')
+    card_id = __parse_card_id(request.values.get('cardid', ''))
+    if not card_id:
+        abort(400)
     interface = __get_server_port(card_id)
     pci_num = subprocess.getoutput("ethtool -i %s | grep 'bus-info' | awk '{print $2}'" % interface) 
     subprocess.getoutput("ip link set down %s" % interface)
@@ -419,11 +425,13 @@ def unbind_server_card():
     """
     Unbind server card
     """
-    card_id = request.values.get('cardid', '')
+    card_id = __parse_card_id(request.values.get('cardid', ''))
+    if not card_id:
+        abort(400)
     pci_num = subprocess.getoutput("dpdk-devbind  -s | grep 'drv=%s' | awk '{print $1}'" % DPDK_DRIVER)
     quad = __get_quad(pci_num)
     kernel_driver = subprocess.getoutput("lspci -s %s -v | grep 'Kernel modules' | awk '{print $3}'" % pci_num)
-    if operator.eq(quad, eval(card_id)):
+    if quad == card_id:
         subprocess.getoutput("dpdk-devbind -b %s %s" % (kernel_driver, pci_num))
         result = subprocess.getoutput(("dpdk-devbind -s | grep {0}").format(pci_num))
         interface = re.search(r'if=(\S*)', result).group(1)
@@ -442,7 +450,7 @@ def test_server(act):
     cmd = request.values.get('cmd', '')
     pci_num = ""
     interface = ""
-    card_id = request.values.get('cardid', '')
+    card_id = __parse_card_id(request.values.get('cardid', ''))
     cmd = cmd.split()
     if (not cmd) or (cmd[0] not in valid_commands + ['all']):
         sys.stdout.write("Invalid command: {0}.\n".format(cmd))
@@ -465,6 +473,8 @@ def test_server(act):
             if result[0] == 0:
                 pci_num = subprocess.getoutput("dpdk-devbind -s | grep 'drv=%s' | awk '{print $1}'" % DPDK_DRIVER)
             else:
+                if not card_id:
+                    abort(400)
                 __setting_dpdk_env()
                 interface = __get_server_port(card_id)
                 pci_num =  subprocess.getoutput("ethtool -i %s | grep 'bus-info' | awk '{print $2}'"
@@ -485,6 +495,26 @@ def test_server(act):
     return render_template('index.html')
 
 
+def __parse_card_id(card_id):
+    """
+    Parse the cardid parameter into a validated quadruple list.
+    Return None if the input is not a list of four hex strings.
+    """
+    try:
+        quad = ast.literal_eval(card_id)
+    except (ValueError, SyntaxError):
+        sys.stderr.write("Invalid cardid format: %s.\n" % card_id)
+        return None
+    if (not isinstance(quad, list)) or len(quad) != 4:
+        sys.stderr.write("Cardid is not a quadruple: %s.\n" % card_id)
+        return None
+    for item in quad:
+        if not isinstance(item, str) or not re.match(r'^[0-9a-fA-F]{4}$', item):
+            sys.stderr.write("Invalid quadruple item in cardid: %s.\n" % card_id)
+            return None
+    return quad
+
+
 def __get_server_port(card_id):
     """
     get server interface
@@ -495,7 +525,7 @@ def __get_server_port(card_id):
     for pt in ports:
         pci_num = subprocess.getoutput("ethtool -i %s | grep 'bus-info' | awk '{print $2}'" % pt)
         quad = __get_quad(pci_num)
-        if operator.eq(quad, eval(card_id)):
+        if quad == card_id:
             result = subprocess.getoutput(("dpdk-devbind -s | grep {0}").format(pci_num))
             interface = re.search(r'if=(\S*)', result).group(1)
             break
