@@ -14,12 +14,16 @@
 # Desc: cpufreq test
 
 import argparse
+import os
+import resource
 from random import randint
 from time import sleep
 from threading import Thread
 from hwcompatible.env import CertEnv
 from hwcompatible.test import Test
 from hwcompatible.command import Command
+
+BOOST_FILE = "/sys/devices/system/cpu/cpufreq/boost"
 
 
 class CPU:
@@ -117,6 +121,31 @@ class CPU:
         self.logger.info("Get cpu governor succeed.")
         return cmd[0].strip()
 
+    @staticmethod
+    def get_boost():
+        """
+        Get the global boost state of cpufreq
+        :return: "0" or "1", None if the driver has no global boost control
+        """
+        if not os.path.exists(BOOST_FILE):
+            return None
+        with open(BOOST_FILE, "r") as boost_file:
+            return boost_file.read().strip()
+
+    @staticmethod
+    def set_boost(value):
+        """
+        Set the global boost state of cpufreq
+        :param value: "0" or "1"
+        :return:
+        """
+        try:
+            with open(BOOST_FILE, "w") as boost_file:
+                boost_file.write(value)
+        except OSError:
+            return False
+        return True
+
 
 class Load(Thread):
     """
@@ -175,6 +204,35 @@ class CPUFreqTest(Test):
         self.command = Command(self.logger)
         self.cpu = CPU(self.logger, self.command)
         self.original_governor = self.cpu.get_governor(0)
+        # The userspace test runs one load process per CPU at the same time and each one
+        # needs pipes; on hosts with hundreds of CPUs the default limit of 1024 open files
+        # is not enough and the failed loads were counted as runtime 0.
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        need = (os.cpu_count() or 1) * 8 + 256
+        if soft != resource.RLIM_INFINITY and soft < need:
+            new_soft = need if hard == resource.RLIM_INFINITY else min(need, hard)
+            resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft, hard))
+
+    def average_runtime(self, freq):
+        """
+        Run the load on all CPUs at the given frequency
+        :param freq:
+        :return: average runtime of the loads that finished, 0 if none did
+        """
+        self.cpu.set_freq(freq)
+        load_list = []
+        for cpu in self.cpu.list:
+            load_test = Load(cpu, self.command)
+            load_test.start()
+            load_list.append(load_test)
+        runtime_list = [load.get_runtime() for load in load_list]
+        finished = [runtime for runtime in runtime_list if runtime > 0]
+        if len(finished) < len(runtime_list):
+            self.logger.error("%d of %d load processes failed at freq %d." %
+                              (len(runtime_list) - len(finished), len(runtime_list), freq))
+        if not finished:
+            return 0
+        return 1.0 * sum(finished) / len(finished)
 
     def test_userspace(self):
         """
@@ -200,39 +258,25 @@ class CPUFreqTest(Test):
         self.logger.info("The governor of CPU%s is %s." %
                          (target_cpu, target_cpu_governor))
 
-        # min_freq -> max_runtime
-        self.cpu.set_freq(self.cpu.min_freq)
-        load_list = []
-        runtime_list = []
-        for cpu in self.cpu.list:
-            load_test = Load(cpu, self.command)
-            load_test.start()
-            load_list.append(load_test)
-        for cpu in self.cpu.list:
-            runtime = load_list[cpu].get_runtime()
-            runtime_list.append(runtime)
-        max_average_runtime = 1.0 * sum(runtime_list) / len(runtime_list)
-        if max_average_runtime == 0:
-            self.logger.error("Max average time is 0.")
+        # Boost lets the CPU run above scaling_max_freq, so the measured speedup would no
+        # longer follow max_freq / min_freq. Measure with boost off and restore it afterwards.
+        original_boost = self.cpu.get_boost()
+        if original_boost == "1" and not self.cpu.set_boost("0"):
+            self.logger.error("Disable cpufreq boost failed.")
+            return False
+        try:
+            # min_freq -> max_runtime
+            max_average_runtime = self.average_runtime(self.cpu.min_freq)
+            # max_freq -> min_runtime
+            min_average_runtime = self.average_runtime(self.cpu.max_freq)
+        finally:
+            if original_boost == "1":
+                self.cpu.set_boost("1")
+        if max_average_runtime == 0 or min_average_runtime == 0:
+            self.logger.error("Average time of userspace load test is 0.")
             return False
         self.logger.info(
             "Max average time of all CPUs userspace load test: %.2f" % max_average_runtime)
-
-        # max_freq -> min_runtime
-        self.cpu.set_freq(self.cpu.max_freq)
-        load_list = []
-        runtime_list = []
-        for cpu in self.cpu.list:
-            load_test = Load(cpu, self.command)
-            load_test.start()
-            load_list.append(load_test)
-        for cpu in self.cpu.list:
-            runtime = load_list[cpu].get_runtime()
-            runtime_list.append(runtime)
-        min_average_runtime = 1.0 * sum(runtime_list) / len(runtime_list)
-        if min_average_runtime == 0:
-            self.logger.info("Min average time is 0.")
-            return False
         self.logger.info(
             "Min average time of all CPUs userspace load test: %.2f" % min_average_runtime)
 
