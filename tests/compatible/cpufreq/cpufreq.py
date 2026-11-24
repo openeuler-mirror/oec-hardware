@@ -25,6 +25,17 @@ from hwcompatible.command import Command
 
 BOOST_FILE = "/sys/devices/system/cpu/cpufreq/boost"
 
+# Relative tolerance for frequency tests: allow 1% deviation between the
+# actual frequency reading and scaling_max/min_freq, and between the measured
+# speedup and the theoretical value, caused by frequency binning precision,
+# sampling transients and load measurement noise.
+FREQ_TOLERANCE = 0.01
+
+
+def freq_close(actual, target):
+    """Check whether the actual frequency falls within ±1% of the target"""
+    return abs(actual - target) <= target * FREQ_TOLERANCE
+
 
 class CPU:
     """
@@ -285,6 +296,10 @@ class CPUFreqTest(Test):
         tolerance = 1.0
         min_speedup = expected_speedup - (expected_speedup - 1.0) * tolerance
         max_speedup = expected_speedup + (expected_speedup - 1.0) * tolerance
+        # Allow 1% measurement error to avoid misjudgement from float boundary or
+        # readout noise
+        min_speedup -= expected_speedup * FREQ_TOLERANCE
+        max_speedup += expected_speedup * FREQ_TOLERANCE
         if not min_speedup <= measured_speedup <= max_speedup:
             self.logger.error("The speedup(%.2f) is not between %.2f and %.2f" % (
                 measured_speedup, min_speedup, max_speedup))
@@ -322,7 +337,7 @@ class CPUFreqTest(Test):
         load_test.start()
         sleep(1)
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        if target_cpu_freq != self.cpu.max_freq:
+        if not freq_close(target_cpu_freq, self.cpu.max_freq):
             self.logger.error("The freq of CPU%s(%d) is not scaling_max_freq(%d)." % (
                 target_cpu, target_cpu_freq, self.cpu.max_freq))
             return False
@@ -407,7 +422,7 @@ class CPUFreqTest(Test):
                          (target_cpu, target_cpu_governor))
 
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        if target_cpu_freq != self.cpu.min_freq:
+        if not freq_close(target_cpu_freq, self.cpu.min_freq):
             self.logger.error("The freq of CPU%s(%d) is not scaling_min_freq(%d)." %
                               (target_cpu, target_cpu_freq, self.cpu.min_freq))
             return False
@@ -439,14 +454,14 @@ class CPUFreqTest(Test):
         target_cpu = randint(0, self.cpu.nums-1)
         target_cpu_governor = self.cpu.get_governor(target_cpu)
         if target_cpu_governor != 'performance':
-            self.logger.error("The governor of CPU%s(%s) is not performance." %
-                              (target_cpu, target_cpu_governor))
+            self.logger.error("The governor of CPU%s(%s) is not performance." % (
+                target_cpu, target_cpu_governor))
             return False
         self.logger.info("The governor of CPU%s is %s." %
                          (target_cpu, target_cpu_governor))
 
         target_cpu_freq = self.cpu.get_freq(target_cpu)
-        if target_cpu_freq != self.cpu.max_freq:
+        if not freq_close(target_cpu_freq, self.cpu.max_freq):
             self.logger.error("The freq of CPU%s(%d) is not scaling_max_freq(%d)." %
                               (target_cpu, target_cpu_freq, self.cpu.max_freq))
             return False
