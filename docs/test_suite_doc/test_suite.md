@@ -136,7 +136,7 @@
 #### swap 内存压力测试
 
 1. 通过`get_memory`方法获取 memory 信息，检查 self.system_memory 是否存在。
-2. 通过 sysctl 命令检查系统配置 vm.panic_on_oom，默认为0的情况下，如果系统内存不足，Linux可能会重启。通过`sysctl -w vm.panic_on_oom=1`设置防止测试工程意外重启。
+2. 通过 sysctl 命令检查系统配置 vm.panic_on_oom。值为 0（默认）时，发生 OOM 会由内核 OOM killer 挑选进程杀死、系统尽量不重启；测试期间通过 `sysctl -w vm.panic_on_oom=1` 将系统设为「OOM 时直接 panic 并重启」，使内存被吃光时以整机重启这一明确信号暴露失败，而非静默杀掉测试进程；测试结束后在 finally 中恢复原值，避免该副作用残留到用例之外。
 3. 检查 swap 区大小，如果小于4G，则记录告警信息，建议将 swap 区配置调整到至少10G大小，较小的 swap 区可能不足以应对高强度内存压力测试。
 4. 计算测试内存总量(test_mem):extra_men (按free_memory/100 计算, 但不能超过swap的一半或者512MB) 加上 free_memory 内存。
 5. 执行当前目录下的`eatmem_test.c`测试脚本，mmap测试内存，触发 swap，进行 120s 读写测试。
