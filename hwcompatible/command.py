@@ -240,10 +240,25 @@ class Command:
         self.logger.info("The command is: %s." %
                          command, log_print, terminal_print)
 
-        if '|' in command:
-            cmd_list = command.split("|")
-        else:
-            cmd_list.append(command)
+        # Split only unquoted, unescaped pipes. Keep the original quoting
+        # for shlex.split so literal pipes remain part of their arguments.
+        quote = None
+        escaped = False
+        start = 0
+        for index, char in enumerate(command):
+            if escaped:
+                escaped = False
+            elif char == "\\" and quote != "'":
+                escaped = True
+            elif quote is not None:
+                if char == quote:
+                    quote = None
+            elif char in ("'", '"'):
+                quote = char
+            elif char == '|':
+                cmd_list.append(command[start:index])
+                start = index + 1
+        cmd_list.append(command[start:])
 
         for cmd in cmd_list:
             cmd = shlex.split(cmd)
