@@ -126,24 +126,41 @@ class MemoryTest(Test):
         if not self.system_memory:
             self.logger.error("Get system memory failed.")
             return False
-        value = getoutput("sysctl -a | grep 'vm.panic_on_oom'")
-        if value == "vm.panic_on_oom = 0":
-            self.command.run_cmd("sysctl -w vm.panic_on_oom=1")
-            self.logger.info("set the system not to restart.")
-        if self.swap_memory < 4096:
-            self.logger.error("Swap memory of %s MB is too small. Suggest configuring to 10G."
-                              % self.swap_memory)
-            return False
-        extra_mem = self.free_memory/100
-        if extra_mem > self.swap_memory/2:
-            extra_mem = self.swap_memory/2
-        if extra_mem > 512:
-            extra_mem = 512
-        test_mem = extra_mem + self.free_memory
-        result = self.command.run_cmd(
-            "%s/eatmem_test -m %sM" % (self.test_dir, test_mem))
+        orig_panic_on_oom = getoutput("sysctl -n vm.panic_on_oom").strip()
+        try:
+            if orig_panic_on_oom == "0":
+                self.command.run_cmd("sysctl -w vm.panic_on_oom=1")
+                self.logger.info(
+                    "Set the system to panic on OOM as a fail signal.")
+            if self.swap_memory < 4096:
+                self.logger.error("Swap memory of %s MB is too small. Suggest configuring to 10G."
+                                  % self.swap_memory)
+                return False
+            extra_mem = self.free_memory / 100
+            if extra_mem > self.swap_memory / 2:
+                extra_mem = self.swap_memory / 2
+            if extra_mem > 512:
+                extra_mem = 512
 
-        return result[2] == 0
+            # free_memory already includes reclaimable Cached/Buffers, so on large-memory
+            # hosts it approaches physical memory. Requesting all of it (plus extra) leaves
+            # too little room for the kernel and other processes, and the per-page write
+            # storm then triggers OOM, which the panic_on_oom above escalates to a reboot.
+            # Reserve 2% of RAM (at least 2GB, capped at 10% for small hosts) so the test
+            # still saturates memory without exhausting it.
+            reserve = min(max(self.system_memory * 0.02, 2048),
+                          self.system_memory * 0.1)
+            test_mem = min(self.free_memory + extra_mem,
+                           self.system_memory - reserve)
+            test_mem = int(test_mem)
+            result = self.command.run_cmd(
+                "%s/eatmem_test -m %sM" % (self.test_dir, test_mem))
+
+            return result[2] == 0
+        finally:
+            if orig_panic_on_oom == "0":
+                self.command.run_cmd("sysctl -w vm.panic_on_oom=0")
+                self.logger.info("Restore vm.panic_on_oom to 0.")
 
     def hugetlb_test(self):
         """
